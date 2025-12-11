@@ -48,6 +48,12 @@ in
           default = true;
           description = "Enable tap to click";
         };
+
+        disableWhileTyping = lib.mkOption {
+          type = lib.types.bool;
+          default = true;
+          description = "Disable touchpad while typing";
+        };
       };
     };
   };
@@ -67,6 +73,7 @@ in
       touchpad = {
         naturalScrolling = cfg.libinput.touchpad.naturalScrolling;
         tapping = cfg.libinput.touchpad.tapping;
+        disableWhileTyping = cfg.libinput.touchpad.disableWhileTyping;
       };
     };
   };

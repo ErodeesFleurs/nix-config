@@ -153,4 +153,24 @@
     polarity = "light";
     base16Scheme = "${pkgs.base16-schemes}/share/themes/gruvbox-material-light-hard.yaml";
   };
+
+  # ==========================================
+  # 游戏配置
+  # ==========================================
+  modules.games = {
+    enable = true;
+    enableGamemode = true;
+    enablePerformanceOptimizations = true;
+    wine.enable = true;
+    steam = {
+      enable = true;
+      remotePlay.enable = true;
+      remotePlay.openFirewall = true;
+      dedicatedServer.enable = true;
+      dedicatedServer.openFirewall = true;
+      extest = true;
+      gamescopeSession = true;
+      protontricks = true;
+    };
+  };
 }

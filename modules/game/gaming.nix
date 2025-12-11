@@ -95,15 +95,9 @@ in
     environment.systemPackages =
       with pkgs;
       [
-        # Controller support
-        antimicrox
-
         # Monitoring tools
         mangohud
         goverlay
-
-        # Performance tools
-        gamemode
       ]
       ++ lib.optionals cfg.wine.enable [
         cfg.wine.package
