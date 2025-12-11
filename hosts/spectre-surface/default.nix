@@ -31,6 +31,14 @@
     };
   };
 
+  # Surface 特定服务
+  services.iptsd.enable = true;
+
+  # 安装 surface-control
+  environment.systemPackages = with pkgs; [
+    surface-control
+  ];
+
   modules.i18n.enable = true;
 
   # ==========================================
@@ -113,6 +121,9 @@
     showIndicator = true;
     enableFirewall = true;
   };
+
+  # 禁用 WiFi 省电模式以解决休眠唤醒问题
+  networking.networkmanager.wifi.powersave = false;
 
   modules.network.bluetooth = {
     enable = true;
