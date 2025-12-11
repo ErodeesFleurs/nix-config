@@ -23,6 +23,11 @@
         extraArgs = "--keep-since 7d --keep 3";
       };
     };
+    sudo = {
+      enable = true;
+      useRust = true;
+      enablePolkit = true;
+    };
   };
 
   modules.i18n.enable = true;
@@ -30,9 +35,13 @@
   # ==========================================
   # 启动配置
   # ==========================================
-  boot.loader = {
-    systemd-boot.enable = true;
-    efi.canTouchEfiVariables = true;
+  modules.system.boot = {
+    enable = true;
+    useLatestKernel = true;
+    enableSystemdBoot = true;
+    enableSystemdInitrd = true;
+    efiCanTouchVariables = true;
+    enableIOMMU = true;
   };
 
   # ==========================================
@@ -66,6 +75,10 @@
       nvidiaBusId = "PCI:0:1:0";
     };
     applyPatches = true;
+  };
+
+  modules.hardware.nvidia-container = {
+    enable = true;
   };
 
   # ==========================================

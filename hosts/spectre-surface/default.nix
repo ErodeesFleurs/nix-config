@@ -24,6 +24,11 @@
         extraArgs = "--keep-since 7d --keep 3";
       };
     };
+    sudo = {
+      enable = true;
+      useRust = true;
+      enablePolkit = true;
+    };
   };
 
   modules.i18n.enable = true;
@@ -31,15 +36,17 @@
   # ==========================================
   # 启动配置
   # ==========================================
-  boot.loader = {
-    systemd-boot.enable = true;
-    efi.canTouchEfiVariables = true;
+  modules.system.boot = {
+    enable = true;
+    useLatestKernel = false; # Surface 使用硬件模块推荐的内核
+    enableSystemdBoot = true;
+    enableSystemdInitrd = true;
+    efiCanTouchVariables = true;
+    enableIOMMU = false; # Intel 平台不需要 AMD IOMMU
+    extraKernelParams = [
+      "mem_sleep_default=deep" # 深度睡眠模式
+    ];
   };
-
-  # Surface 内核参数优化
-  boot.kernelParams = [
-    "mem_sleep_default=deep" # 深度睡眠模式
-  ];
 
   # ==========================================
   # 硬件配置（Surface Pro 5 使用 Intel 集显）

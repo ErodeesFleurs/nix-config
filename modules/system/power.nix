@@ -94,7 +94,6 @@ in
     environment.systemPackages =
       with pkgs;
       [
-        powertop
         acpi
       ]
       ++ lib.optionals cfg.enableTlp [ tlp ];

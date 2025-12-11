@@ -69,9 +69,8 @@
   # 显示配置
   # ==========================================
   # Surface Pro 5 的高 DPI 屏幕
-  hardware.opengl = {
+  hardware.graphics = {
     enable = true;
-    driSupport = true;
   };
 
   # ==========================================
@@ -85,9 +84,8 @@
   # 蓝牙
   hardware.bluetooth.enable = true;
 
-  # 声卡
-  sound.enable = true;
-  hardware.pulseaudio.enable = false; # 使用 PipeWire
+  # 声卡 - 使用 PipeWire
+  services.pulseaudio.enable = false;
 
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
 }
