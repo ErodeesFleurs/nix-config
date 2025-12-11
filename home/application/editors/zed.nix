@@ -31,6 +31,7 @@ in
         "lua"
         "nix"
         "toml"
+        "nu"
         "git-firefly"
         "opencode"
         "gemini"

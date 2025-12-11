@@ -65,6 +65,7 @@ in
           usbutils
           networkmanagerapplet
           sshfs
+          sshpass
         ];
         description = "System utility packages";
       };
