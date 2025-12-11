@@ -1,0 +1,7 @@
+{ ... }:
+
+{
+  time = {
+    timeZone = "Asia/Shanghai";
+  };
+}
