@@ -29,6 +29,8 @@
       useRust = true;
       enablePolkit = true;
     };
+    enableInit = true;
+    overlayMutable = true;
   };
 
   # Surface 特定服务

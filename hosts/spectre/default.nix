@@ -28,6 +28,8 @@
       useRust = true;
       enablePolkit = true;
     };
+    enableInit = true;
+    overlayMutable = true;
   };
 
   modules.i18n.enable = true;
