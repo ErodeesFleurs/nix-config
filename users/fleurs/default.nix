@@ -2,18 +2,13 @@
 { pkgs, ... }:
 
 {
-  imports = [
-    # Home Manager 全局配置（自动导入所有 home/ 下的模块）
-    ../../home
-  ];
-
   # 用户基本信息
   home = {
     username = "fleurs";
     homeDirectory = "/home/fleurs";
     stateVersion = "26.05";
 
-    # 用户特定的软件包
+    # 特定软件包
     packages = with pkgs; [
       vscode
       rar
