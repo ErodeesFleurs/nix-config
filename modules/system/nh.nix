@@ -31,7 +31,7 @@ in
 
     flake = lib.mkOption {
       type = lib.types.str;
-      default = "/home/fleurs/NixConfig";
+      default = "/home/fleurs/nix-config";
       description = "Path to the flake configuration";
     };
   };
