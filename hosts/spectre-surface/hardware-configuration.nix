@@ -32,29 +32,23 @@
   # ==========================================
   # 文件系统（需要根据实际情况调整）
   # ==========================================
-  # 示例配置 - 请运行 nixos-generate-config 获取真实 UUID
   fileSystems."/" = {
-    device = "/dev/disk/by-uuid/XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX";
-    fsType = "ext4";
+    device = "/dev/disk/by-uuid/2b6178d3-cd6a-4fad-b8c4-2cb995cd7a0e";
+    fsType = "btrfs";
+    options = [
+      "subvol=root"
+      "compress=zstd"
+      "noatime"
+    ];
   };
 
   fileSystems."/boot" = {
-    device = "/dev/disk/by-uuid/XXXX-XXXX";
+    device = "/dev/disk/by-uuid/A8ED-7BCF";
     fsType = "vfat";
-    options = [
-      "fmask=0022"
-      "dmask=0022"
-    ];
   };
 
   # CPU 微码更新
   hardware.cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
-
-  # Surface 特定内核模块
-  boot.extraModprobeConfig = ''
-    # Surface 触摸屏
-    options i915 enable_fbc=1 enable_psr=2
-  '';
 
   # 启用固件更新
   hardware.enableRedistributableFirmware = true;
@@ -83,9 +77,6 @@
   # ==========================================
   # 蓝牙
   hardware.bluetooth.enable = true;
-
-  # 声卡 - 使用 PipeWire
-  services.pulseaudio.enable = false;
 
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
 }
