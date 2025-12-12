@@ -73,8 +73,6 @@
       nixcord,
       vicinae,
       agenix,
-      nixos-hardware,
-      fleurs-nur,
       ...
     }:
     let
@@ -126,7 +124,7 @@
         specialArgs = specialArgs;
         modules = [
           { nixpkgs.pkgs = pkgs; }
-          nixos-hardware.nixosModules.microsoft-surface-pro-intel
+          # nixos-hardware.nixosModules.microsoft-surface-pro-intel
           stylix.nixosModules.stylix
           ./modules
           ./hosts/spectre-surface
