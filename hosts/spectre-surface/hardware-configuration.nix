@@ -36,7 +36,6 @@
     device = "/dev/disk/by-uuid/2b6178d3-cd6a-4fad-b8c4-2cb995cd7a0e";
     fsType = "btrfs";
     options = [
-      "subvol=root"
       "compress=zstd"
       "noatime"
     ];
