@@ -48,7 +48,7 @@
   # ==========================================
   modules.system.boot = {
     enable = true;
-    useLatestKernel = false; # Surface 使用硬件模块推荐的内核
+    useLatestKernel = true; # Surface 使用硬件模块推荐的内核，也没那么需要
     enableSystemdBoot = true;
     enableSystemdInitrd = true;
     efiCanTouchVariables = true;
