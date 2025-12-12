@@ -2,9 +2,9 @@
 
 {
   # 用户账户配置
-  users.users.fleurs = {
+  users.users.sanka = {
     isNormalUser = true;
-    description = "Fleurs";
+    description = "Sanka";
     extraGroups = [
       "wheel" # sudo 权限
       "networkmanager"
@@ -15,5 +15,6 @@
       "libvirtd"
     ];
     shell = pkgs.nushell;
+    hashedPassword = "$y$j9T$.dWghH0CwDQx.GdIlK1Nl/$rwo7rUUN7ffo1C6cVdavRpn56PgAZOV216ugv5EREt6";
   };
 }

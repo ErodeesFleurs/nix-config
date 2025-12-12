@@ -148,6 +148,19 @@
         ];
       };
 
+      homeConfigurations.sanka = home-manager.lib.homeManagerConfiguration {
+        pkgs = pkgs;
+        extraSpecialArgs = specialArgs;
+        modules = [
+          stylix.homeModules.stylix
+          nixcord.homeModules.nixcord
+          vicinae.homeManagerModules.default
+          agenix.homeManagerModules.default
+          ./home
+          ./users/sanka
+        ];
+      };
+
       # ==========================================
       # 导出模块
       # ==========================================
