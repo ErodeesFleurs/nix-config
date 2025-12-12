@@ -33,6 +33,7 @@ in
         "toml"
         "nu"
         "git-firefly"
+        "neocmake"
         "opencode"
         "gemini"
       ];
