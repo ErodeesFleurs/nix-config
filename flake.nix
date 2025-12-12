@@ -148,7 +148,7 @@
         ];
       };
 
-      homeConfigurations.sanka = home-manager.lib.homeManagerConfiguration {
+      homeConfigurations.fleurs-surface = home-manager.lib.homeManagerConfiguration {
         pkgs = pkgs;
         extraSpecialArgs = specialArgs;
         modules = [
@@ -157,7 +157,7 @@
           vicinae.homeManagerModules.default
           agenix.homeManagerModules.default
           ./home
-          ./users/sanka
+          ./users/fleurs
         ];
       };
 

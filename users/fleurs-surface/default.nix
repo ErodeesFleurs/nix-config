@@ -4,8 +4,8 @@
 {
   # 用户基本信息
   home = {
-    username = "sanka";
-    homeDirectory = "/home/sanka";
+    username = "fleurs";
+    homeDirectory = "/home/fleurs";
     stateVersion = "26.05";
 
     # 特定软件包
@@ -69,7 +69,7 @@
   # 应用程序
   homeModules.firefox = {
     enable = true;
-    profileName = "sanka";
+    profileName = "fleurs";
     forceExtensions = true;
     enableStylix = true;
   };
