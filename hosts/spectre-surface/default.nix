@@ -124,8 +124,8 @@
     enableFirewall = true;
   };
 
-  # 禁用 WiFi 省电模式以解决休眠唤醒问题
-  networking.networkmanager.wifi.powersave = false;
+  # 禁用 WiFi 省电模式以解决休眠唤醒问题，不禁用应该也没太大问题
+  networking.networkmanager.wifi.powersave = true;
 
   modules.network.bluetooth = {
     enable = true;
@@ -163,6 +163,26 @@
   modules.system.power = {
     enable = true;
     enableTlp = true; # 电池优化
+  };
+
+  # ==========================================
+  # 游戏配置
+  # ==========================================
+  modules.games = {
+    enable = true;
+    enableGamemode = true;
+    enablePerformanceOptimizations = true;
+    wine.enable = true;
+    steam = {
+      enable = true;
+      remotePlay.enable = true;
+      remotePlay.openFirewall = true;
+      dedicatedServer.enable = true;
+      dedicatedServer.openFirewall = true;
+      extest = true;
+      gamescopeSession = true;
+      protontricks = true;
+    };
   };
 
   # ==========================================

@@ -157,7 +157,7 @@
           vicinae.homeManagerModules.default
           agenix.homeManagerModules.default
           ./home
-          ./users/fleurs
+          ./users/fleurs-surface
         ];
       };
 

@@ -57,6 +57,7 @@
     enable = true;
     systemd = false;
     xwayland = true;
+    monitors = [ "eDP-1,2736x1824,0x0,1.5" ];
   };
 
   homeModules.ashell = {
@@ -111,12 +112,6 @@
     enable = true;
     autoEnable = true;
     base16Scheme = "${pkgs.base16-schemes}/share/themes/gruvbox-material-light-hard.yaml";
-  };
-
-  homeModules.hyprland = {
-    extraConfig = {
-      monitor = [ "eDP-1, 2736x1824, 0x0, 1.5" ];
-    };
   };
 
   # XDG 配置
