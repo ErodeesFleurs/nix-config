@@ -63,7 +63,7 @@
   # ==========================================
   modules.hardware.graphics = {
     enable = true;
-    enable32Bit = false; # Surface 不需要 32 位支持
+    enable32Bit = true;
     vulkan.enable = true;
     vaapi.enable = true;
     vdpau.enable = false; # Intel 不需要 VDPAU
@@ -109,7 +109,7 @@
   # ==========================================
   modules.pipewire = {
     enable = true;
-    alsa32Bit = false; # 平板不需要 32 位音频
+    alsa32Bit = true; # 平板不需要 32 位音频，还是加上吧。
     pulse = true;
   };
 
@@ -172,7 +172,7 @@
     enable = true;
     enableGamemode = true;
     enablePerformanceOptimizations = true;
-    wine.enable = true;
+    wine.enable = false;
     steam = {
       enable = true;
       remotePlay.enable = true;

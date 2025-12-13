@@ -1,6 +1,4 @@
 # Surface Pro 5 硬件配置
-# 这是一个模板文件，需要在实际设备上运行以下命令生成真实配置：
-# nixos-generate-config --show-hardware-config > hardware-configuration.nix
 
 {
   config,
@@ -30,7 +28,7 @@
   boot.extraModulePackages = [ ];
 
   # ==========================================
-  # 文件系统（需要根据实际情况调整）
+  # 文件系统
   # ==========================================
   fileSystems."/" = {
     device = "/dev/disk/by-uuid/2b6178d3-cd6a-4fad-b8c4-2cb995cd7a0e";
@@ -45,6 +43,13 @@
     device = "/dev/disk/by-uuid/A8ED-7BCF";
     fsType = "vfat";
   };
+
+  swapDevices = [
+    {
+      device = "/var/lib/swapfile";
+      size = 8192;
+    }
+  ];
 
   # CPU 微码更新
   hardware.cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
