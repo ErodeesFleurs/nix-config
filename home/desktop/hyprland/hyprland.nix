@@ -1,6 +1,8 @@
 {
   config,
   lib,
+  inputs,
+  pkgs,
   ...
 }:
 
@@ -249,8 +251,9 @@ in
       enable = true;
       systemd.enable = cfg.systemd;
       xwayland.enable = cfg.xwayland;
-      package = null;
-      portalPackage = null;
+      package = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.hyprland;
+      portalPackage =
+        inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.xdg-desktop-portal-hyprland;
 
       settings = lib.mkMerge [
         {

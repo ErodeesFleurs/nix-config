@@ -15,7 +15,7 @@ in
     extraPackages = lib.mkOption {
       type = lib.types.listOf lib.types.package;
       default = with pkgs; [
-        lua-language-server
+        emmylua-ls
         nil
         nixd
         basedpyright
@@ -28,7 +28,7 @@ in
     extensions = lib.mkOption {
       type = lib.types.listOf lib.types.str;
       default = [
-        "lua"
+        "emmylua"
         "nix"
         "toml"
         "nu"

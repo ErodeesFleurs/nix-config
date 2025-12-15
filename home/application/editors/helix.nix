@@ -41,7 +41,7 @@ in
 
         # Lua
         stylua
-        lua-language-server
+        emmylua-ls
 
         # C/C++
         clang-tools
@@ -132,6 +132,14 @@ in
           type = lib.types.bool;
           default = true;
           description = "Use clippy for Rust checking";
+        };
+      };
+
+      emmylua-ls = {
+        enable = lib.mkOption {
+          type = lib.types.bool;
+          default = true;
+          description = "Enable Emmylua language server for Lua support";
         };
       };
     };
@@ -258,7 +266,7 @@ in
             {
               name = "lua";
               language-servers = [
-                "lua-language-server"
+                "emmylua-ls"
               ]
               ++ lib.optionals cfg.languageServers.gpt.enable [ "gpt" ];
               formatter = {
