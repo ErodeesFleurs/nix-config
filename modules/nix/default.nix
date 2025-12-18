@@ -64,27 +64,6 @@ in
       '';
     };
 
-    allowUnfree = lib.mkOption {
-      type = lib.types.bool;
-      default = true;
-      description = ''
-        Allow installation of unfree packages.
-        CN: 是否允许安装非自由许可软件包（unfree）。
-        EN: Allow packages with non-free licenses to be installed.
-      '';
-    };
-
-    permittedInsecurePackages = lib.mkOption {
-      type = lib.types.listOf lib.types.str;
-      default = [ ];
-      description = ''
-        List of permitted insecure packages.
-        CN: 明确允许的存在安全问题的包名列表（仅在确知风险时使用）。
-        EN: Explicit list of insecure packages that are permitted (use with caution).
-      '';
-      example = [ "openssl-1.0.2u" ];
-    };
-
     substituters = lib.mkOption {
       type = lib.types.listOf lib.types.str;
       default = [ "https://cache.nixos.org" ];
@@ -139,12 +118,12 @@ in
       };
     };
 
-    # nixpkgs configuration derived from module options
-    nixpkgs.config = lib.mkMerge [
-      { allowUnfree = cfg.allowUnfree; }
-      (lib.optional (!(cfg.permittedInsecurePackages == null || cfg.permittedInsecurePackages == [ ])) {
-        permittedInsecurePackages = cfg.permittedInsecurePackages;
-      })
-    ];
+    # nixpkgs.config intentionally left unset here. Configure `nixpkgs.config`
+    # at flake / instance creation time (for example in `flake.nix` or when
+    # creating the nixpkgs instance) to avoid external-instance conflicts.
+    #
+    # Setting `nixpkgs.config` inside a system module can lead to the error:
+    # "Your system configures nixpkgs with an externally created instance."
+    # Therefore we purposely do not set it here.
   };
 }

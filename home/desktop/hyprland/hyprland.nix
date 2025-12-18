@@ -43,6 +43,12 @@ in
       description = "Enable installing and using hyprlauncher as application launcher";
     };
 
+    hyprpolkit = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = "Enable the hyprpolkitagent user systemd service";
+    };
+
     browser = lib.mkOption {
       type = lib.types.str;
       default = "firefox";
@@ -449,12 +455,14 @@ in
       ];
     };
 
-    home.packages =
-      if cfg.hyprlauncher then
-        [
-          pkgs.hyprlauncher
-        ]
-      else
-        [ ];
+    # If the user enabled hyprpolkit via this module, enable the global service.
+    # This makes the module integrate with the system-level service option:
+    # `services.hyprpolkitagent.enable = true`.
+    services.hyprpolkitagent.enable = cfg.hyprpolkit;
+
+    # Add hyprlauncher package when enabled
+    home.packages = lib.concatLists [
+      (lib.optional cfg.hyprlauncher [ pkgs.hyprlauncher ])
+    ];
   };
 }

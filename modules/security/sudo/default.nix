@@ -116,9 +116,10 @@ in
     ];
 
     # Helpful warning if user config may be contradictory
-    warnings = lib.optionalString (cfg.useRust && cfg.enablePolkit == false) ''
-      EN: Using `sudo-rs` without polkit may limit some desktop integrations that expect polkit.
-      CN: 在禁用 polkit 的同时启用 sudo-rs 可能会影响某些桌面集成（它们可能依赖 polkit）。
-    '';
+    # The NixOS `warnings` option expects a list of strings; produce a list when the condition holds.
+    warnings = lib.optional (cfg.useRust && (cfg.enablePolkit == false)) [
+      "EN: Using `sudo-rs` without polkit may limit some desktop integrations that expect polkit."
+      "CN: 在禁用 polkit 的同时启用 sudo-rs 可能会影响某些桌面集成（它们可能依赖 polkit）。"
+    ];
   };
 }

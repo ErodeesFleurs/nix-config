@@ -78,7 +78,7 @@
     applyPatches = true;
   };
 
-  modules.hardware.nvidia-container = {
+  modules.hardware.nvidiaContainer = {
     enable = true;
   };
 

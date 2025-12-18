@@ -59,6 +59,7 @@
     systemd = false;
     xwayland = true;
     hyprlauncher = false;
+    hyprpolkit = true;
   };
 
   homeModules.ashell = {

@@ -80,8 +80,10 @@ in
     };
 
     # Warn the user if both nh.clean and nix.gc.automatic are enabled to avoid conflict.
-    warnings =
-      lib.optional (cfg.clean.enable && config.nix.gc.automatic or false)
-        "Both nh.clean and nix.gc.automatic are enabled. This may cause conflicts. Please disable one of them. / CN: nh.clean 与 nix.gc.automatic 同时启用，可能导致冲突，请禁用其中一项。";
+    # The NixOS `warnings` option expects a list of strings; produce a list when the condition holds.
+    warnings = lib.optional (cfg.clean.enable && (config.nix.gc.automatic or false)) [
+      "Both nh.clean and nix.gc.automatic are enabled. This may cause conflicts. Please disable one of them."
+      "CN: nh.clean 与 nix.gc.automatic 同时启用，可能导致冲突，请禁用其中一项。"
+    ];
   };
 }
