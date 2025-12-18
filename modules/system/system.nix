@@ -1,184 +1,38 @@
+/*
+  nix-config/modules/system/system.nix
+  System submodule aggregator — 聚合 system 相关子模块
+
+  CN:
+  本文件作为 system 相关子模块的聚合器。各子模块在其各自目录内声明并实现选项与行为：
+    - `nix`            : Nix 相关设置（autoGC、gcOptions、substituters 等）
+    - `etc`            : /etc overlay、machine-id、stateVersion、nixos-init
+    - `filesystems`    : 持久化绑定挂载与额外 fileSystems 条目
+    - `network/resolver`: 解析器开关（systemd-resolved / resolvconf）
+    - `network/dns`    : DNS 代理 / resolver 配置
+
+  EN:
+  This file aggregates focused submodules that implement system-related configuration.
+  Each submodule declares its own options and implements the corresponding configuration.
+*/
+
+{ ... }:
+
 {
-  config,
-  lib,
-  ...
-}:
-
-let
-  cfg = config.modules.system;
-in
-{
-  options.modules.system = {
-    enable = lib.mkEnableOption "System base configuration";
-
-    trustedUsers = lib.mkOption {
-      type = lib.types.listOf lib.types.str;
-      default = [ "fleurs" ];
-      description = "List of trusted Nix users";
-    };
-
-    autoOptimise = lib.mkOption {
-      type = lib.types.bool;
-      default = true;
-      description = "Automatically optimize the Nix store";
-    };
-
-    autoGC = lib.mkOption {
-      type = lib.types.bool;
-      default = true;
-      description = "Automatically run garbage collection";
-    };
-
-    gcOptions = lib.mkOption {
-      type = lib.types.str;
-      default = "--delete-older-than 7d";
-      description = "Options for garbage collection";
-    };
-
-    allowUnfree = lib.mkOption {
-      type = lib.types.bool;
-      default = true;
-      description = "Allow unfree packages";
-    };
-
-    permittedInsecurePackages = lib.mkOption {
-      type = lib.types.listOf lib.types.str;
-      default = [ ];
-      description = "List of permitted insecure packages";
-      example = [ "openssl-1.0.2u" ];
-    };
-
-    substituters = lib.mkOption {
-      type = lib.types.listOf lib.types.str;
-      default = [ "https://cache.nixos.org" ];
-      description = "List of binary cache substituters";
-    };
-
-    trustedPublicKeys = lib.mkOption {
-      type = lib.types.listOf lib.types.str;
-      default = [ ];
-      description = "List of trusted public keys for substituters";
-    };
-
-    stateVersion = lib.mkOption {
-      type = lib.types.str;
-      default = "26.05";
-      description = "NixOS state version";
-    };
-
-    enableInit = lib.mkOption {
-      type = lib.types.bool;
-      default = true;
-      description = "Enable nixos-init";
-    };
-
-    overlayMutable = lib.mkOption {
-      type = lib.types.bool;
-      default = true;
-      description = "Make /etc overlay mutable";
-    };
-
-    machineId = lib.mkOption {
-      type = lib.types.str;
-      default = builtins.hashString "md5" (config.networking.hostName or "unknown") + "\n";
-      description = "Set a fixed machine ID for the system";
-    };
-  };
-
-  config = lib.mkIf cfg.enable {
-    # Nix 系统设置
-    nix = {
-      settings = {
-        experimental-features = [
-          "flakes"
-          "nix-command"
-        ];
-        trusted-users = cfg.trustedUsers;
-        substituters = cfg.substituters;
-        trusted-public-keys = cfg.trustedPublicKeys;
-      };
-
-      optimise = {
-        automatic = cfg.autoOptimise;
-      };
-
-      gc = lib.mkIf cfg.autoGC {
-        automatic = true;
-        dates = "weekly";
-        options = cfg.gcOptions;
-      };
-    };
-
-    # 系统配置
-    system = {
-      stateVersion = cfg.stateVersion;
-      nixos-init.enable = cfg.enableInit;
-      etc.overlay = {
-        enable = true;
-        mutable = cfg.overlayMutable;
-      };
-    };
-
-    environment = lib.mkIf (!cfg.overlayMutable) {
-      etc = {
-        "machine-id".text = cfg.machineId;
-        "NetworkManager/system-connections/.keep".text = "";
-        "v2raya/.keep".text = "";
-      };
-    };
-
-    fileSystems."/etc/NetworkManager/system-connections" = {
-      device = "/persist/etc/NetworkManager/system-connections";
-      options = [
-        "bind"
-        "rw"
-      ];
-      noCheck = true;
-    };
-
-    fileSystems."/etc/v2raya" = {
-      device = "/persist/etc/v2raya";
-      options = [
-        "bind"
-        "rw"
-      ];
-      noCheck = true;
-    };
-
-    systemd.tmpfiles.rules = [
-      "d /persist/etc/NetworkManager/system-connections 0700 root root -"
-      "d /persist/var/lib/nixos 0755 root root -"
-      "d /persist/etc/v2raya 0750 root root -"
-    ];
-
-    services.resolved.enable = false;
-    networking.resolvconf.enable = false;
-    services.dnsproxy = {
-      enable = true;
-      flags = [
-        "--cache"
-        "--cache-optimistic"
-        "--edns"
-      ];
-      settings = {
-        bootstrap = [
-          "8.8.8.8"
-          "127.2.0.17"
-          "119.29.29.29"
-          "114.114.114.114"
-          "223.6.6.6"
-        ];
-        listen-addrs = [ "::" ];
-        listen-ports = [ 53 ];
-        upstream-mode = "parallel";
-        upstream = [
-          "tls://1.1.1.1"
-          "quic://dns.alidns.com"
-          "h3://dns.alidns.com/dns-query"
-          "tls://dot.pub"
-          "https://doh.pub/dns-query"
-        ];
-      };
-    };
-  };
+  # Import focused system submodules. Each submodule contains its own `options` and `config`.
+  #
+  # Submodule directories (each must contain a `default.nix`):
+  #  - ../nix            : Nix-specific settings, GC implementation, substituters, trusted-users
+  #  - ../etc            : /etc overlay handling, machine-id and environment defaults
+  #  - ../filesystems    : bind mounts and persistent filesystem entries
+  #  - ../network/resolver : networking defaults (resolvconf/resolved toggles)
+  #  - ../network/dns    : dns proxy / resolver configuration (dnsproxy etc)
+  #
+  # CN: 导入子模块目录（每个目录应包含一个 `default.nix`），这些子模块在各自位置声明并实现选项与行为。
+  imports = [
+    ../nix
+    ../etc
+    ../filesystems
+    ../network/resolver
+    ../network/dns
+  ];
 }

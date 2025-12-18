@@ -7,10 +7,10 @@
 }:
 
 let
-  cfg = config.modules.hyprland;
+  cfg = config.modules.programs.hyprland;
 in
 {
-  options.modules.hyprland = {
+  options.modules.programs.hyprland = {
     enable = lib.mkEnableOption "Hyprland window manager";
 
     xwayland = lib.mkOption {

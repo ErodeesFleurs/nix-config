@@ -14,21 +14,20 @@
   networking.hostName = "spectre-surface";
   system.stateVersion = "26.05";
 
-  modules.system = {
+  modules.nix = {
     enable = true;
     autoGC = false; # 使用 nh 来管理垃圾回收
-    nh = {
-      enable = true;
-      clean = {
-        enable = true;
-        extraArgs = "--keep-since 7d --keep 3";
-      };
-    };
-    sudo = {
-      enable = true;
-      useRust = true;
-      enablePolkit = true;
-    };
+  };
+
+  modules.security.sudo = {
+    enable = true;
+    useRust = true;
+    enablePolkit = true;
+  };
+
+  # /etc related options moved to modules.etc
+  modules.etc = {
+    enable = true;
     enableInit = true;
     overlayMutable = false;
   };
@@ -46,7 +45,7 @@
   # ==========================================
   # 启动配置
   # ==========================================
-  modules.system.boot = {
+  modules.boot = {
     enable = true;
     useLatestKernel = true; # 没用硬件模块推荐的内核，也没那么需要
     enableSystemdBoot = true;
@@ -78,7 +77,7 @@
     autoNumlock = false; # 平板设备通常没有数字键盘
   };
 
-  modules.hyprland = {
+  modules.programs.hyprland = {
     enable = true;
     xwayland = true;
     withUWSM = true;
@@ -123,9 +122,6 @@
     enableFirewall = true;
   };
 
-  # 禁用 WiFi 省电模式以解决休眠唤醒问题，不禁用应该也没太大问题
-  networking.networkmanager.wifi.powersave = true;
-
   modules.network.bluetooth = {
     enable = true;
     enableBlueman = true;
@@ -134,7 +130,7 @@
 
   modules.network.ssh = {
     enable = true;
-    enableServer = true;
+    enableServer = false;
     enableAgent = true;
     knownHosts = {
       "github.com".publicKey =
@@ -145,6 +141,32 @@
       passwordAuthentication = false;
       port = 22;
     };
+  };
+
+  modules.network.dns = {
+    enable = true;
+    enableService = true;
+    bootstrap = [
+      "127.2.0.17"
+      "8.8.8.8"
+      "119.29.29.29"
+      "114.114.114.114"
+      "223.6.6.6"
+    ];
+    upstream = [
+      "tls://1.1.1.1"
+      "quic://dns.alidns.com"
+      "h3://dns.alidns.com/dns-query"
+      "tls://dot.pub"
+      "https://doh.pub/dns-query"
+    ];
+  };
+
+  modules.network.resolver = {
+    enable = true;
+    enableResolved = true;
+    enableResolvconf = true;
+    preferResolved = true;
   };
 
   modules.network.v2ray = {
@@ -159,7 +181,7 @@
   # ==========================================
   # 电源管理（平板设备重要）
   # ==========================================
-  modules.system.power = {
+  modules.hardware.power = {
     enable = true;
     enableTlp = true; # 电池优化
   };
@@ -167,20 +189,29 @@
   # ==========================================
   # 游戏配置
   # ==========================================
-  modules.games = {
+  modules.programs.gaming = {
     enable = true;
     enableGamemode = true;
     enablePerformanceOptimizations = true;
     wine.enable = false;
-    steam = {
+  };
+
+  modules.programs.steam = {
+    enable = true;
+    remotePlay.enable = true;
+    remotePlay.openFirewall = true;
+    dedicatedServer.enable = true;
+    dedicatedServer.openFirewall = true;
+    extest = true;
+    gamescopeSession = true;
+    protontricks = true;
+  };
+
+  modules.programs.nh = {
+    enable = true;
+    clean = {
       enable = true;
-      remotePlay.enable = true;
-      remotePlay.openFirewall = true;
-      dedicatedServer.enable = true;
-      dedicatedServer.openFirewall = true;
-      extest = true;
-      gamescopeSession = true;
-      protontricks = true;
+      extraArgs = "--keep-since 7d --keep 3";
     };
   };
 

@@ -13,21 +13,20 @@
   networking.hostName = "spectre";
   system.stateVersion = "26.05";
 
-  modules.system = {
+  modules.nix = {
     enable = true;
     autoGC = false; # 使用 nh 来管理垃圾回收
-    nh = {
-      enable = true;
-      clean = {
-        enable = true;
-        extraArgs = "--keep-since 7d --keep 3";
-      };
-    };
-    sudo = {
-      enable = true;
-      useRust = true;
-      enablePolkit = true;
-    };
+  };
+
+  modules.security.sudo = {
+    enable = true;
+    useRust = true;
+    enablePolkit = true;
+  };
+
+  # /etc related options moved to modules.etc
+  modules.etc = {
+    enable = true;
     enableInit = true;
     overlayMutable = false;
   };
@@ -37,7 +36,7 @@
   # ==========================================
   # 启动配置
   # ==========================================
-  modules.system.boot = {
+  modules.boot = {
     enable = true;
     useLatestKernel = true;
     enableSystemdBoot = true;
@@ -92,7 +91,7 @@
     autoNumlock = true;
   };
 
-  modules.hyprland = {
+  modules.programs.hyprland = {
     enable = true;
     xwayland = true;
     withUWSM = true;
@@ -151,6 +150,32 @@
     };
   };
 
+  modules.network.dns = {
+    enable = true;
+    enableService = true;
+    bootstrap = [
+      "127.2.0.17"
+      "8.8.8.8"
+      "119.29.29.29"
+      "114.114.114.114"
+      "223.6.6.6"
+    ];
+    upstream = [
+      "tls://1.1.1.1"
+      "quic://dns.alidns.com"
+      "h3://dns.alidns.com/dns-query"
+      "tls://dot.pub"
+      "https://doh.pub/dns-query"
+    ];
+  };
+
+  modules.network.resolver = {
+    enable = true;
+    enableResolved = true;
+    enableResolvconf = true;
+    preferResolved = true;
+  };
+
   modules.network.v2ray = {
     enable = true;
     port = 1080;
@@ -170,22 +195,32 @@
   };
 
   # ==========================================
-  # 游戏配置
+  # 游戏配置（已迁移到 programs 命名空间）
   # ==========================================
-  modules.games = {
+  modules.programs.gaming = {
     enable = true;
     enableGamemode = true;
     enablePerformanceOptimizations = true;
     wine.enable = true;
-    steam = {
+  };
+
+  modules.programs.steam = {
+    enable = true;
+    remotePlay.enable = true;
+    remotePlay.openFirewall = true;
+    dedicatedServer.enable = true;
+    dedicatedServer.openFirewall = true;
+    extest = true;
+    gamescopeSession = true;
+    protontricks = true;
+  };
+
+  # nh: moved to modules.programs.nh
+  modules.programs.nh = {
+    enable = true;
+    clean = {
       enable = true;
-      remotePlay.enable = true;
-      remotePlay.openFirewall = true;
-      dedicatedServer.enable = true;
-      dedicatedServer.openFirewall = true;
-      extest = true;
-      gamescopeSession = true;
-      protontricks = true;
+      extraArgs = "--keep-since 7d --keep 3";
     };
   };
 }

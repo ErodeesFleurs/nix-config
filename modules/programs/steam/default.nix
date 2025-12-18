@@ -5,10 +5,10 @@
 }:
 
 let
-  cfg = config.modules.games.steam;
+  cfg = config.modules.programs.steam;
 in
 {
-  options.modules.games.steam = {
+  options.modules.programs.steam = {
     enable = lib.mkEnableOption "Steam gaming platform";
 
     remotePlay = {

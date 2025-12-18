@@ -6,10 +6,10 @@
 }:
 
 let
-  cfg = config.modules.games;
+  cfg = config.modules.programs.gaming;
 in
 {
-  options.modules.games = {
+  options.modules.programs.gaming = {
     enable = lib.mkEnableOption "Gaming support and optimizations";
 
     enablePerformanceOptimizations = lib.mkOption {
