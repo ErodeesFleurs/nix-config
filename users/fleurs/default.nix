@@ -16,7 +16,6 @@
       aria2
     ];
   };
-
   # Shell 配置
   homeModules.terminal.shell.nushell = {
     enable = true;
@@ -59,6 +58,7 @@
     enable = true;
     systemd = false;
     xwayland = true;
+    hyprlauncher = false;
   };
 
   homeModules.ashell = {

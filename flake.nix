@@ -58,10 +58,6 @@
       url = "github:ErodeesFleurs/fleurs-nur";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-
-    nixos-hardware = {
-      url = "github:NixOS/nixos-hardware/master";
-    };
   };
 
   outputs =
@@ -119,12 +115,12 @@
         ];
       };
 
+      # 使用: nh os switch .#spectre-surface
       nixosConfigurations.spectre-surface = nixpkgs.lib.nixosSystem {
         inherit system;
         specialArgs = specialArgs;
         modules = [
           { nixpkgs.pkgs = pkgs; }
-          # nixos-hardware.nixosModules.microsoft-surface-pro-intel
           stylix.nixosModules.stylix
           ./modules
           ./hosts/spectre-surface
@@ -135,6 +131,7 @@
       # Home Manager 配置
       # 使用: nh home switch .#fleurs
       # ==========================================
+      home-manager.backupFileExtension = "backup";
       homeConfigurations.fleurs = home-manager.lib.homeManagerConfiguration {
         pkgs = pkgs;
         extraSpecialArgs = specialArgs;
@@ -148,6 +145,7 @@
         ];
       };
 
+      # 使用: nh home switch .#fleurs-surface
       homeConfigurations.fleurs-surface = home-manager.lib.homeManagerConfiguration {
         pkgs = pkgs;
         extraSpecialArgs = specialArgs;

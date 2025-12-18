@@ -77,6 +77,12 @@ in
       default = true;
       description = "Make /etc overlay mutable";
     };
+
+    machineId = lib.mkOption {
+      type = lib.types.str;
+      default = builtins.hashString "md5" (config.networking.hostName or "unknown") + "\n";
+      description = "Set a fixed machine ID for the system";
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -110,6 +116,68 @@ in
       etc.overlay = {
         enable = true;
         mutable = cfg.overlayMutable;
+      };
+    };
+
+    environment = lib.mkIf (!cfg.overlayMutable) {
+      etc = {
+        "machine-id".text = cfg.machineId;
+        "NetworkManager/system-connections/.keep".text = "";
+        "v2raya/.keep".text = "";
+      };
+    };
+
+    fileSystems."/etc/NetworkManager/system-connections" = {
+      device = "/persist/etc/NetworkManager/system-connections";
+      options = [
+        "bind"
+        "rw"
+      ];
+      noCheck = true;
+    };
+
+    fileSystems."/etc/v2raya" = {
+      device = "/persist/etc/v2raya";
+      options = [
+        "bind"
+        "rw"
+      ];
+      noCheck = true;
+    };
+
+    systemd.tmpfiles.rules = [
+      "d /persist/etc/NetworkManager/system-connections 0700 root root -"
+      "d /persist/var/lib/nixos 0755 root root -"
+      "d /persist/etc/v2raya 0750 root root -"
+    ];
+
+    services.resolved.enable = false;
+    networking.resolvconf.enable = false;
+    services.dnsproxy = {
+      enable = true;
+      flags = [
+        "--cache"
+        "--cache-optimistic"
+        "--edns"
+      ];
+      settings = {
+        bootstrap = [
+          "8.8.8.8"
+          "127.2.0.17"
+          "119.29.29.29"
+          "114.114.114.114"
+          "223.6.6.6"
+        ];
+        listen-addrs = [ "::" ];
+        listen-ports = [ 53 ];
+        upstream-mode = "parallel";
+        upstream = [
+          "tls://1.1.1.1"
+          "quic://dns.alidns.com"
+          "h3://dns.alidns.com/dns-query"
+          "tls://dot.pub"
+          "https://doh.pub/dns-query"
+        ];
       };
     };
   };

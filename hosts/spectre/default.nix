@@ -29,7 +29,7 @@
       enablePolkit = true;
     };
     enableInit = true;
-    overlayMutable = true;
+    overlayMutable = false;
   };
 
   modules.i18n.enable = true;
@@ -138,7 +138,7 @@
 
   modules.network.ssh = {
     enable = true;
-    enableServer = true;
+    enableServer = false;
     enableAgent = true;
     knownHosts = {
       "github.com".publicKey =

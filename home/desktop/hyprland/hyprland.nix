@@ -37,6 +37,12 @@ in
       description = "Application launcher command";
     };
 
+    hyprlauncher = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = "Enable installing and using hyprlauncher as application launcher";
+    };
+
     browser = lib.mkOption {
       type = lib.types.str;
       default = "firefox";
@@ -263,7 +269,7 @@ in
 
           "$mainMod" = cfg.mainMod;
           "$terminal" = cfg.terminal;
-          "$menu" = cfg.menu;
+          "$menu" = if cfg.hyprlauncher then "hyprlauncher" else cfg.menu;
           "$browser" = cfg.browser;
           "$colorpicker" = cfg.colorPicker;
 
@@ -442,5 +448,13 @@ in
         cfg.extraConfig
       ];
     };
+
+    home.packages =
+      if cfg.hyprlauncher then
+        [
+          pkgs.hyprlauncher
+        ]
+      else
+        [ ];
   };
 }

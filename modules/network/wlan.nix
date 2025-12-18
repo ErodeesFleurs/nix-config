@@ -62,7 +62,10 @@ in
   config = mkIf cfg.enable {
     networking = {
       hostName = cfg.hostName;
-      networkmanager.enable = true;
+      networkmanager = {
+        enable = true;
+        wifi.backend = "iwd";
+      };
 
       firewall = mkIf cfg.enableFirewall {
         enable = true;

@@ -30,11 +30,11 @@
       enablePolkit = true;
     };
     enableInit = true;
-    overlayMutable = true;
+    overlayMutable = false;
   };
 
-  # Surface 特定服务
-  services.iptsd.enable = true;
+  # Surface 特定服务，没装内核没啥用
+  services.iptsd.enable = false;
 
   # 安装 surface-control
   environment.systemPackages = with pkgs; [
@@ -48,7 +48,7 @@
   # ==========================================
   modules.system.boot = {
     enable = true;
-    useLatestKernel = true; # Surface 使用硬件模块推荐的内核，也没那么需要
+    useLatestKernel = true; # 没用硬件模块推荐的内核，也没那么需要
     enableSystemdBoot = true;
     enableSystemdInitrd = true;
     efiCanTouchVariables = true;
@@ -90,7 +90,6 @@
     layout = "cn";
     libinput = {
       enable = true;
-      # 触摸屏和触摸板优化
       touchpad = {
         naturalScrolling = true;
         tapping = true;
@@ -109,7 +108,7 @@
   # ==========================================
   modules.pipewire = {
     enable = true;
-    alsa32Bit = true; # 平板不需要 32 位音频，还是加上吧。
+    alsa32Bit = true;
     pulse = true;
   };
 
