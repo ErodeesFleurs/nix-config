@@ -10,11 +10,7 @@
 { lib, ... }:
 
 let
-  fleursLib =
-    lib.fleursLib or (import ../../lib {
-      inherit lib;
-      inputs = { };
-    });
+  fleursLib = lib.fleursLib;
 in
 {
   imports = fleursLib.importDir ./.;

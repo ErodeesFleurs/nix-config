@@ -7,7 +7,7 @@ in
     enable = lib.mkEnableOption "DNS proxy configuration / DNS 代理配置";
 
     # Use a distinct name for the runtime service toggle to avoid colliding with mkEnableOption.
-    enableService = lib.mkOption {
+    enable-service = lib.mkOption {
       type = lib.types.bool;
       default = true;
       description = ''
@@ -87,9 +87,9 @@ in
 
   # Apply the service configuration only when this dns module is enabled.
   config = lib.mkIf cfg.enable (
-    lib.mkIf cfg.enableService {
+    lib.mkIf cfg.enable-service {
       services.dnsproxy = {
-        enable = cfg.enableService;
+        enable = cfg.enable-service;
 
         # Command-line flags
         flags = cfg.flags;

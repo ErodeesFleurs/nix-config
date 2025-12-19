@@ -11,7 +11,6 @@
   # ==========================================
   # 系统基础配置
   # ==========================================
-  networking.hostName = "spectre-surface";
   system.stateVersion = "26.05";
 
   modules.nix = {
@@ -40,7 +39,7 @@
     surface-control
   ];
 
-  modules.i18n.enable = true;
+  modules.localization.enable = true;
 
   # ==========================================
   # 启动配置
@@ -116,7 +115,7 @@
   # ==========================================
   modules.network.wlan = {
     enable = true;
-    hostName = "spectre-surface";
+    host-name = "spectre-surface";
     enableNmApplet = true;
     showIndicator = true;
     enableFirewall = true;
@@ -145,7 +144,7 @@
 
   modules.network.dns = {
     enable = true;
-    enableService = true;
+    enable-service = true;
     bootstrap = [
       "127.2.0.17"
       "8.8.8.8"

@@ -14,10 +14,10 @@ in
   options.modules.network.wlan = {
     enable = mkEnableOption "Wireless LAN and NetworkManager support";
 
-    hostName = mkOption {
+    host-name = mkOption {
       type = types.str;
       default = "nixos";
-      description = "The hostname of the system";
+      description = "The hostName of the system";
     };
 
     enableNmApplet = mkOption {
@@ -61,7 +61,7 @@ in
 
   config = mkIf cfg.enable {
     networking = {
-      hostName = cfg.hostName;
+      hostName = cfg.host-name;
       networkmanager = {
         enable = true;
         wifi.backend = "iwd";

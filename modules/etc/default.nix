@@ -4,112 +4,84 @@
   ...
 }:
 
-/*
-  nix-config/modules/etc/default.nix
-  /etc overlay, machine-id and environment defaults implementation
-
-  This submodule implements the `/etc` overlay behaviour and writes a minimal set of files
-  into `environment.etc` when the overlay is immutable (for example: `machine-id`). It also
-  declares persistent bind mounts and tmpfiles rules used to ensure expected persistent
-  directories exist on systems that provide a `/persist` partition.
-
-  CN:
-  本子模块实现 `/etc` overlay（enable + mutable）行為。在 overlay 为不可变时会向
-  `environment.etc` 写入最小集合的必要文件（例如 `machine-id`）。同时声明用于保证
-  持久化目录存在的绑定挂载与 tmpfiles 规则。
-*/
-
 let
-  # Prefer explicit `modules.etc` for new-style configuration.
-  # Legacy fallback has been removed; callers must migrate to `modules.etc`.
   cfg = config.modules.etc or { };
 in
 {
-  # Declare the `/etc` / system-state related options in the new `modules.etc` namespace.
-  # These keys were migrated into `modules.etc` and cover overlay and minimal system state
-  # concerns (machine-id / stateVersion / nixos-init).
+  # 在新的 `modules.etc` 命名空间中声明 `/etc` / 系统状态相关选项。
+  # 相关的考虑（例如 machine-id / stateVersion / nixos-init）。
   options.modules.etc = {
-    enable = lib.mkEnableOption "System /etc and state options / /etc 与系统状态选项";
+    enable = lib.mkEnableOption "etc 与系统状态选项";
 
-    stateVersion = lib.mkOption {
+    state-version = lib.mkOption {
       type = lib.types.str;
       default = "26.05";
       description = ''
-        NixOS state version used for compatibility logic.
-        CN: NixOS 的 stateVersion（影响一些模块的向后兼容逻辑），请根据系统实际版本调整。
-        EN: The NixOS stateVersion value (affects module compatibility behavior).
+        NixOS 的 stateVersion（影响一些模块的向后兼容逻辑），请根据系统实际版本调整。
       '';
     };
 
-    enableInit = lib.mkOption {
+    enable-init = lib.mkOption {
       type = lib.types.bool;
       default = true;
       description = ''
-        Enable the `nixos-init` helper for system initialization tasks.
-        CN: 是否启用 nixos-init（用于初始系统引导/安装流程的工具）。
-        EN: Enable the `nixos-init` helper for initial system setup tasks.
+        是否启用 nixos-init（用于初始系统引导/安装流程的工具）。
       '';
     };
 
-    overlayMutable = lib.mkOption {
+    overlay-mutable = lib.mkOption {
       type = lib.types.bool;
       default = true;
       description = ''
-        Make the /etc overlay mutable. When false, a minimal set of files will be written
-        into `environment.etc` so that services and bind-mounts have expected file paths.
-        CN: 是否允许 /etc overlay 可写（使得 /etc 上的覆盖可变更）。若为 false，将写入一组最小文件到 `environment.etc`。
-        EN: Make the /etc overlay writable; when false some paths will be populated from the NixOS configuration instead.
+        是否允许 /etc overlay 可写（使得 /etc 上的覆盖可变更）。若为 false，将写入一组最小文件到 `environment.etc`。
       '';
     };
 
-    machineId = lib.mkOption {
+    machine-id = lib.mkOption {
       type = lib.types.str;
       default = builtins.hashString "md5" (config.networking.hostName or "unknown") + "\n";
       description = ''
-        Deterministic machine ID written to /etc/machine-id when the overlay is immutable.
-        CN: 在 /etc overlay 不可变时写入的固定 machine-id 值。
-        EN: Deterministic machine-id used when `/etc` overlay is kept immutable.
+        在 /etc overlay 不可变时写入的固定 machine-id 值。
       '';
     };
   };
 
-  # Implementation: apply behaviour using whichever namespace is configured (prefer modules.etc).
+  # 实现：根据所配置的命名空间应用行为（优先使用 modules.etc）。
   config = lib.mkIf cfg.enable {
-    # Ensure basic system-level `system.*` values related to /etc overlay and state are applied here.
+    # 确保与 /etc overlay 与系统状态相关的基础 system.* 系统级设置在此处被应用。
     system = {
-      # Keep stateVersion and nixos-init colocated with system-level concerns.
-      stateVersion = cfg.stateVersion;
-      nixos-init.enable = cfg.enableInit;
+      # 将 stateVersion 与 nixos-init 与其它系统级相关项放在一起管理。
+      stateVersion = cfg.state-version;
+      nixos-init.enable = cfg.enable-init;
 
-      # /etc overlay configuration: always enabled, mutability controlled by option
+      # /etc overlay 配置：始终启用，是否可写由选项控制
       etc = {
         overlay = {
           enable = true;
-          mutable = cfg.overlayMutable;
+          mutable = cfg.overlay-mutable;
         };
       };
     };
 
-    # When the /etc overlay is immutable, we must populate a minimal set of files under /etc
-    # so that later mount-binds and services have their expected files/dirs.
-    environment = lib.mkIf (!cfg.overlayMutable) {
+    # 当 /etc overlay 为不可变时，需要在 /etc 下填充一组最小文件，
+    # 以便后续的挂载绑定与服务能够找到它们期望的文件和目录。
+    environment = lib.mkIf (!cfg.overlay-mutable) {
       etc = {
-        # Write a deterministic machine-id when overlay is immutable.
-        # CN: 当 /etc overlay 为只读/不可变时，写入固定 machine-id。
-        "machine-id".text = cfg.machineId;
+        # 当 /etc overlay 为只读/不可变时，写入固定 machine-id。
+        "machine-id".text = cfg.machine-id;
 
-        # Keep files to ensure the directories exist in the Nix store when overlay is immutable.
-        # They are typically empty placeholder files used to make the paths appear in the Nix-managed /etc.
+        # 写入占位文件以确保当 overlay 不可变时，这些目录在 Nix store 中存在。
+        # 这些通常是空的占位文件，用于让路径在 Nix 管理的 /etc 中出现。
         "NetworkManager/system-connections/.keep".text = "";
         "v2raya/.keep".text = "";
       };
     };
 
-    # Persistent bind mounts typically used to mount data from a `/persist` partition into /etc
-    # so that runtime modifications are stored off the read-only Nix-managed file tree.
+    # 持久性绑定挂载：通常用于将 `/persist` 分区中的数据挂载到 /etc，
+    # 使得运行时的修改存放在只读的 Nix 管理树之外。
     #
-    # These fileSystems entries are intentionally unconditional when cfg.enable is true so that the
-    # system will attempt to bind the expected `/persist` locations.
+    # 当 cfg.enable 为 true 时，这些 fileSystems 条目故意保持无条件，
+    # 以便系统尝试绑定预期的 `/persist` 位置。
     fileSystems = {
       "/etc/NetworkManager/system-connections" = {
         device = "/persist/etc/NetworkManager/system-connections";
@@ -130,9 +102,9 @@ in
       };
     };
 
-    # Ensure the expected persistent directories exist on boot with correct permissions using tmpfiles.
+    # 使用 tmpfiles 确保引导时预期的持久目录存在并具有正确权限。
     systemd.tmpfiles.rules = [
-      # Create directories on /persist if they don't exist. Mode and ownership chosen conservatively.
+      # 在 /persist 中创建目录（若不存在）。权限与归属选择保守。
       "d /persist/etc/NetworkManager/system-connections 0700 root root -"
       "d /persist/var/lib/nixos 0755 root root -"
       "d /persist/etc/v2raya 0750 root root -"

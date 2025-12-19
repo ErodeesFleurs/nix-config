@@ -77,14 +77,15 @@
       # 加载 overlays
       overlays = import ./overlays { inherit inputs; };
 
-      pkgs = import nixpkgs {
+      # 先导入基础 pkgs，命名为 basePkgs，避免后面重定义同名变量
+      basePkgs = import nixpkgs {
         inherit system;
         config.allowUnfree = true;
         overlays = overlays;
       };
 
-      # 扩展标准库
-      lib = nixpkgs.lib.extend (
+      # 扩展 nixpkgs.lib（而非 basePkgs.lib），这样扩展后的 lib 会包含 nixosSystem
+      finalLib = nixpkgs.lib.extend (
         final: prev: {
           fleursLib = import ./lib {
             lib = final;
@@ -93,9 +94,21 @@
         }
       );
 
+      # 把扩展后的 lib 注入到 pkgs（使得 pkgs.lib == finalLib）
+      pkgs = basePkgs // {
+        lib = finalLib;
+      };
+
+      # 扩展 home-manager 的 lib（以便 Home Manager 模块也能直接用 fleursLib）
+      finalHomeLib = home-manager.lib.extend (
+        final: prev: {
+          fleursLib = finalLib.fleursLib;
+        }
+      );
+
       specialArgs = {
         inherit inputs self;
-        fleursLib = lib.fleursLib;
+        fleursLib = finalLib.fleursLib;
       };
 
     in
@@ -104,7 +117,7 @@
       # NixOS 配置
       # 使用: nh os switch .#spectre
       # ==========================================
-      nixosConfigurations.spectre = nixpkgs.lib.nixosSystem {
+      nixosConfigurations.spectre = finalLib.nixosSystem {
         inherit system;
         specialArgs = specialArgs;
         modules = [
@@ -116,7 +129,7 @@
       };
 
       # 使用: nh os switch .#spectre-surface
-      nixosConfigurations.spectre-surface = nixpkgs.lib.nixosSystem {
+      nixosConfigurations.spectre-surface = finalLib.nixosSystem {
         inherit system;
         specialArgs = specialArgs;
         modules = [
@@ -132,7 +145,7 @@
       # 使用: nh home switch .#fleurs
       # ==========================================
       home-manager.backupFileExtension = "backup";
-      homeConfigurations.fleurs = home-manager.lib.homeManagerConfiguration {
+      homeConfigurations.fleurs = finalHomeLib.homeManagerConfiguration {
         pkgs = pkgs;
         extraSpecialArgs = specialArgs;
         modules = [
@@ -146,7 +159,7 @@
       };
 
       # 使用: nh home switch .#fleurs-surface
-      homeConfigurations.fleurs-surface = home-manager.lib.homeManagerConfiguration {
+      homeConfigurations.fleurs-surface = finalHomeLib.homeManagerConfiguration {
         pkgs = pkgs;
         extraSpecialArgs = specialArgs;
         modules = [
@@ -162,8 +175,18 @@
       # ==========================================
       # 导出模块
       # ==========================================
-      nixosModules.default = ./modules;
-      homeModules.default = ./home;
+      nixosModules.default =
+        { lib, ... }:
+        (import ./modules {
+          inherit lib;
+          inputs = { };
+        });
+      homeModules.default =
+        { lib, ... }:
+        (import ./home {
+          inherit lib;
+          inputs = { };
+        });
 
       # ==========================================
       # 格式化器

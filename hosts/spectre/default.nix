@@ -10,28 +10,42 @@
   # ==========================================
   # 系统基础配置
   # ==========================================
-  networking.hostName = "spectre";
-  system.stateVersion = "26.05";
 
   modules.nix = {
     enable = true;
-    autoGC = false; # 使用 nh 来管理垃圾回收
+    trusted-users = [ "fleurs" ];
+    auto-gc = false; # 使用 nh 来管理垃圾回收
+    auto-optimise = true;
+    substituters = [ "https://cache.nixos.org" ];
+    trusted-public-keys = [ ];
   };
 
   modules.security.sudo = {
     enable = true;
-    useRust = true;
-    enablePolkit = true;
+    use-rust = true;
+    enable-polkit = true;
+    wheel-needs-password = true;
+    extra-rules = [ ];
   };
 
   # /etc related options moved to modules.etc
   modules.etc = {
+    state-version = "26.05";
     enable = true;
-    enableInit = true;
-    overlayMutable = false;
+    enable-init = true;
+    overlay-mutable = false;
   };
 
-  modules.i18n.enable = true;
+  modules.localization = {
+    enable = true;
+    default-locale = "zh_CN.UTF-8";
+    supported-locales = [
+      "zh_CN.UTF-8/UTF-8"
+      "en_US.UTF-8/UTF-8"
+    ];
+    extra-locale-settings = { };
+    apply-to-all = true;
+  };
 
   # ==========================================
   # 启动配置
@@ -123,7 +137,7 @@
   # ==========================================
   modules.network.wlan = {
     enable = true;
-    hostName = "spectre";
+    host-name = "spectre";
     enableNmApplet = true;
     showIndicator = true;
     enableFirewall = true;
@@ -152,7 +166,8 @@
 
   modules.network.dns = {
     enable = true;
-    enableService = true;
+    enable-service = true;
+    listenAddrs = [ "127.0.0.1" ];
     bootstrap = [
       "127.2.0.17"
       "8.8.8.8"
