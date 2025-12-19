@@ -147,7 +147,7 @@
         amdgpu-bus-id = "PCI:0:6:0";
         nvidia-bus-id = "PCI:0:1:0";
       };
-      apply-patches = true;
+      apply-patches = false;
     };
 
     nvidia-container = {

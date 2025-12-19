@@ -159,11 +159,12 @@ in
           // {
             open = selectedPackage.open.overrideAttrs (old: {
               patches = (old.patches or [ ]) ++ [
-                (pkgs.fetchpatch {
-                  name = "get_dev_pagemap.patch";
-                  url = "https://github.com/NVIDIA/open-gpu-kernel-modules/commit/3e230516034d29e84ca023fe95e284af5cd5a065.patch";
-                  hash = "sha256-BhL4mtuY5W+eLofwhHVnZnVf0msDj7XBxskZi8e6/k8=";
-                })
+                # (pkgs.fetchpatch {
+                #   name = "get_dev_pagemap.patch";
+                #   url = "https://github.com/NVIDIA/open-gpu-kernel-modules/commit/3e230516034d29e84ca023fe95e284af5cd5a065.patch";
+                #   hash = "sha256-BhL4mtuY5W+eLofwhHVnZnVf0msDj7XBxskZi8e6/k8=";
+                # })
+                # 说不定啥时候又有bug。
               ];
             });
           }
