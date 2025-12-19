@@ -18,8 +18,11 @@
     trusted-users = [ "fleurs" ];
     auto-gc = false; # 使用 nh 来管理垃圾回收
     auto-optimise = true;
-    substituters = [ "https://cache.nixos.org" ];
-    trusted-public-keys = [ ];
+    substituters = [
+      "https://cache.nixos.org"
+      "https://hyprland.cachix.org"
+    ];
+    trusted-public-keys = [ "hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc=" ];
   };
 
   modules.security.sudo = {

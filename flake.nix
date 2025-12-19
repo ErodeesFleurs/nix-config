@@ -36,7 +36,6 @@
 
     vicinae = {
       url = "github:vicinaehq/vicinae";
-      inputs.nixpkgs.follows = "nixpkgs";
     };
 
     xddxdd-nur = {
@@ -99,11 +98,9 @@
       };
 
       # 扩展 home-manager 的 lib（以便 Home Manager 模块也能直接用 fleursLib）
-      finalHomeLib = home-manager.lib.extend (
-        final: prev: {
-          fleursLib = finalLib.fleursLib;
-        }
-      );
+      finalHomeLib = home-manager.lib // {
+        fleursLib = finalLib.fleursLib;
+      };
 
       specialArgs = {
         inherit inputs self;

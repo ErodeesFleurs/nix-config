@@ -18,5 +18,8 @@
         config.programs.firefox.package
       ];
     };
+    configFile = {
+      "mimeapps.list".force = true;
+    };
   };
 }
