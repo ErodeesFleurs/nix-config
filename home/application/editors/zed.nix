@@ -15,6 +15,7 @@ in
     extraPackages = lib.mkOption {
       type = lib.types.listOf lib.types.package;
       default = with pkgs; [
+        package-version-server
         lua-language-server
         emmylua-ls
         nil
