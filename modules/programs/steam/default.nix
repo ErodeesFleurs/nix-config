@@ -11,28 +11,28 @@ in
   options.modules.programs.steam = {
     enable = lib.mkEnableOption "Steam gaming platform";
 
-    remotePlay = {
+    remote-play = {
       enable = lib.mkOption {
         type = lib.types.bool;
         default = true;
         description = "Enable Steam Remote Play";
       };
 
-      openFirewall = lib.mkOption {
+      open-firewall = lib.mkOption {
         type = lib.types.bool;
         default = true;
         description = "Open firewall ports for Remote Play";
       };
     };
 
-    dedicatedServer = {
+    dedicated-server = {
       enable = lib.mkOption {
         type = lib.types.bool;
         default = true;
         description = "Enable Steam dedicated server support";
       };
 
-      openFirewall = lib.mkOption {
+      open-firewall = lib.mkOption {
         type = lib.types.bool;
         default = true;
         description = "Open firewall ports for dedicated servers";
@@ -45,7 +45,7 @@ in
       description = "Enable Steam input emulation (extest)";
     };
 
-    gamescopeSession = lib.mkOption {
+    gamescope-session = lib.mkOption {
       type = lib.types.bool;
       default = true;
       description = "Enable Gamescope session for Steam";
@@ -57,7 +57,7 @@ in
       description = "Enable Protontricks for managing Proton prefixes";
     };
 
-    extraCompatPackages = lib.mkOption {
+    extra-compat-packages = lib.mkOption {
       type = lib.types.listOf lib.types.package;
       default = [ ];
       description = "Additional compatibility packages for Steam";
@@ -70,11 +70,11 @@ in
       enable = true;
 
       remotePlay = {
-        openFirewall = cfg.remotePlay.enable && cfg.remotePlay.openFirewall;
+        openFirewall = cfg.remote-play.enable && cfg.remote-play.open-firewall;
       };
 
       dedicatedServer = {
-        openFirewall = cfg.dedicatedServer.enable && cfg.dedicatedServer.openFirewall;
+        openFirewall = cfg.dedicated-server.enable && cfg.dedicated-server.open-firewall;
       };
 
       extest = {
@@ -82,14 +82,14 @@ in
       };
 
       gamescopeSession = {
-        enable = cfg.gamescopeSession;
+        enable = cfg.gamescope-session;
       };
 
       protontricks = {
         enable = cfg.protontricks;
       };
 
-      extraCompatPackages = cfg.extraCompatPackages;
+      extraCompatPackages = cfg.extra-compat-packages;
     };
   };
 }

@@ -18,7 +18,7 @@ in
       description = "Enable Wayland support";
     };
 
-    autoNumlock = lib.mkOption {
+    auto-numlock = lib.mkOption {
       type = lib.types.bool;
       default = true;
       description = "Enable numlock on boot";
@@ -49,7 +49,7 @@ in
         description = "Theme font";
       };
 
-      fontSize = lib.mkOption {
+      font-size = lib.mkOption {
         type = lib.types.str;
         default = "9";
         description = "Theme font size";
@@ -57,7 +57,7 @@ in
 
       background = lib.mkOption {
         type = lib.types.nullOr lib.types.path;
-        default = ../../assets/wallpaper.jpg;
+        default = ../../../assets/wallpaper.jpg;
         description = "Background image path";
       };
     };
@@ -68,7 +68,7 @@ in
       enable = true;
       wayland.enable = cfg.wayland;
       package = pkgs.kdePackages.sddm;
-      autoNumlock = cfg.autoNumlock;
+      autoNumlock = cfg.auto-numlock;
       theme = cfg.theme.name;
     };
 
@@ -77,7 +77,7 @@ in
         flavor = cfg.theme.flavor;
         accent = cfg.theme.accent;
         font = cfg.theme.font;
-        fontSize = cfg.theme.fontSize;
+        fontSize = cfg.theme.font-size;
         background = toString cfg.theme.background;
         loginBackground = true;
       })

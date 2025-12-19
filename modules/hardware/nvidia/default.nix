@@ -20,7 +20,7 @@ in
       description = "Enable kernel modesetting";
     };
 
-    powerManagement = {
+    power-management = {
       enable = lib.mkOption {
         type = lib.types.bool;
         default = true;
@@ -40,7 +40,7 @@ in
       description = "Use open-source NVIDIA kernel modules";
     };
 
-    nvidiaSettings = lib.mkOption {
+    nvidia-settings = lib.mkOption {
       type = lib.types.bool;
       default = true;
       description = "Enable nvidia-settings tool";
@@ -72,7 +72,7 @@ in
           description = "Enable PRIME offload mode";
         };
 
-        enableOffloadCmd = lib.mkOption {
+        enable-offload-cmd = lib.mkOption {
           type = lib.types.bool;
           default = true;
           description = "Enable nvidia-offload command";
@@ -87,7 +87,7 @@ in
         };
       };
 
-      reverseSync = {
+      reverse-sync = {
         enable = lib.mkOption {
           type = lib.types.bool;
           default = false;
@@ -95,21 +95,21 @@ in
         };
       };
 
-      amdgpuBusId = lib.mkOption {
+      amdgpu-bus-id = lib.mkOption {
         type = lib.types.nullOr lib.types.str;
         default = null;
         description = "Bus ID of AMD GPU (e.g., 'PCI:0:6:0')";
         example = "PCI:0:6:0";
       };
 
-      intelBusId = lib.mkOption {
+      intel-bus-id = lib.mkOption {
         type = lib.types.nullOr lib.types.str;
         default = null;
         description = "Bus ID of Intel GPU (e.g., 'PCI:0:2:0')";
         example = "PCI:0:2:0";
       };
 
-      nvidiaBusId = lib.mkOption {
+      nvidia-bus-id = lib.mkOption {
         type = lib.types.nullOr lib.types.str;
         default = null;
         description = "Bus ID of NVIDIA GPU (e.g., 'PCI:0:1:0')";
@@ -117,7 +117,7 @@ in
       };
     };
 
-    applyPatches = lib.mkOption {
+    apply-patches = lib.mkOption {
       type = lib.types.bool;
       default = false;
       description = "Apply additional patches to the driver";
@@ -133,12 +133,12 @@ in
       modesetting.enable = cfg.modesetting;
 
       powerManagement = {
-        enable = cfg.powerManagement.enable;
-        finegrained = cfg.powerManagement.finegrained;
+        enable = cfg.power-management.enable;
+        finegrained = cfg.power-management.finegrained;
       };
 
       open = cfg.open;
-      nvidiaSettings = cfg.nvidiaSettings;
+      nvidiaSettings = cfg.nvidia-settings;
 
       # Select package version
       package =
@@ -154,7 +154,7 @@ in
             }
             .${cfg.package};
         in
-        if cfg.applyPatches && cfg.open then
+        if cfg.apply-patches && cfg.open then
           selectedPackage
           // {
             open = selectedPackage.open.overrideAttrs (old: {
@@ -174,21 +174,21 @@ in
       prime = lib.mkIf cfg.prime.enable {
         offload = lib.mkIf cfg.prime.offload.enable {
           enable = true;
-          enableOffloadCmd = cfg.prime.offload.enableOffloadCmd;
+          enableOffloadCmd = cfg.prime.offload.enable-offload-cmd;
         };
 
         sync.enable = cfg.prime.sync.enable;
-        reverseSync.enable = cfg.prime.reverseSync.enable;
+        reverseSync.enable = cfg.prime.reverse-sync.enable;
 
-        amdgpuBusId = lib.mkIf (cfg.prime.amdgpuBusId != null) cfg.prime.amdgpuBusId;
-        intelBusId = lib.mkIf (cfg.prime.intelBusId != null) cfg.prime.intelBusId;
-        nvidiaBusId = lib.mkIf (cfg.prime.nvidiaBusId != null) cfg.prime.nvidiaBusId;
+        amdgpuBusId = lib.mkIf (cfg.prime.amdgpu-bus-id != null) cfg.prime.amdgpu-bus-id;
+        intelBusId = lib.mkIf (cfg.prime.intel-bus-id != null) cfg.prime.intel-bus-id;
+        nvidiaBusId = lib.mkIf (cfg.prime.nvidia-bus-id != null) cfg.prime.nvidia-bus-id;
       };
     };
 
     # Add nvidia-offload script if prime offload is enabled
     environment.systemPackages =
-      lib.optionals (cfg.prime.enable && cfg.prime.offload.enable && cfg.prime.offload.enableOffloadCmd)
+      lib.optionals (cfg.prime.enable && cfg.prime.offload.enable && cfg.prime.offload.enable-offload-cmd)
         [
           (pkgs.writeShellScriptBin "nvidia-offload" ''
             export __NV_PRIME_RENDER_OFFLOAD=1

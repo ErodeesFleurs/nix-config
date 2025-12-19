@@ -28,7 +28,6 @@
     extra-rules = [ ];
   };
 
-  # /etc related options moved to modules.etc
   modules.etc = {
     state-version = "26.05";
     enable = true;
@@ -36,6 +35,9 @@
     overlay-mutable = false;
   };
 
+  # ==========================================
+  # 本地化配置
+  # ==========================================
   modules.localization = {
     enable = true;
     default-locale = "zh_CN.UTF-8";
@@ -45,6 +47,61 @@
     ];
     extra-locale-settings = { };
     apply-to-all = true;
+
+    input-methods = {
+      enable = true;
+      type = "fcitx5";
+      fcitx5 = {
+        wayland-frontend = true;
+        addons = with pkgs; [
+          fcitx5-gtk
+          kdePackages.fcitx5-qt
+          qt6Packages.fcitx5-chinese-addons
+          fcitx5-material-color
+          fcitx5-pinyin-moegirl
+          fcitx5-pinyin-zhwiki
+        ];
+      };
+    };
+
+    fonts = {
+      enable = true;
+      enable-default-packages = true;
+      font-dir = {
+        enable = true;
+      };
+      fontconfig = {
+        enable = true;
+      };
+      packages = with pkgs; [
+        noto-fonts
+        noto-fonts-cjk-sans
+        noto-fonts-color-emoji
+
+        font-awesome
+
+        source-code-pro
+        source-han-sans
+        source-han-serif
+        source-han-mono
+
+        sarasa-gothic
+
+        corefonts
+
+        wqy_microhei
+        wqy_zenhei
+
+        nerd-fonts.caskaydia-cove
+        nerd-fonts.caskaydia-mono
+        nerd-fonts.symbols-only
+      ];
+    };
+
+    time = {
+      enable = true;
+      time-zone = "Asia/Shanghai";
+    };
   };
 
   # ==========================================
@@ -52,48 +109,84 @@
   # ==========================================
   modules.boot = {
     enable = true;
-    useLatestKernel = true;
-    enableSystemdBoot = true;
-    enableSystemdInitrd = true;
-    efiCanTouchVariables = true;
-    enableIOMMU = true;
+    use-latest-kernel = true;
+    enable-systemd-boot = true;
+    enable-systemd-initrd = true;
+    efi-can-touch-variables = true;
+    enable-iommu = true;
   };
 
   # ==========================================
   # 硬件配置
   # ==========================================
-  modules.hardware.graphics = {
-    enable = true;
-    enable32Bit = true;
-    vulkan.enable = true;
-    vaapi.enable = true;
-    vdpau.enable = true;
-  };
-
-  modules.hardware.nvidia = {
-    enable = true;
-    modesetting = true;
-    open = true;
-    nvidiaSettings = true;
-    package = "stable";
-    powerManagement = {
+  modules.hardware = {
+    graphics = {
       enable = true;
-      finegrained = true;
+      enable-32bit = true;
+      vulkan.enable = true;
+      vaapi.enable = true;
+      vdpau.enable = true;
     };
-    prime = {
+
+    nvidia = {
       enable = true;
-      offload = {
+      modesetting = true;
+      open = true;
+      nvidia-settings = true;
+      package = "stable";
+      power-management = {
         enable = true;
-        enableOffloadCmd = true;
+        finegrained = true;
       };
-      amdgpuBusId = "PCI:0:6:0";
-      nvidiaBusId = "PCI:0:1:0";
+      prime = {
+        enable = true;
+        offload = {
+          enable = true;
+          enable-offload-cmd = true;
+        };
+        amdgpu-bus-id = "PCI:0:6:0";
+        nvidia-bus-id = "PCI:0:1:0";
+      };
+      apply-patches = true;
     };
-    applyPatches = true;
-  };
 
-  modules.hardware.nvidiaContainer = {
-    enable = true;
+    nvidia-container = {
+      enable = true;
+    };
+
+    power = {
+      enable = true;
+      enable-tlp = true;
+      enable-powertop = true;
+      enable-upower = true;
+    };
+
+    printing = {
+      enable = true;
+      service = {
+        enable = true;
+      };
+      drivers = with pkgs; [
+        hplip
+        gutenprint
+        splix
+      ];
+    };
+
+    storage = {
+      enable = true;
+      gvfs = {
+        enable = true;
+      };
+    };
+
+    logitech = {
+      enable = true;
+      wireless = {
+        enable = true;
+        enable-graphical = true;
+      };
+    };
   };
 
   # ==========================================
@@ -102,25 +195,25 @@
   modules.display-manager = {
     enable = true;
     wayland = true;
-    autoNumlock = true;
+    auto-numlock = true;
   };
 
   modules.programs.hyprland = {
     enable = true;
     xwayland = true;
-    withUWSM = true;
+    with-uwsm = true;
   };
 
   modules.xserver = {
     enable = true;
-    videoDrivers = [ "nvidia" ];
+    video-drivers = [ "nvidia" ];
     layout = "cn";
     libinput.enable = true;
   };
 
   modules.xdg = {
     enable = true;
-    xdgOpenUsePortal = true;
+    xdg-open-use-portal = true;
   };
 
   # ==========================================
@@ -128,76 +221,72 @@
   # ==========================================
   modules.pipewire = {
     enable = true;
-    alsa32Bit = true;
+    alsa-32bit = true;
     pulse = true;
   };
 
   # ==========================================
   # 网络配置
   # ==========================================
-  modules.network.wlan = {
-    enable = true;
-    host-name = "spectre";
-    enableNmApplet = true;
-    showIndicator = true;
-    enableFirewall = true;
-  };
-
-  modules.network.bluetooth = {
-    enable = true;
-    enableBlueman = true;
-    powerOnBoot = true;
-  };
-
-  modules.network.ssh = {
-    enable = true;
-    enableServer = false;
-    enableAgent = true;
-    knownHosts = {
-      "github.com".publicKey =
-        "github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl";
+  modules.network = {
+    wlan = {
+      enable = true;
+      host-name = "spectre";
+      enable-nm-applet = true;
+      show-indicator = true;
+      enable-firewall = true;
     };
-    serverSettings = {
-      permitRootLogin = "prohibit-password";
-      passwordAuthentication = false;
-      port = 22;
+
+    bluetooth = {
+      enable = true;
+      enable-blueman = true;
+      power-on-boot = true;
     };
-  };
 
-  modules.network.dns = {
-    enable = true;
-    enable-service = true;
-    listenAddrs = [ "127.0.0.1" ];
-    bootstrap = [
-      "127.2.0.17"
-      "8.8.8.8"
-      "119.29.29.29"
-      "114.114.114.114"
-      "223.6.6.6"
-    ];
-    upstream = [
-      "tls://1.1.1.1"
-      "quic://dns.alidns.com"
-      "h3://dns.alidns.com/dns-query"
-      "tls://dot.pub"
-      "https://doh.pub/dns-query"
-    ];
-  };
+    ssh = {
+      enable = true;
+      enable-server = false;
+      enable-agent = true;
+      known-hosts = {
+        "github.com".publicKey =
+          "github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl";
+      };
+    };
 
-  modules.network.resolver = {
-    enable = true;
-    enableResolved = true;
-    enableResolvconf = true;
-    preferResolved = true;
-  };
+    dns = {
+      enable = true;
+      enable-service = true;
+      listen-addrs = [ "127.0.0.1" ];
+      bootstrap = [
+        "127.2.0.17"
+        "8.8.8.8"
+        "119.29.29.29"
+        "114.114.114.114"
+        "223.6.6.6"
+      ];
+      upstream = [
+        "tls://1.1.1.1"
+        "quic://dns.alidns.com"
+        "h3://dns.alidns.com/dns-query"
+        "tls://dot.pub"
+        "https://doh.pub/dns-query"
+      ];
+    };
 
-  modules.network.v2ray = {
-    enable = true;
-    port = 1080;
-    listenAddress = "127.0.0.1";
-    protocol = "socks";
-    enableUDP = true;
-    enableV2rayA = true;
+    resolver = {
+      enable = true;
+      enable-resolved = true;
+      enable-resolvconf = false;
+    };
+
+    v2ray = {
+      enable = true;
+      port = 1080;
+      listen-address = "127.0.0.1";
+      protocol = "socks";
+      enable-udp = true;
+      enable-v2raya = true;
+    };
   };
 
   # ==========================================
@@ -206,36 +295,39 @@
   modules.stylix = {
     enable = true;
     polarity = "light";
-    base16Scheme = "${pkgs.base16-schemes}/share/themes/gruvbox-material-light-hard.yaml";
+    base16-scheme = "${pkgs.base16-schemes}/share/themes/gruvbox-material-light-hard.yaml";
   };
 
   # ==========================================
-  # 游戏配置（已迁移到 programs 命名空间）
+  # 游戏配置
   # ==========================================
   modules.programs.gaming = {
     enable = true;
-    enableGamemode = true;
-    enablePerformanceOptimizations = true;
+    enable-gamemode = true;
+    enable-performance-optimizations = true;
     wine.enable = true;
   };
 
   modules.programs.steam = {
     enable = true;
-    remotePlay.enable = true;
-    remotePlay.openFirewall = true;
-    dedicatedServer.enable = true;
-    dedicatedServer.openFirewall = true;
+    remote-play = {
+      enable = true;
+      open-firewall = true;
+    };
+    dedicated-server = {
+      enable = true;
+      open-firewall = true;
+    };
     extest = true;
-    gamescopeSession = true;
+    gamescope-session = true;
     protontricks = true;
   };
 
-  # nh: moved to modules.programs.nh
   modules.programs.nh = {
     enable = true;
     clean = {
       enable = true;
-      extraArgs = "--keep-since 7d --keep 3";
+      extra-args = "--keep-since 7d --keep 3";
     };
   };
 }

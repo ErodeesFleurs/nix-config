@@ -20,19 +20,19 @@ in
       description = "The hostName of the system";
     };
 
-    enableNmApplet = mkOption {
+    enable-nm-applet = mkOption {
       type = types.bool;
       default = true;
       description = "Whether to enable nm-applet tray icon";
     };
 
-    showIndicator = mkOption {
+    show-indicator = mkOption {
       type = types.bool;
       default = true;
       description = "Whether to show network indicator in nm-applet";
     };
 
-    allowedTCPPorts = mkOption {
+    allowed-tcp-ports = mkOption {
       type = types.listOf types.port;
       default = [ ];
       description = "List of allowed TCP ports through the firewall";
@@ -42,7 +42,7 @@ in
       ];
     };
 
-    allowedUDPPorts = mkOption {
+    allowed-udp-ports = mkOption {
       type = types.listOf types.port;
       default = [ ];
       description = "List of allowed UDP ports through the firewall";
@@ -52,7 +52,7 @@ in
       ];
     };
 
-    enableFirewall = mkOption {
+    enable-firewall = mkOption {
       type = types.bool;
       default = true;
       description = "Whether to enable the firewall";
@@ -67,17 +67,17 @@ in
         wifi.backend = "iwd";
       };
 
-      firewall = mkIf cfg.enableFirewall {
+      firewall = mkIf cfg.enable-firewall {
         enable = true;
-        allowedTCPPorts = cfg.allowedTCPPorts;
-        allowedUDPPorts = cfg.allowedUDPPorts;
+        allowedTCPPorts = cfg.allowed-tcp-ports;
+        allowedUDPPorts = cfg.allowed-udp-ports;
       };
     };
 
     # 启用 WiFi 托盘图标
-    programs.nm-applet = mkIf cfg.enableNmApplet {
+    programs.nm-applet = mkIf cfg.enable-nm-applet {
       enable = true;
-      indicator = cfg.showIndicator;
+      indicator = cfg.show-indicator;
     };
 
     # 添加网络管理相关工具

@@ -11,7 +11,7 @@ in
   options.modules.pipewire = {
     enable = lib.mkEnableOption "PipeWire audio system";
 
-    alsa32Bit = lib.mkOption {
+    alsa-32bit = lib.mkOption {
       type = lib.types.bool;
       default = true;
       description = "Enable 32-bit ALSA support";
@@ -34,7 +34,7 @@ in
 
       alsa = {
         enable = true;
-        support32Bit = cfg.alsa32Bit;
+        support32Bit = cfg.alsa-32bit;
       };
 
       pulse.enable = cfg.pulse;

@@ -14,7 +14,7 @@ in
 
     image = lib.mkOption {
       type = lib.types.path;
-      default = ../../assets/wallpaper.jpg;
+      default = ../../../assets/wallpaper.jpg;
       description = "Wallpaper image for theming";
     };
 
@@ -27,14 +27,14 @@ in
       description = "Color scheme polarity";
     };
 
-    base16Scheme = lib.mkOption {
+    base16-scheme = lib.mkOption {
       type = lib.types.nullOr lib.types.path;
       default = null;
       description = "Base16 color scheme file";
       example = lib.literalExpression ''"''${pkgs.base16-schemes}/share/themes/catppuccin-mocha.yaml"'';
     };
 
-    autoEnable = lib.mkOption {
+    auto-enable = lib.mkOption {
       type = lib.types.bool;
       default = true;
       description = "Automatically theme all supported programs";
@@ -89,7 +89,7 @@ in
         };
       };
 
-      sansSerif = {
+      sans-serif = {
         package = lib.mkOption {
           type = lib.types.package;
           default = pkgs.source-han-sans;
@@ -126,9 +126,9 @@ in
       };
     };
 
-    enableReleaseChecks = lib.mkOption {
+    enable-release-checks = lib.mkOption {
       type = lib.types.bool;
-      default = false;
+      default = true;
       description = "Enable release checks for Stylix";
     };
   };
@@ -136,12 +136,12 @@ in
   config = lib.mkIf cfg.enable {
     stylix = {
       enable = true;
-      autoEnable = cfg.autoEnable;
+      autoEnable = cfg.auto-enable;
 
       image = cfg.image;
       polarity = cfg.polarity;
 
-      base16Scheme = lib.mkIf (cfg.base16Scheme != null) cfg.base16Scheme;
+      base16Scheme = lib.mkIf (cfg.base16-scheme != null) cfg.base16-scheme;
 
       cursor = {
         package = cfg.cursor.package;
@@ -161,8 +161,8 @@ in
         };
 
         sansSerif = {
-          package = cfg.fonts.sansSerif.package;
-          name = cfg.fonts.sansSerif.name;
+          package = cfg.fonts.sans-serif.package;
+          name = cfg.fonts.sans-serif.name;
         };
 
         serif = {
@@ -175,7 +175,7 @@ in
         terminal = cfg.opacity.terminal;
       };
 
-      enableReleaseChecks = cfg.enableReleaseChecks;
+      enableReleaseChecks = cfg.enable-release-checks;
     };
   };
 }

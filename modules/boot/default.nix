@@ -12,7 +12,7 @@ in
   options.modules.boot = {
     enable = lib.mkEnableOption "Boot configuration / 引导配置";
 
-    useLatestKernel = lib.mkOption {
+    use-latest-kernel = lib.mkOption {
       type = lib.types.bool;
       default = true;
       description = ''
@@ -21,17 +21,17 @@ in
       '';
     };
 
-    kernelPackages = lib.mkOption {
+    kernel-packages = lib.mkOption {
       type = lib.types.nullOr lib.types.raw;
       default = null;
       description = ''
         指定精确的内核包集合（例如：pkgs.linuxPackages_zen）。
-        如果为 null，则根据 `useLatestKernel` 在最新和发行版默认之间选择。
+        如果为 null，则根据 `use-latest-kernel` 在最新和发行版默认之间选择。
       '';
       example = lib.literalExpression "pkgs.linuxPackages_zen";
     };
 
-    enableSystemdBoot = lib.mkOption {
+    enable-systemd-boot = lib.mkOption {
       type = lib.types.bool;
       default = true;
       description = ''
@@ -40,7 +40,7 @@ in
       '';
     };
 
-    enableSystemdInitrd = lib.mkOption {
+    enable-systemd-initrd = lib.mkOption {
       type = lib.types.bool;
       default = true;
       description = ''
@@ -49,7 +49,7 @@ in
       '';
     };
 
-    efiCanTouchVariables = lib.mkOption {
+    efi-can-touch-variables = lib.mkOption {
       type = lib.types.bool;
       default = true;
       description = ''
@@ -58,7 +58,7 @@ in
       '';
     };
 
-    enableIOMMU = lib.mkOption {
+    enable-iommu = lib.mkOption {
       type = lib.types.bool;
       default = true;
       description = ''
@@ -67,7 +67,7 @@ in
       '';
     };
 
-    extraKernelParams = lib.mkOption {
+    extra-kernel-params = lib.mkOption {
       type = lib.types.listOf lib.types.str;
       default = [ ];
       description = ''
@@ -85,24 +85,24 @@ in
     boot = {
       # initrd 配置
       initrd = {
-        systemd.enable = cfg.enableSystemdInitrd;
+        systemd.enable = cfg.enable-systemd-initrd;
       };
 
       # 引导加载器配置
-      loader = lib.mkIf cfg.enableSystemdBoot {
+      loader = lib.mkIf cfg.enable-systemd-boot {
         systemd-boot = {
           enable = true;
         };
         efi = {
-          canTouchEfiVariables = cfg.efiCanTouchVariables;
+          canTouchEfiVariables = cfg.efi-can-touch-variables;
         };
       };
 
       # 内核包选择 — 使用 mkDefault 以允许上层覆盖
       kernelPackages = lib.mkDefault (
-        if cfg.kernelPackages != null then
-          cfg.kernelPackages
-        else if cfg.useLatestKernel then
+        if cfg.kernel-packages != null then
+          cfg.kernel-packages
+        else if cfg.use-latest-kernel then
           pkgs.linuxPackages_latest
         else
           pkgs.linuxPackages
@@ -110,11 +110,11 @@ in
 
       # 内核参数
       kernelParams =
-        lib.optionals cfg.enableIOMMU [
+        lib.optionals cfg.enable-iommu [
           "amd_iommu=on"
           "iommu=pt"
         ]
-        ++ cfg.extraKernelParams;
+        ++ cfg.extra-kernel-params;
     };
   };
 }

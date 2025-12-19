@@ -14,19 +14,19 @@ in
   options.modules.network.ssh = {
     enable = mkEnableOption "SSH client and server support";
 
-    enableServer = mkOption {
+    enable-server = mkOption {
       type = types.bool;
       default = true;
       description = "Whether to enable OpenSSH server";
     };
 
-    enableAgent = mkOption {
+    enable-agent = mkOption {
       type = types.bool;
       default = true;
       description = "Whether to start SSH agent automatically";
     };
 
-    knownHosts = mkOption {
+    known-hosts = mkOption {
       type = types.attrsOf (
         types.submodule {
           options = {
@@ -44,10 +44,10 @@ in
       };
     };
 
-    serverSettings = mkOption {
+    server-settings = mkOption {
       type = types.submodule {
         options = {
-          permitRootLogin = mkOption {
+          permit-root-login = mkOption {
             type = types.enum [
               "yes"
               "no"
@@ -58,7 +58,7 @@ in
             description = "Whether root can login via SSH";
           };
 
-          passwordAuthentication = mkOption {
+          password-authentication = mkOption {
             type = types.bool;
             default = false;
             description = "Whether to allow password authentication";
@@ -78,16 +78,16 @@ in
 
   config = mkIf cfg.enable {
     programs.ssh = {
-      startAgent = cfg.enableAgent;
-      knownHosts = cfg.knownHosts;
+      startAgent = cfg.enable-agent;
+      knownHosts = cfg.known-hosts;
     };
 
-    services.openssh = mkIf cfg.enableServer {
+    services.openssh = mkIf cfg.enable-server {
       enable = true;
-      ports = [ cfg.serverSettings.port ];
+      ports = [ cfg.server-settings.port ];
       settings = {
-        PermitRootLogin = cfg.serverSettings.permitRootLogin;
-        PasswordAuthentication = cfg.serverSettings.passwordAuthentication;
+        PermitRootLogin = cfg.server-settings.permit-root-login;
+        PasswordAuthentication = cfg.server-settings.password-authentication;
       };
     };
 

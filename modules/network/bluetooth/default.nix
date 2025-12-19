@@ -14,13 +14,13 @@ in
   options.modules.network.bluetooth = {
     enable = mkEnableOption "Bluetooth support";
 
-    enableBlueman = mkOption {
+    enable-blueman = mkOption {
       type = types.bool;
       default = true;
       description = "Whether to enable Blueman Bluetooth manager";
     };
 
-    powerOnBoot = mkOption {
+    power-on-boot = mkOption {
       type = types.bool;
       default = true;
       description = "Whether to power on Bluetooth adapters on boot";
@@ -30,7 +30,7 @@ in
   config = mkIf cfg.enable {
     hardware.bluetooth = {
       enable = true;
-      powerOnBoot = cfg.powerOnBoot;
+      powerOnBoot = cfg.power-on-boot;
       settings = {
         General = {
           Enable = "Source,Sink,Media,Socket";
@@ -39,12 +39,12 @@ in
       };
     };
 
-    services.blueman.enable = mkIf cfg.enableBlueman true;
+    services.blueman.enable = mkIf cfg.enable-blueman true;
 
     # 添加蓝牙相关工具到系统包
     environment.systemPackages =
       with pkgs;
-      mkIf cfg.enableBlueman [
+      mkIf cfg.enable-blueman [
         bluez
         bluez-tools
       ];

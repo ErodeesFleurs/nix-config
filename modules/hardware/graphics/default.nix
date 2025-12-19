@@ -12,20 +12,20 @@ in
   options.modules.hardware.graphics = {
     enable = lib.mkEnableOption "Graphics hardware support";
 
-    enable32Bit = lib.mkOption {
+    enable-32bit = lib.mkOption {
       type = lib.types.bool;
       default = true;
       description = "Enable 32-bit graphics driver support";
     };
 
-    extraPackages = lib.mkOption {
+    extra-packages = lib.mkOption {
       type = lib.types.listOf lib.types.package;
       default = [ ];
       description = "Additional graphics packages to install";
       example = lib.literalExpression "[ pkgs.libva pkgs.vaapiVdpau ]";
     };
 
-    extraPackages32 = lib.mkOption {
+    extra-packages32 = lib.mkOption {
       type = lib.types.listOf lib.types.package;
       default = [ ];
       description = "Additional 32-bit graphics packages to install";
@@ -73,9 +73,9 @@ in
   config = lib.mkIf cfg.enable {
     hardware.graphics = {
       enable = true;
-      enable32Bit = cfg.enable32Bit;
+      enable32Bit = cfg.enable-32bit;
       extraPackages =
-        cfg.extraPackages
+        cfg.extra-packages
         ++ lib.optionals cfg.vulkan.enable [
           pkgs.vulkan-loader
           pkgs.vulkan-tools
@@ -95,8 +95,8 @@ in
         ];
 
       extraPackages32 =
-        cfg.extraPackages32
-        ++ lib.optionals cfg.enable32Bit [
+        cfg.extra-packages32
+        ++ lib.optionals cfg.enable-32bit [
           pkgs.pkgsi686Linux.vulkan-loader
         ];
     };

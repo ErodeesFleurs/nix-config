@@ -45,7 +45,7 @@ in
       '';
     };
 
-    listenAddrs = lib.mkOption {
+    listen-addrs = lib.mkOption {
       type = lib.types.listOf lib.types.str;
       default = [ "::" ];
       description = ''
@@ -53,7 +53,7 @@ in
       '';
     };
 
-    listenPorts = lib.mkOption {
+    listen-ports = lib.mkOption {
       type = lib.types.listOf lib.types.int;
       default = [ 53 ];
       description = ''
@@ -61,7 +61,7 @@ in
       '';
     };
 
-    upstreamMode = lib.mkOption {
+    upstream-mode = lib.mkOption {
       type = lib.types.str;
       default = "parallel";
       description = ''
@@ -97,9 +97,9 @@ in
         # Nested settings passed to the service
         settings = {
           bootstrap = cfg.bootstrap;
-          listen-addrs = cfg.listenAddrs;
-          "listen-ports" = cfg.listenPorts;
-          "upstream-mode" = cfg.upstreamMode;
+          listen-addrs = cfg.listen-addrs;
+          listen-ports = cfg.listen-ports;
+          upstream-mode = cfg.upstream-mode;
           upstream = cfg.upstream;
         };
       };

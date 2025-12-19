@@ -12,15 +12,15 @@ in
   options.modules.xdg = {
     enable = lib.mkEnableOption "XDG portal configuration";
 
-    xdgOpenUsePortal = lib.mkOption {
+    xdg-open-use-portal = lib.mkOption {
       type = lib.types.bool;
       default = true;
       description = "Use XDG portal for opening files";
     };
 
-    extraPortals = lib.mkOption {
+    extra-portals = lib.mkOption {
       type = lib.types.listOf lib.types.package;
-      default = [ pkgs.xdg-desktop-portal-gtk ];
+      default = with pkgs; [ xdg-desktop-portal-gtk ];
       description = "Additional XDG desktop portals";
     };
 
@@ -40,9 +40,9 @@ in
   config = lib.mkIf cfg.enable {
     xdg.portal = {
       enable = true;
-      xdgOpenUsePortal = cfg.xdgOpenUsePortal;
+      xdgOpenUsePortal = cfg.xdg-open-use-portal;
       config = cfg.config;
-      extraPortals = cfg.extraPortals;
+      extraPortals = cfg.extra-portals;
     };
   };
 }

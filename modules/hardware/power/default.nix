@@ -25,47 +25,35 @@ in
   options.modules.hardware.power = {
     enable = lib.mkEnableOption "Power management configuration / 电源管理配置";
 
-    enableTlp = lib.mkOption {
+    enable-tlp = lib.mkOption {
       type = lib.types.bool;
       default = false;
       description = ''
-        Enable TLP for advanced power management.
-
-        CN: 启用 TLP 以获得更细粒度的电源管理（针对笔记本/节能场景）。
-        EN: Enable TLP for fine-grained power management (useful on laptops).
+        启用 TLP 以获得更细粒度的电源管理（针对笔记本/节能场景）。
       '';
     };
 
-    enablePowertop = lib.mkOption {
+    enable-powertop = lib.mkOption {
       type = lib.types.bool;
       default = true;
       description = ''
-        Enable powertop (tool for analyzing and tuning power consumption).
-
-        CN: 启用 powertop，用于分析与调优电源消耗（通常以命令行或交互方式运行）。
-        EN: Enable powertop, a tool for power consumption analysis and interactive tuning.
+        启用 powertop，用于分析与调优电源消耗（通常以命令行或交互方式运行）。
       '';
     };
 
-    enableUpower = lib.mkOption {
+    enable-upower = lib.mkOption {
       type = lib.types.bool;
       default = true;
       description = ''
-        Enable UPower service for battery and power source information.
-
-        CN: 启用 UPower 服务，用于提供电池状态等信息（桌面环境与电源小工具通常依赖）。
-        EN: Enable UPower service used by desktop components to query battery and power status.
+        启用 UPower 服务，用于提供电池状态等信息（桌面环境与电源小工具通常依赖）。
       '';
     };
 
-    cpuGovernor = lib.mkOption {
+    cpu-governor = lib.mkOption {
       type = lib.types.nullOr lib.types.str;
       default = null;
       description = ''
-        CPU frequency scaling governor to set (e.g. \"powersave\", \"performance\").
-
-        CN: 指定 CPU 调频策略（例如 \"powersave\" 或 \"performance\"）。为 null 时不强制设置。
-        EN: Set the CPU frequency scaling governor. If null, no governor is enforced by this module.
+        指定 CPU 调频策略（例如 \"powersave\" 或 \"performance\"）。为 null 时不强制设置。
       '';
       example = "powersave";
     };
@@ -76,19 +64,19 @@ in
     powerManagement = {
       enable = true;
       # Note: keep the original conditional assignment style to avoid changing semantics.
-      cpuFreqGovernor = lib.mkIf (cfg.cpuGovernor != null) cfg.cpuGovernor;
-      powertop = lib.mkIf cfg.enablePowertop {
+      cpuFreqGovernor = lib.mkIf (cfg.cpu-governor != null) cfg.cpu-governor;
+      powertop = lib.mkIf cfg.enable-powertop {
         enable = true;
       };
     };
 
     # UPower for battery information
-    services.upower = lib.mkIf cfg.enableUpower {
+    services.upower = lib.mkIf cfg.enable-upower {
       enable = true;
     };
 
     # TLP for advanced power management
-    services.tlp = lib.mkIf cfg.enableTlp {
+    services.tlp = lib.mkIf cfg.enable-tlp {
       enable = true;
       settings = {
         # CPU settings
@@ -132,7 +120,7 @@ in
         acpi
       ]
       # Include powertop and tlp packages conditionally according to the enabled options.
-      ++ lib.optionals cfg.enablePowertop [ powertop ]
-      ++ lib.optionals cfg.enableTlp [ tlp ];
+      ++ lib.optionals cfg.enable-powertop [ powertop ]
+      ++ lib.optionals cfg.enable-tlp [ tlp ];
   };
 }

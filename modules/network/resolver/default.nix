@@ -6,7 +6,7 @@ in
   options.modules.network.resolver = {
     enable = lib.mkEnableOption "网络开关";
 
-    enableResolved = lib.mkOption {
+    enable-resolved = lib.mkOption {
       type = lib.types.bool;
       default = false;
       description = ''
@@ -14,7 +14,7 @@ in
       '';
     };
 
-    enableResolvconf = lib.mkOption {
+    enable-resolvconf = lib.mkOption {
       type = lib.types.bool;
       default = false;
       description = ''
@@ -24,7 +24,7 @@ in
 
     # Expose a small helper option to prefer a specific resolver mode; this simply sets the two booleans
     # for convenience. It does not add extra logic beyond setting the booleans; users may still override individually.
-    preferResolved = lib.mkOption {
+    prefer-resolved = lib.mkOption {
       type = lib.types.nullOr lib.types.bool;
       default = null;
       description = ''
@@ -41,19 +41,19 @@ in
       # - if preferResolved == false -> resolved = false, resolvconf = true
       # - if preferResolved == null -> use explicit enableResolved / enableResolvconf options
       finalResolved =
-        if cfg.preferResolved == true then
+        if cfg.prefer-resolved == true then
           true
-        else if cfg.preferResolved == false then
+        else if cfg.prefer-resolved == false then
           false
         else
-          cfg.enableResolved;
+          cfg.enable-resolved;
       finalResolvconf =
-        if cfg.preferResolved == false then
+        if cfg.prefer-resolved == false then
           true
-        else if cfg.preferResolved == true then
+        else if cfg.prefer-resolved == true then
           false
         else
-          cfg.enableResolvconf;
+          cfg.enable-resolvconf;
     in
     {
       services.resolved.enable = finalResolved;

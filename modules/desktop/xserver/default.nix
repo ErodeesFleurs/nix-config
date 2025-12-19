@@ -11,7 +11,7 @@ in
   options.modules.xserver = {
     enable = lib.mkEnableOption "X Server";
 
-    videoDrivers = lib.mkOption {
+    video-drivers = lib.mkOption {
       type = lib.types.listOf lib.types.str;
       default = [ ];
       description = "Video drivers to use";
@@ -37,7 +37,7 @@ in
       };
 
       touchpad = {
-        naturalScrolling = lib.mkOption {
+        natural-scrolling = lib.mkOption {
           type = lib.types.bool;
           default = false;
           description = "Enable natural scrolling";
@@ -49,7 +49,7 @@ in
           description = "Enable tap to click";
         };
 
-        disableWhileTyping = lib.mkOption {
+        disable-while-typing = lib.mkOption {
           type = lib.types.bool;
           default = true;
           description = "Disable touchpad while typing";
@@ -61,7 +61,7 @@ in
   config = lib.mkIf cfg.enable {
     services.xserver = {
       enable = true;
-      videoDrivers = cfg.videoDrivers;
+      videoDrivers = cfg.video-drivers;
       xkb = {
         layout = cfg.layout;
         variant = cfg.variant;
@@ -71,9 +71,9 @@ in
     services.libinput = lib.mkIf cfg.libinput.enable {
       enable = true;
       touchpad = {
-        naturalScrolling = cfg.libinput.touchpad.naturalScrolling;
+        naturalScrolling = cfg.libinput.touchpad.natural-scrolling;
         tapping = cfg.libinput.touchpad.tapping;
-        disableWhileTyping = cfg.libinput.touchpad.disableWhileTyping;
+        disableWhileTyping = cfg.libinput.touchpad.disable-while-typing;
       };
     };
   };

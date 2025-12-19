@@ -12,19 +12,19 @@ in
   options.modules.programs.gaming = {
     enable = lib.mkEnableOption "Gaming support and optimizations";
 
-    enablePerformanceOptimizations = lib.mkOption {
+    enable-performance-optimizations = lib.mkOption {
       type = lib.types.bool;
       default = true;
       description = "Enable performance optimizations for gaming";
     };
 
-    enableGamemode = lib.mkOption {
+    enable-gamemode = lib.mkOption {
       type = lib.types.bool;
       default = true;
       description = "Enable Feral GameMode for performance optimization";
     };
 
-    extraPackages = lib.mkOption {
+    extra-packages = lib.mkOption {
       type = lib.types.listOf lib.types.package;
       default = [ ];
       description = "Additional gaming-related packages";
@@ -51,7 +51,7 @@ in
       };
     };
 
-    openPorts = {
+    open-ports = {
       tcp = lib.mkOption {
         type = lib.types.listOf lib.types.port;
         default = [ ];
@@ -76,7 +76,7 @@ in
 
   config = lib.mkIf cfg.enable {
     # Enable GameMode for performance
-    programs.gamemode = lib.mkIf cfg.enableGamemode {
+    programs.gamemode = lib.mkIf cfg.enable-gamemode {
       enable = true;
       enableRenice = true;
       settings = {
@@ -103,7 +103,7 @@ in
         cfg.wine.package
         winetricks
       ]
-      ++ cfg.extraPackages;
+      ++ cfg.extra-packages;
 
     # Wine support
     hardware.graphics = lib.mkIf cfg.wine.enable {
@@ -111,7 +111,7 @@ in
     };
 
     # Performance optimizations
-    boot.kernel.sysctl = lib.mkIf cfg.enablePerformanceOptimizations {
+    boot.kernel.sysctl = lib.mkIf cfg.enable-performance-optimizations {
       # Reduce swappiness for better gaming performance
       "vm.swappiness" = lib.mkDefault 10;
 
@@ -126,9 +126,9 @@ in
     };
 
     # Open firewall ports for gaming
-    networking.firewall = lib.mkIf (cfg.openPorts.tcp != [ ] || cfg.openPorts.udp != [ ]) {
-      allowedTCPPorts = cfg.openPorts.tcp;
-      allowedUDPPorts = cfg.openPorts.udp;
+    networking.firewall = lib.mkIf (cfg.open-ports.tcp != [ ] || cfg.open-ports.udp != [ ]) {
+      allowedTCPPorts = cfg.open-ports.tcp;
+      allowedUDPPorts = cfg.open-ports.udp;
     };
 
     # Gaming session environment variables
@@ -144,7 +144,7 @@ in
     };
 
     # Security limits for gaming
-    security.pam.loginLimits = lib.mkIf cfg.enablePerformanceOptimizations [
+    security.pam.loginLimits = lib.mkIf cfg.enable-performance-optimizations [
       {
         domain = "*";
         type = "hard";

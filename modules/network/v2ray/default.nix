@@ -13,7 +13,7 @@ in
   options.modules.network.v2ray = {
     enable = mkEnableOption "V2Ray proxy service";
 
-    listenAddress = mkOption {
+    listen-address = mkOption {
       type = types.str;
       default = "127.0.0.1";
       description = "The address V2Ray listens on";
@@ -25,13 +25,13 @@ in
       description = "The port V2Ray listens on";
     };
 
-    enableV2rayA = mkOption {
+    enable-v2raya = mkOption {
       type = types.bool;
       default = true;
       description = "Whether to enable V2RayA GUI";
     };
 
-    enableUDP = mkOption {
+    enable-udp = mkOption {
       type = types.bool;
       default = true;
       description = "Whether to enable UDP support";
@@ -54,11 +54,11 @@ in
       config = {
         inbounds = [
           {
-            listen = cfg.listenAddress;
+            listen = cfg.listen-address;
             port = cfg.port;
             protocol = cfg.protocol;
             settings = {
-              udp = cfg.enableUDP;
+              udp = cfg.enable-udp;
             };
           }
         ];
@@ -70,6 +70,6 @@ in
       };
     };
 
-    services.v2raya.enable = cfg.enableV2rayA;
+    services.v2raya.enable = cfg.enable-v2raya;
   };
 }
