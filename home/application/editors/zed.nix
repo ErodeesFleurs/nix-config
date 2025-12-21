@@ -137,30 +137,27 @@ in
             edit_prediction_provider = cfg.features.editPredictionProvider;
           };
 
-          lsp = lib.mergeAttrsList [
-            (lib.mkIf cfg.lsp.rust.enableClippy {
-              rust-analyzer = {
+          lsp = {
+            rust-analyzer = lib.mkMerge [
+              (lib.mkIf cfg.lsp.rust.enableClippy {
                 initialization_options = {
                   check = {
                     command = "clippy";
                   };
                 };
-              };
-            })
-            {
-              rust-analyzer = {
+              })
+              {
                 binary = {
-                  path_lookup = true;
+                  path = lib.getExe pkgs.rust-analyzer;
                 };
+              }
+            ];
+            nix = {
+              binary = {
+                path = lib.getExe pkgs.nil;
               };
-
-              nix = {
-                binary = {
-                  path_lookup = true;
-                };
-              };
-            }
-          ];
+            };
+          };
 
         }
         cfg.userSettings
