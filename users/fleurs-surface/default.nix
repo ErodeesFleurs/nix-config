@@ -57,7 +57,7 @@
     enable = true;
     systemd = false;
     xwayland = true;
-    monitors = [ "eDP-1,2736x1824,0x0,1.5" ];
+    monitors = [ "eDP-1,2736x1824,0x0,2.0" ];
   };
 
   homeModules.ashell = {
