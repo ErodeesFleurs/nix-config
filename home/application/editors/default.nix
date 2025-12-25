@@ -1,9 +1,8 @@
-{ ... }:
+{ lib, ... }:
 
+let
+  fleursLib = lib.fleursLib;
+in
 {
-  imports = [
-    ./direnv.nix
-    ./helix.nix
-    ./zed.nix
-  ];
+  imports = fleursLib.importDir ./.;
 }

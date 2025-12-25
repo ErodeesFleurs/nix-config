@@ -1,8 +1,8 @@
-{ ... }:
+{ lib, ... }:
 
+let
+  fleursLib = lib.fleursLib;
+in
 {
-  imports = [
-    ./git.nix
-    ./gitui.nix
-  ];
+  imports = fleursLib.importDir ./.;
 }

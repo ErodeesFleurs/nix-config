@@ -11,13 +11,13 @@ in
   options.homeModules.terminal.git = {
     enable = lib.mkEnableOption "Git version control system";
 
-    userName = lib.mkOption {
+    user-name = lib.mkOption {
       type = lib.types.str;
       default = "ErodeesFleurs";
       description = "Git user name";
     };
 
-    userEmail = lib.mkOption {
+    user-email = lib.mkOption {
       type = lib.types.str;
       default = "862959461@qq.com";
       description = "Git user email";
@@ -36,7 +36,7 @@ in
         description = "GPG key ID for signing";
       };
 
-      signByDefault = lib.mkOption {
+      sign-by-default = lib.mkOption {
         type = lib.types.bool;
         default = true;
         description = "Sign commits by default";
@@ -57,7 +57,7 @@ in
       description = "Git command aliases";
     };
 
-    extraConfig = lib.mkOption {
+    extra-config = lib.mkOption {
       type = lib.types.attrs;
       default = { };
       description = "Additional git configuration";
@@ -103,8 +103,8 @@ in
         {
           # User settings
           user = {
-            name = cfg.userName;
-            email = cfg.userEmail;
+            name = cfg.user-name;
+            email = cfg.user-email;
           };
 
           # Core settings
@@ -133,9 +133,9 @@ in
         }
         (lib.mkIf cfg.signing.enable {
           user.signingkey = cfg.signing.key;
-          commit.gpgsign = cfg.signing.signByDefault;
+          commit.gpgsign = cfg.signing.sign-by-default;
         })
-        cfg.extraConfig
+        cfg.extra-config
       ];
 
       lfs = lib.mkIf cfg.lfs.enable {
@@ -143,7 +143,6 @@ in
       };
     };
 
-    # Delta is now a separate program
     programs.delta = lib.mkIf cfg.delta.enable {
       enable = true;
       options = cfg.delta.options;

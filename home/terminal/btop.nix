@@ -63,38 +63,38 @@ in
       example = "gruvbox_dark_v2";
     };
 
-    updateInterval = lib.mkOption {
+    update-interval = lib.mkOption {
       type = lib.types.int;
       default = 2000;
       description = "Update interval in milliseconds";
     };
 
-    cpuSettings = {
-      graphUpper = lib.mkOption {
+    cpu-settings = {
+      graph-upper = lib.mkOption {
         type = lib.types.str;
         default = "total";
         description = "CPU graph upper type";
       };
 
-      graphLower = lib.mkOption {
+      graph-lower = lib.mkOption {
         type = lib.types.str;
         default = "total";
         description = "CPU graph lower type";
       };
 
-      singleGraph = lib.mkOption {
+      single-graph = lib.mkOption {
         type = lib.types.bool;
         default = false;
         description = "Show single CPU graph";
       };
 
-      invertLower = lib.mkOption {
+      invert-lower = lib.mkOption {
         type = lib.types.bool;
         default = true;
         description = "Invert lower CPU graph";
       };
 
-      perCore = lib.mkOption {
+      per-core = lib.mkOption {
         type = lib.types.bool;
         default = false;
         description = "Show per-core CPU usage";
@@ -107,26 +107,26 @@ in
       };
     };
 
-    memorySettings = {
+    memory-settings = {
       graphs = lib.mkOption {
         type = lib.types.bool;
         default = true;
         description = "Show memory graphs";
       };
 
-      belowNet = lib.mkOption {
+      below-net = lib.mkOption {
         type = lib.types.bool;
         default = false;
         description = "Place memory below network";
       };
 
-      showSwap = lib.mkOption {
+      show-swap = lib.mkOption {
         type = lib.types.bool;
         default = true;
         description = "Show swap usage";
       };
 
-      swapDisk = lib.mkOption {
+      swap-disk = lib.mkOption {
         type = lib.types.bool;
         default = true;
         description = "Show swap as disk";
@@ -158,46 +158,46 @@ in
         description = "Enable process gradient";
       };
 
-      memBytes = lib.mkOption {
+      mem-bytes = lib.mkOption {
         type = lib.types.bool;
         default = true;
         description = "Show memory in bytes";
       };
     };
 
-    diskSettings = {
+    disk-settings = {
       show = lib.mkOption {
         type = lib.types.bool;
         default = true;
         description = "Show disk usage";
       };
 
-      onlyPhysical = lib.mkOption {
+      only-physical = lib.mkOption {
         type = lib.types.bool;
         default = true;
         description = "Show only physical disks";
       };
 
-      useFstab = lib.mkOption {
+      use-fstab = lib.mkOption {
         type = lib.types.bool;
         default = true;
         description = "Use fstab for disk discovery";
       };
 
-      showIoStat = lib.mkOption {
+      show-io-stat = lib.mkOption {
         type = lib.types.bool;
         default = true;
         description = "Show disk I/O statistics";
       };
 
-      ioMode = lib.mkOption {
+      io-mode = lib.mkOption {
         type = lib.types.bool;
         default = false;
         description = "Enable I/O mode";
       };
     };
 
-    networkSettings = {
+    network-settings = {
       download = lib.mkOption {
         type = lib.types.int;
         default = 100;
@@ -222,15 +222,15 @@ in
         description = "Sync network graph scales";
       };
 
-      colorFixed = lib.mkOption {
+      color-fixed = lib.mkOption {
         type = lib.types.bool;
         default = false;
         description = "Use fixed colors for network";
       };
     };
 
-    temperatureSettings = {
-      checkTemp = lib.mkOption {
+    temperature-settings = {
+      check-temp = lib.mkOption {
         type = lib.types.bool;
         default = true;
         description = "Enable temperature monitoring";
@@ -242,7 +242,7 @@ in
         description = "Temperature sensor to use";
       };
 
-      showCoretemp = lib.mkOption {
+      show-coretemp = lib.mkOption {
         type = lib.types.bool;
         default = true;
         description = "Show core temperatures";
@@ -260,31 +260,31 @@ in
     };
 
     miscSettings = {
-      showUptime = lib.mkOption {
+      show-uptime = lib.mkOption {
         type = lib.types.bool;
         default = true;
         description = "Show system uptime";
       };
 
-      showBattery = lib.mkOption {
+      show-battery = lib.mkOption {
         type = lib.types.bool;
         default = true;
         description = "Show battery status";
       };
 
-      showInit = lib.mkOption {
+      show-init = lib.mkOption {
         type = lib.types.bool;
         default = false;
         description = "Show init system";
       };
 
-      disableUnicode = lib.mkOption {
+      disable-unicode = lib.mkOption {
         type = lib.types.bool;
         default = false;
         description = "Disable Unicode characters";
       };
 
-      themeBackground = lib.mkOption {
+      theme-background = lib.mkOption {
         type = lib.types.bool;
         default = false;
         description = "Use theme background";
@@ -300,57 +300,57 @@ in
         {
           # Theme
           color_theme = lib.mkIf (cfg.theme != null) cfg.theme;
-          theme_background = cfg.miscSettings.themeBackground;
+          theme_background = cfg.misc-settings.theme-background;
 
           # Update interval
-          update_ms = cfg.updateInterval;
+          update_ms = cfg.update-interval;
 
           # CPU settings
-          cpu_graph_upper = cfg.cpuSettings.graphUpper;
-          cpu_graph_lower = cfg.cpuSettings.graphLower;
-          cpu_single_graph = cfg.cpuSettings.singleGraph;
-          cpu_invert_lower = cfg.cpuSettings.invertLower;
-          proc_per_core = cfg.cpuSettings.perCore;
-          show_cpu_freq = cfg.cpuSettings.showFreq;
+          cpu_graph_upper = cfg.cpu-settings.graph-upper;
+          cpu_graph_lower = cfg.cpu-settings.graph-lower;
+          cpu_single_graph = cfg.cpu-settings.single-graph;
+          cpu_invert_lower = cfg.cpu-settings.invert-lower;
+          proc_per_core = cfg.cpu-settings.per-core;
+          show_cpu_freq = cfg.cpu-settings.show-freq;
 
           # Memory settings
-          mem_graphs = cfg.memorySettings.graphs;
-          mem_below_net = cfg.memorySettings.belowNet;
-          show_swap = cfg.memorySettings.showSwap;
-          swap_disk = cfg.memorySettings.swapDisk;
+          mem_graphs = cfg.memory-settings.graphs;
+          mem_below_net = cfg.memory-settings.below-net;
+          show_swap = cfg.memory-settings.show-swap;
+          swap_disk = cfg.memory-settings.swap-disk;
 
           # Process settings
-          proc_sorting = cfg.processSettings.sorting;
-          proc_tree = cfg.processSettings.tree;
-          proc_colors = cfg.processSettings.colors;
-          proc_gradient = cfg.processSettings.gradient;
-          proc_mem_bytes = cfg.processSettings.memBytes;
+          proc_sorting = cfg.process-settings.sorting;
+          proc_tree = cfg.process-settings.tree;
+          proc_colors = cfg.process-settings.colors;
+          proc_gradient = cfg.process-settings.gradient;
+          proc_mem_bytes = cfg.process-settings.mem-bytes;
 
           # Disk settings
-          show_disks = cfg.diskSettings.show;
-          only_physical = cfg.diskSettings.onlyPhysical;
-          use_fstab = cfg.diskSettings.useFstab;
-          show_io_stat = cfg.diskSettings.showIoStat;
-          io_mode = cfg.diskSettings.ioMode;
+          show_disks = cfg.disk-settings.show;
+          only_physical = cfg.disk-settings.only-physical;
+          use_fstab = cfg.disk-settings.use-fstab;
+          show_io_stat = cfg.disk-settings.show-io-stat;
+          io_mode = cfg.disk-settings.io-mode;
 
           # Network settings
-          net_download = cfg.networkSettings.download;
-          net_upload = cfg.networkSettings.upload;
-          net_auto = cfg.networkSettings.auto;
-          net_sync = cfg.networkSettings.sync;
-          net_color_fixed = cfg.networkSettings.colorFixed;
+          net_download = cfg.network-settings.download;
+          net_upload = cfg.network-settings.upload;
+          net_auto = cfg.network-settings.auto;
+          net_sync = cfg.network-settings.sync;
+          net_color_fixed = cfg.network-settings.color-fixed;
 
           # Temperature settings
-          check_temp = cfg.temperatureSettings.checkTemp;
-          cpu_sensor = cfg.temperatureSettings.sensor;
-          show_coretemp = cfg.temperatureSettings.showCoretemp;
-          temp_scale = cfg.temperatureSettings.scale;
+          check_temp = cfg.temperature-settings.check-temp;
+          cpu_sensor = cfg.temperature-settings.sensor;
+          show_coretemp = cfg.temperature-settings.show-coretemp;
+          temp_scale = cfg.temperature-settings.scale;
 
           # Misc settings
-          show_uptime = cfg.miscSettings.showUptime;
-          show_battery = cfg.miscSettings.showBattery;
-          show_init = cfg.miscSettings.showInit;
-          disable_unicode = cfg.miscSettings.disableUnicode;
+          show_uptime = cfg.misc-settings.show-uptime;
+          show_battery = cfg.misc-settings.show-battery;
+          show_init = cfg.misc-settings.show-init;
+          disable_unicode = cfg.misc-settings.disable-unicode;
         }
         cfg.settings
       ];

@@ -18,16 +18,16 @@
   # Shell 配置
   homeModules.terminal.shell.nushell = {
     enable = true;
-    showBanner = false;
-    enableYaziIntegration = true;
-    enableCarapaceIntegration = true;
+    show-banner = false;
+    enable-yazi-integration = true;
+    enable-carapace-integration = true;
   };
 
   # Git 配置
   homeModules.terminal.git = {
     enable = true;
-    userName = "ErodeesFleurs";
-    userEmail = "862959461@qq.com";
+    user-name = "ErodeesFleurs";
+    user-email = "862959461@qq.com";
     delta.enable = true;
   };
 
@@ -42,14 +42,14 @@
   # 开发工具
   homeModules.helix = {
     enable = true;
-    defaultEditor = true;
+    default-editor = true;
   };
 
   homeModules.zed.enable = true;
 
   homeModules.direnv = {
     enable = true;
-    enableNushellIntegration = true;
+    enable-nushell-integration = true;
   };
 
   # 桌面环境
@@ -57,6 +57,7 @@
     enable = true;
     systemd = false;
     xwayland = true;
+    hyprpolkit = true;
     monitors = [ "eDP-1,2736x1824,0x0,2.0" ];
   };
 
@@ -64,15 +65,15 @@
     enable = true;
     systemd = true;
     position = "Top";
-    appLauncherCmd = "vicinae toggle";
+    app-launcher-cmd = "vicinae toggle";
   };
 
   # 应用程序
   homeModules.firefox = {
     enable = true;
-    profileName = "fleurs";
-    forceExtensions = true;
-    enableStylix = true;
+    profile-name = "fleurs";
+    force-extensions = true;
+    enable-stylix = true;
   };
 
   homeModules.mpv.enable = true;
@@ -110,8 +111,8 @@
   # 主题配置
   homeModules.stylix = {
     enable = true;
-    autoEnable = true;
-    base16Scheme = "${pkgs.base16-schemes}/share/themes/gruvbox-material-light-hard.yaml";
+    auto-enable = true;
+    base16-scheme = "${pkgs.base16-schemes}/share/themes/gruvbox-light-soft.yaml";
   };
 
   # XDG 配置

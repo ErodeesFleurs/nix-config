@@ -1,10 +1,8 @@
-{ ... }:
+{ lib, ... }:
 
+let
+  fleursLib = lib.fleursLib;
+in
 {
-  imports = [
-    ./hypridle.nix
-    ./hyprland.nix
-    ./hyprlock.nix
-    ./hyprpaper.nix
-  ];
+  imports = fleursLib.importDir ./.;
 }

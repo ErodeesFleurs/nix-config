@@ -12,13 +12,13 @@ in
   options.homeModules.helix = {
     enable = lib.mkEnableOption "Helix text editor";
 
-    defaultEditor = lib.mkOption {
+    default-editor = lib.mkOption {
       type = lib.types.bool;
       default = true;
       description = "Set Helix as the default editor";
     };
 
-    extraPackages = lib.mkOption {
+    extra-packages = lib.mkOption {
       type = lib.types.listOf lib.types.package;
       default = with pkgs; [
         # Nix
@@ -34,10 +34,7 @@ in
 
         # Python
         ruff
-        (python313.withPackages (python-pkgs: [
-          python-pkgs.python-lsp-ruff
-          python-pkgs.python-lsp-server
-        ]))
+        basedpyright
 
         # Lua
         stylua
@@ -60,7 +57,7 @@ in
 
     settings = {
       editor = {
-        lineNumber = lib.mkOption {
+        line-number = lib.mkOption {
           type = lib.types.str;
           default = "relative";
           description = "Line number display mode (relative, absolute, or none)";
@@ -98,19 +95,19 @@ in
           description = "Enable LSP support";
         };
 
-        displayMessages = lib.mkOption {
+        display-messages = lib.mkOption {
           type = lib.types.bool;
           default = true;
           description = "Display LSP messages";
         };
 
-        displayInlayHints = lib.mkOption {
+        display-inlay-hints = lib.mkOption {
           type = lib.types.bool;
           default = true;
           description = "Display inlay hints from LSP";
         };
 
-        autoSignatureHelp = lib.mkOption {
+        auto-signature-help = lib.mkOption {
           type = lib.types.bool;
           default = true;
           description = "Show signature help automatically";
@@ -118,7 +115,7 @@ in
       };
     };
 
-    languageServers = {
+    language-servers = {
       gpt = {
         enable = lib.mkOption {
           type = lib.types.bool;
@@ -128,7 +125,7 @@ in
       };
 
       rust = {
-        enableClippy = lib.mkOption {
+        enable-clippy = lib.mkOption {
           type = lib.types.bool;
           default = true;
           description = "Use clippy for Rust checking";
@@ -154,12 +151,12 @@ in
   config = lib.mkIf cfg.enable {
     programs.helix = {
       enable = true;
-      defaultEditor = cfg.defaultEditor;
-      extraPackages = cfg.extraPackages;
+      defaultEditor = cfg.default-editor;
+      extraPackages = cfg.extra-packages;
 
       settings = {
         editor = {
-          line-number = cfg.settings.editor.lineNumber;
+          line-number = cfg.settings.editor.line-number;
           mouse = cfg.settings.editor.mouse;
           cursorline = cfg.settings.editor.cursorline;
           cursorcolumn = cfg.settings.editor.cursorcolumn;
@@ -197,10 +194,10 @@ in
 
           lsp = {
             enable = cfg.settings.lsp.enable;
-            display-messages = cfg.settings.lsp.displayMessages;
+            display-messages = cfg.settings.lsp.display-messages;
             display-progress-messages = true;
-            auto-signature-help = cfg.settings.lsp.autoSignatureHelp;
-            display-inlay-hints = cfg.settings.lsp.displayInlayHints;
+            auto-signature-help = cfg.settings.lsp.auto-signature-help;
+            display-inlay-hints = cfg.settings.lsp.display-inlay-hints;
             display-color-swatches = true;
             display-signature-help-docs = true;
             snippets = true;
@@ -212,7 +209,7 @@ in
       languages = lib.mkMerge [
         {
           language-server = lib.mkMerge [
-            (lib.mkIf cfg.languageServers.gpt.enable {
+            (lib.mkIf cfg.language-servers.gpt.enable {
               gpt = {
                 command = "helix-gpt";
                 args = [
@@ -221,7 +218,7 @@ in
                 ];
               };
             })
-            (lib.mkIf cfg.languageServers.rust.enableClippy {
+            (lib.mkIf cfg.language-servers.rust.enable-clippy {
               rust-analyzer.config.check = {
                 command = "clippy";
               };
@@ -248,12 +245,12 @@ in
             }
             {
               name = "rust";
-              language-servers = [ "rust-analyzer" ] ++ lib.optionals cfg.languageServers.gpt.enable [ "gpt" ];
+              language-servers = [ "rust-analyzer" ] ++ lib.optionals cfg.language-servers.gpt.enable [ "gpt" ];
               auto-format = true;
             }
             {
               name = "python";
-              language-servers = [ "pylsp" ] ++ lib.optionals cfg.languageServers.gpt.enable [ "gpt" ];
+              language-servers = [ "pylsp" ] ++ lib.optionals cfg.language-servers.gpt.enable [ "gpt" ];
               formatter = {
                 command = "sh";
                 args = [
@@ -268,7 +265,7 @@ in
               language-servers = [
                 "emmylua-ls"
               ]
-              ++ lib.optionals cfg.languageServers.gpt.enable [ "gpt" ];
+              ++ lib.optionals cfg.language-servers.gpt.enable [ "gpt" ];
               formatter = {
                 command = "stylua";
                 args = [ "-" ];

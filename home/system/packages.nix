@@ -249,23 +249,9 @@ in
         description = "Enable agenix (age-encrypted secrets)";
       };
     };
-
-    allowUnfree = lib.mkOption {
-      type = lib.types.bool;
-      default = true;
-      description = "Allow unfree packages";
-    };
-
-    permittedInsecurePackages = lib.mkOption {
-      type = lib.types.listOf lib.types.str;
-      default = [ ];
-      description = "List of permitted insecure packages";
-    };
   };
 
   config = lib.mkIf cfg.enable {
-    # nixpkgs.config is not needed when using useGlobalPkgs = true in Home Manager
-    # The system-level pkgs already has allowUnfree and overlays configured
 
     home.packages =
       lib.optionals (cfg.hyprland-tools.enable) cfg.hyprland-tools.packages

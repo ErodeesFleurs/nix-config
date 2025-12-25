@@ -1,11 +1,8 @@
-{ ... }:
+{ lib, ... }:
 
+let
+  fleursLib = lib.fleursLib;
+in
 {
-  imports = [
-    ./bash.nix
-    ./carapace.nix
-    ./nushell.nix
-    ./shell.nix
-    ./starship.nix
-  ];
+  imports = fleursLib.importDir ./.;
 }

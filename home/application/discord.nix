@@ -26,37 +26,37 @@ in
         description = "Enable Dorion Discord client";
       };
 
-      autoClearCache = lib.mkOption {
+      auto-clear-cache = lib.mkOption {
         type = lib.types.bool;
         default = true;
         description = "Automatically clear cache on startup";
       };
 
-      disableHardwareAccel = lib.mkOption {
+      disable-hardware-accel = lib.mkOption {
         type = lib.types.bool;
         default = false;
         description = "Disable hardware acceleration";
       };
 
-      rpcServer = lib.mkOption {
+      rpc-server = lib.mkOption {
         type = lib.types.bool;
         default = true;
         description = "Enable RPC server";
       };
 
-      rpcProcessScanner = lib.mkOption {
+      rpc-process-scanner = lib.mkOption {
         type = lib.types.bool;
         default = true;
         description = "Enable RPC process scanner";
       };
 
-      desktopNotifications = lib.mkOption {
+      desktop-notifications = lib.mkOption {
         type = lib.types.bool;
         default = true;
         description = "Enable desktop notifications";
       };
 
-      unreadBadge = lib.mkOption {
+      unread-badge = lib.mkOption {
         type = lib.types.bool;
         default = true;
         description = "Show unread badge";
@@ -70,19 +70,19 @@ in
         description = "Use frameless window";
       };
 
-      autoUpdate = lib.mkOption {
+      auto-update = lib.mkOption {
         type = lib.types.bool;
         default = false;
         description = "Enable automatic updates";
       };
 
-      notifyAboutUpdates = lib.mkOption {
+      notify-about-updates = lib.mkOption {
         type = lib.types.bool;
         default = false;
         description = "Notify about available updates";
       };
 
-      autoUpdateNotification = lib.mkOption {
+      auto-update-notification = lib.mkOption {
         type = lib.types.bool;
         default = false;
         description = "Show auto-update notifications";
@@ -104,19 +104,19 @@ in
 
       dorion = {
         enable = cfg.dorion.enable;
-        autoClearCache = cfg.dorion.autoClearCache;
-        disableHardwareAccel = cfg.dorion.disableHardwareAccel;
-        rpcServer = cfg.dorion.rpcServer;
-        rpcProcessScanner = cfg.dorion.rpcProcessScanner;
-        desktopNotifications = cfg.dorion.desktopNotifications;
-        unreadBadge = cfg.dorion.unreadBadge;
+        autoClearCache = cfg.dorion.auto-clear-cache;
+        disableHardwareAccel = cfg.dorion.disable-hardware-accel;
+        rpcServer = cfg.dorion.rpc-server;
+        rpcProcessScanner = cfg.dorion.rpc-process-scanner;
+        desktopNotifications = cfg.dorion.desktop-notifications;
+        unreadBadge = cfg.dorion.unread-badge;
       };
 
       config = {
         frameless = cfg.config.frameless;
-        autoUpdate = cfg.config.autoUpdate;
-        notifyAboutUpdates = cfg.config.notifyAboutUpdates;
-        autoUpdateNotification = cfg.config.autoUpdateNotification;
+        auto-update = cfg.config.autoUpdate;
+        notifyAboutUpdates = cfg.config.notify-about-updates;
+        autoUpdateNotification = cfg.config.auto-update-notification;
         plugins = cfg.config.plugins;
       };
     };

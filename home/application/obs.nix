@@ -14,8 +14,8 @@ in
 
     plugins = lib.mkOption {
       type = lib.types.listOf lib.types.package;
-      default = with pkgs.obs-studio-plugins; [
-        wlrobs
+      default = with pkgs; [
+        obs-studio-plugins.wlrobs
       ];
       description = "List of OBS Studio plugins to install";
     };

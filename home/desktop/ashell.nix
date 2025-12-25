@@ -34,19 +34,19 @@ in
       description = "Bar position";
     };
 
-    truncateTitleLength = lib.mkOption {
+    truncate-title-length = lib.mkOption {
       type = lib.types.int;
       default = 150;
       description = "Truncate window title after this length";
     };
 
-    appLauncherCmd = lib.mkOption {
+    app-launcher-cmd = lib.mkOption {
       type = lib.types.str;
       default = "vicinae toggle";
       description = "Application launcher command";
     };
 
-    clipboardCmd = lib.mkOption {
+    clipboard-cmd = lib.mkOption {
       type = lib.types.str;
       default = "cliphist-rofi-img | wl-copy";
       description = "Clipboard manager command";
@@ -83,7 +83,7 @@ in
       };
     };
 
-    systemInfo = {
+    system-info = {
       indicators = lib.mkOption {
         type = lib.types.listOf lib.types.str;
         default = [
@@ -94,49 +94,49 @@ in
         description = "System info indicators to show";
       };
 
-      cpuWarnThreshold = lib.mkOption {
+      cpu-warn-threshold = lib.mkOption {
         type = lib.types.int;
         default = 70;
         description = "CPU warning threshold percentage";
       };
 
-      cpuAlertThreshold = lib.mkOption {
+      cpu-alert-threshold = lib.mkOption {
         type = lib.types.int;
         default = 85;
         description = "CPU alert threshold percentage";
       };
 
-      memoryWarnThreshold = lib.mkOption {
+      memory-warn-threshold = lib.mkOption {
         type = lib.types.int;
         default = 70;
         description = "Memory warning threshold percentage";
       };
 
-      memoryAlertThreshold = lib.mkOption {
+      memory-alert-threshold = lib.mkOption {
         type = lib.types.int;
         default = 85;
         description = "Memory alert threshold percentage";
       };
 
-      temperatureWarnThreshold = lib.mkOption {
+      temperature-warn-threshold = lib.mkOption {
         type = lib.types.int;
         default = 70;
         description = "Temperature warning threshold";
       };
 
-      temperatureAlertThreshold = lib.mkOption {
+      temperature-alert-threshold = lib.mkOption {
         type = lib.types.int;
         default = 85;
         description = "Temperature alert threshold";
       };
 
-      diskWarnThreshold = lib.mkOption {
+      disk-warn-threshold = lib.mkOption {
         type = lib.types.int;
         default = 80;
         description = "Disk warning threshold percentage";
       };
 
-      diskAlertThreshold = lib.mkOption {
+      disk-alert-threshold = lib.mkOption {
         type = lib.types.int;
         default = 90;
         description = "Disk alert threshold percentage";
@@ -152,19 +152,19 @@ in
     };
 
     settings = {
-      lockCmd = lib.mkOption {
+      lock-cmd = lib.mkOption {
         type = lib.types.str;
         default = "hyprlock &";
         description = "Lock screen command";
       };
 
-      wifiMoreCmd = lib.mkOption {
+      wifi-more-cmd = lib.mkOption {
         type = lib.types.str;
         default = "nm-connection-editor";
         description = "WiFi settings command";
       };
 
-      vpnMoreCmd = lib.mkOption {
+      vpn-more-cmd = lib.mkOption {
         type = lib.types.str;
         default = "nm-connection-editor";
         description = "VPN settings command";
@@ -172,7 +172,7 @@ in
     };
 
     appearance = {
-      fontName = lib.mkOption {
+      font-name = lib.mkOption {
         type = lib.types.str;
         default = "CaskaydiaMonoNerdFont";
         description = "Font name";
@@ -184,14 +184,14 @@ in
         description = "Bar style";
       };
 
-      menuBackdrop = lib.mkOption {
+      menu-backdrop = lib.mkOption {
         type = lib.types.float;
         default = 0.0;
         description = "Menu backdrop opacity";
       };
     };
 
-    customModules = lib.mkOption {
+    custom-modules = lib.mkOption {
       type = lib.types.listOf lib.types.attrs;
       default = [
         {
@@ -203,7 +203,7 @@ in
       description = "Custom modules";
     };
 
-    extraSettings = lib.mkOption {
+    extra-settings = lib.mkOption {
       type = lib.types.attrs;
       default = { };
       description = "Additional settings";
@@ -218,9 +218,9 @@ in
         {
           outputs = cfg.outputs;
           position = cfg.position;
-          truncate_title_after_length = cfg.truncateTitleLength;
-          app_launcher_cmd = cfg.appLauncherCmd;
-          clipboard_cmd = cfg.clipboardCmd;
+          truncate_title_after_length = cfg.truncate-title-length;
+          app_launcher_cmd = cfg.app-launcher-cmd;
+          clipboard_cmd = cfg.clipboard-cmd;
 
           modules = {
             left = cfg.modules.left;
@@ -229,22 +229,22 @@ in
           };
 
           system_info = {
-            indicators = cfg.systemInfo.indicators;
+            indicators = cfg.system-info.indicators;
             cpu = {
-              warn_threshold = cfg.systemInfo.cpuWarnThreshold;
-              alert_threshold = cfg.systemInfo.cpuAlertThreshold;
+              warn_threshold = cfg.system-info.cpu-warn-threshold;
+              alert_threshold = cfg.system-info.cpu-alert-threshold;
             };
             memory = {
-              warn_threshold = cfg.systemInfo.memoryWarnThreshold;
-              alert_threshold = cfg.systemInfo.memoryAlertThreshold;
+              warn_threshold = cfg.system-info.memory-warn-threshold;
+              alert_threshold = cfg.system-info.memory-alert-threshold;
             };
             temperature = {
-              warn_threshold = cfg.systemInfo.temperatureWarnThreshold;
-              alert_threshold = cfg.systemInfo.temperatureAlertThreshold;
+              warn_threshold = cfg.system-info.temperature-warn-threshold;
+              alert_threshold = cfg.system-info.temperature-alert-threshold;
             };
             disk = {
-              warn_threshold = cfg.systemInfo.diskWarnThreshold;
-              alert_threshold = cfg.systemInfo.diskAlertThreshold;
+              warn_threshold = cfg.system-info.disk-warn-threshold;
+              alert_threshold = cfg.system-info.disk-alert-threshold;
             };
           };
 
@@ -253,22 +253,22 @@ in
           };
 
           settings = {
-            lock_cmd = cfg.settings.lockCmd;
-            wifi_more_cmd = cfg.settings.wifiMoreCmd;
-            vpn_more_cmd = cfg.settings.vpnMoreCmd;
+            lock_cmd = cfg.settings.lock-cmd;
+            wifi_more_cmd = cfg.settings.wifi-more-cmd;
+            vpn_more_cmd = cfg.settings.vpn-more-cmd;
           };
 
           appearance = {
-            font_name = cfg.appearance.fontName;
+            font_name = cfg.appearance.font-name;
             style = cfg.appearance.style;
             menu = {
-              backdrop = cfg.appearance.menuBackdrop;
+              backdrop = cfg.appearance.menu-backdrop;
             };
           };
 
-          CustomModule = cfg.customModules;
+          CustomModule = cfg.custom-modules;
         }
-        cfg.extraSettings
+        cfg.extra-settings
       ];
     };
   };

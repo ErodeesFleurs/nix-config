@@ -23,7 +23,7 @@ in
       description = "Default terminal emulator";
     };
 
-    termType = lib.mkOption {
+    term-type = lib.mkOption {
       type = lib.types.str;
       default = "xterm-256color";
       description = "Terminal type";
@@ -35,33 +35,33 @@ in
       description = "Default editor";
     };
 
-    fileManager = lib.mkOption {
+    file-manager = lib.mkOption {
       type = lib.types.str;
       default = "dolphin";
       description = "Default file manager";
     };
 
     wayland = {
-      enableOzoneWayland = lib.mkOption {
+      enable-ozone-wayland = lib.mkOption {
         type = lib.types.bool;
         default = true;
         description = "Enable Wayland support for Chromium/Electron apps";
       };
 
-      disableHardwareCursors = lib.mkOption {
+      disable-hardware-cursors = lib.mkOption {
         type = lib.types.bool;
         default = true;
         description = "Disable hardware cursors (useful for some GPU/Wayland issues)";
       };
 
-      sdlVideoDriver = lib.mkOption {
+      sdl-video-driver = lib.mkOption {
         type = lib.types.str;
         default = "wayland";
         description = "SDL video driver";
       };
     };
 
-    extraVariables = lib.mkOption {
+    extra-variables = lib.mkOption {
       type = lib.types.attrs;
       default = { };
       description = "Additional session variables";
@@ -77,20 +77,20 @@ in
         # Default applications
         BROWSER = cfg.browser;
         TERMINAL = cfg.terminal;
-        TERM = cfg.termType;
+        TERM = cfg.term-type;
         EDITOR = cfg.editor;
-        FILE_MANAGER = cfg.fileManager;
+        FILE_MANAGER = cfg.file-manager;
       }
-      (lib.mkIf cfg.wayland.enableOzoneWayland {
+      (lib.mkIf cfg.wayland.enable-ozone-wayland {
         NIXOS_OZONE_WL = "1";
       })
-      (lib.mkIf cfg.wayland.disableHardwareCursors {
+      (lib.mkIf cfg.wayland.disable-hardware-cursors {
         WLR_NO_HARDWARE_CURSORS = "1";
       })
       {
-        SDL_VIDEODRIVER = cfg.wayland.sdlVideoDriver;
+        SDL_VIDEODRIVER = cfg.wayland.sdl-video-driver;
       }
-      cfg.extraVariables
+      cfg.extra-variables
     ];
   };
 }

@@ -22,20 +22,20 @@ in
       description = "Video quality profile";
     };
 
-    hardwareAcceleration = lib.mkOption {
+    hardware-acceleration = lib.mkOption {
       type = lib.types.bool;
       default = true;
       description = "Enable hardware acceleration";
     };
 
-    hwdecMethod = lib.mkOption {
+    hwdec-method = lib.mkOption {
       type = lib.types.str;
       default = "auto-safe";
       description = "Hardware decoding method";
       example = "vaapi";
     };
 
-    savePosition = lib.mkOption {
+    save-position = lib.mkOption {
       type = lib.types.bool;
       default = true;
       description = "Save playback position on quit";
@@ -47,7 +47,7 @@ in
       description = "Default volume (0-100)";
     };
 
-    volumeMax = lib.mkOption {
+    volume-max = lib.mkOption {
       type = lib.types.int;
       default = 200;
       description = "Maximum volume (0-1000)";
@@ -85,7 +85,7 @@ in
         description = "Enable on-screen display";
       };
 
-      fontSize = lib.mkOption {
+      font-size = lib.mkOption {
         type = lib.types.int;
         default = 32;
         description = "OSD font size";
@@ -98,7 +98,7 @@ in
       };
     };
 
-    ytdlFormat = lib.mkOption {
+    ytdl-format = lib.mkOption {
       type = lib.types.str;
       default = "bestvideo[height<=?1080]+bestaudio/best";
       description = "YouTube-DL format string";
@@ -121,7 +121,7 @@ in
       };
     };
 
-    extraOptions = lib.mkOption {
+    extra-options = lib.mkOption {
       type = lib.types.attrsOf lib.types.anything;
       default = { };
       description = "Additional MPV configuration options";
@@ -142,15 +142,15 @@ in
           profile = cfg.profile;
 
           # Hardware acceleration
-          hwdec = lib.mkIf cfg.hardwareAcceleration cfg.hwdecMethod;
-          vo = lib.mkIf cfg.hardwareAcceleration "gpu";
+          hwdec = lib.mkIf cfg.hardware-acceleration cfg.hwdec-method;
+          vo = lib.mkIf cfg.hardware-acceleration "gpu";
 
           # Playback
-          save-position-on-quit = cfg.savePosition;
+          save-position-on-quit = cfg.save-position;
 
           # Audio
           volume = cfg.volume;
-          volume-max = cfg.volumeMax;
+          volume-max = cfg.volume-max;
 
           # Screenshots
           screenshot-format = cfg.screenshot.format;
@@ -162,18 +162,18 @@ in
           screenshot-png-compression = lib.mkIf (cfg.screenshot.format == "png") 7;
 
           # OSD
-          osd-font-size = cfg.osd.fontSize;
+          osd-font-size = cfg.osd.font-size;
           osd-duration = cfg.osd.duration;
           osd-bar = cfg.osd.enable;
 
           # YouTube-DL
-          ytdl-format = cfg.ytdlFormat;
+          ytdl-format = cfg.ytdl-format;
 
           # Additional settings
           keep-open = true;
           cursor-autohide = 1000;
         }
-        cfg.extraOptions
+        cfg.extra-options
       ];
     };
   };

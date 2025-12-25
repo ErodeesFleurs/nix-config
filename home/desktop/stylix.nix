@@ -27,14 +27,14 @@ in
       description = "Color scheme polarity";
     };
 
-    base16Scheme = lib.mkOption {
+    base16-scheme = lib.mkOption {
       type = lib.types.nullOr lib.types.path;
       default = null;
       description = "Base16 color scheme file";
       example = lib.literalExpression ''"''${pkgs.base16-schemes}/share/themes/catppuccin-mocha.yaml"'';
     };
 
-    autoEnable = lib.mkOption {
+    auto-enable = lib.mkOption {
       type = lib.types.bool;
       default = true;
       description = "Automatically enable Stylix for all supported Home Manager programs";
@@ -89,7 +89,7 @@ in
         };
       };
 
-      sansSerif = {
+      sans-serif = {
         package = lib.mkOption {
           type = lib.types.package;
           default = pkgs.source-han-sans;
@@ -126,15 +126,7 @@ in
       };
     };
 
-    enableReleaseChecks = lib.mkOption {
-      type = lib.types.bool;
-      default = false;
-      description = "Enable release checks for Stylix";
-    };
-
     targets = {
-      # Per-application Stylix targets can be configured here if needed
-      # These will only take effect if Stylix is enabled at the NixOS level
 
       gtk = {
         enable = lib.mkOption {
@@ -159,12 +151,12 @@ in
     # This will automatically inherit theme settings from NixOS-level Stylix
     stylix = {
       enable = cfg.enable;
-      autoEnable = cfg.autoEnable;
+      autoEnable = cfg.auto-enable;
 
       image = cfg.image;
       polarity = cfg.polarity;
 
-      base16Scheme = lib.mkIf (cfg.base16Scheme != null) cfg.base16Scheme;
+      base16Scheme = lib.mkIf (cfg.base16-scheme != null) cfg.base16-scheme;
 
       cursor = {
         package = cfg.cursor.package;
@@ -184,8 +176,8 @@ in
         };
 
         sansSerif = {
-          package = cfg.fonts.sansSerif.package;
-          name = cfg.fonts.sansSerif.name;
+          package = cfg.fonts.sans-serif.package;
+          name = cfg.fonts.sans-serif.name;
         };
 
         serif = {

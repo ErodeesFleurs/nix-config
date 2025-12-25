@@ -1,8 +1,8 @@
 { ... }:
 
 {
-    programs.bash = {
-        enable = true;
-        enableCompletion = true;
-    };
+  programs.bash = {
+    enable = true;
+    enableCompletion = true;
+  };
 }

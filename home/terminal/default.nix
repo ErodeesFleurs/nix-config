@@ -1,14 +1,8 @@
-{ ... }:
+{ lib, ... }:
 
+let
+  fleursLib = lib.fleursLib;
+in
 {
-  imports = [
-    ./fastfetch
-    ./git
-    ./shell
-
-    ./agent.nix
-    ./btop.nix
-    ./ghostty.nix
-    ./yazi.nix
-  ];
+  imports = fleursLib.importDir ./.;
 }

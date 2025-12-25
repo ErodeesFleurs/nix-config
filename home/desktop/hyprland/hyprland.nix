@@ -55,13 +55,13 @@ in
       description = "Default web browser";
     };
 
-    colorPicker = lib.mkOption {
+    color-picker = lib.mkOption {
       type = lib.types.str;
       default = "hyprpicker -a";
       description = "Color picker command";
     };
 
-    mainMod = lib.mkOption {
+    main-mod = lib.mkOption {
       type = lib.types.str;
       default = "SUPER";
       description = "Main modifier key";
@@ -86,7 +86,7 @@ in
       description = "Monitor configuration";
     };
 
-    execOnce = lib.mkOption {
+    exec-once = lib.mkOption {
       type = lib.types.listOf lib.types.str;
       default = [
         "systemctl --user import-environment XDG_SESSION_ID XDG_CURRENT_DESKTOP DBUS_SESSION_BUS_ADDRESS WAYLAND_DISPLAY DISPLAY"
@@ -104,31 +104,31 @@ in
     };
 
     general = {
-      gapsIn = lib.mkOption {
+      gaps-in = lib.mkOption {
         type = lib.types.int;
         default = 5;
         description = "Inner gaps size";
       };
 
-      gapsOut = lib.mkOption {
+      gaps-out = lib.mkOption {
         type = lib.types.int;
         default = 20;
         description = "Outer gaps size";
       };
 
-      borderSize = lib.mkOption {
+      border-size = lib.mkOption {
         type = lib.types.int;
         default = 2;
         description = "Border size";
       };
 
-      resizeOnBorder = lib.mkOption {
+      resize-on-border = lib.mkOption {
         type = lib.types.bool;
         default = false;
         description = "Resize windows on border";
       };
 
-      allowTearing = lib.mkOption {
+      allow-tearing = lib.mkOption {
         type = lib.types.bool;
         default = false;
         description = "Allow screen tearing";
@@ -148,13 +148,13 @@ in
         description = "Corner rounding";
       };
 
-      activeOpacity = lib.mkOption {
+      active-opacity = lib.mkOption {
         type = lib.types.float;
         default = 1.0;
         description = "Active window opacity";
       };
 
-      inactiveOpacity = lib.mkOption {
+      inactive-opacity = lib.mkOption {
         type = lib.types.float;
         default = 1.0;
         description = "Inactive window opacity";
@@ -202,7 +202,7 @@ in
         description = "Enable pseudotiling";
       };
 
-      preserveSplit = lib.mkOption {
+      preserve-split = lib.mkOption {
         type = lib.types.bool;
         default = true;
         description = "Preserve split direction";
@@ -210,13 +210,13 @@ in
     };
 
     input = {
-      kbLayout = lib.mkOption {
+      kb-layout = lib.mkOption {
         type = lib.types.str;
         default = "us";
         description = "Keyboard layout";
       };
 
-      followMouse = lib.mkOption {
+      follow-mouse = lib.mkOption {
         type = lib.types.int;
         default = 1;
         description = "Follow mouse mode";
@@ -229,7 +229,7 @@ in
       };
 
       touchpad = {
-        naturalScroll = lib.mkOption {
+        natural-scroll = lib.mkOption {
           type = lib.types.bool;
           default = false;
           description = "Enable natural scrolling";
@@ -238,20 +238,20 @@ in
     };
 
     misc = {
-      forceDefaultWallpaper = lib.mkOption {
+      force-default-wallpaper = lib.mkOption {
         type = lib.types.int;
         default = 0;
         description = "Force default wallpaper (0 or 1)";
       };
 
-      disableHyprlandLogo = lib.mkOption {
+      disable-hyprland-logo = lib.mkOption {
         type = lib.types.bool;
         default = true;
         description = "Disable Hyprland logo";
       };
     };
 
-    extraConfig = lib.mkOption {
+    extra-config = lib.mkOption {
       type = lib.types.attrs;
       default = { };
       description = "Additional Hyprland configuration";
@@ -271,27 +271,27 @@ in
         {
           env = cfg.environment;
           monitor = cfg.monitors;
-          exec-once = cfg.execOnce;
+          exec-once = cfg.exec-once;
 
-          "$mainMod" = cfg.mainMod;
+          "$mainMod" = cfg.main-mod;
           "$terminal" = cfg.terminal;
           "$menu" = if cfg.hyprlauncher then "hyprlauncher" else cfg.menu;
           "$browser" = cfg.browser;
-          "$colorpicker" = cfg.colorPicker;
+          "$colorpicker" = cfg.color-picker;
 
           general = {
-            gaps_in = cfg.general.gapsIn;
-            gaps_out = cfg.general.gapsOut;
-            border_size = cfg.general.borderSize;
-            resize_on_border = cfg.general.resizeOnBorder;
-            allow_tearing = cfg.general.allowTearing;
+            gaps_in = cfg.general.gaps-in;
+            gaps_out = cfg.general.gaps-out;
+            border_size = cfg.general.border-size;
+            resize_on_border = cfg.general.resize-on-border;
+            allow_tearing = cfg.general.allow-tearing;
             layout = cfg.general.layout;
           };
 
           decoration = {
             rounding = cfg.decoration.rounding;
-            active_opacity = cfg.decoration.activeOpacity;
-            inactive_opacity = cfg.decoration.inactiveOpacity;
+            active_opacity = cfg.decoration.active-opacity;
+            inactive_opacity = cfg.decoration.inactive-opacity;
 
             blur = {
               enabled = cfg.decoration.blur.enable;
@@ -334,7 +334,7 @@ in
 
           dwindle = {
             pseudotile = cfg.dwindle.pseudotile;
-            preserve_split = cfg.dwindle.preserveSplit;
+            preserve_split = cfg.dwindle.preserve-split;
           };
 
           master = {
@@ -342,22 +342,22 @@ in
           };
 
           misc = {
-            force_default_wallpaper = cfg.misc.forceDefaultWallpaper;
-            disable_hyprland_logo = cfg.misc.disableHyprlandLogo;
+            force_default_wallpaper = cfg.misc.force-default-wallpaper;
+            disable_hyprland_logo = cfg.misc.disable-hyprland-logo;
           };
 
           input = {
-            kb_layout = cfg.input.kbLayout;
+            kb_layout = cfg.input.kb-layout;
             kb_variant = "";
             kb_model = "";
             kb_options = "";
             kb_rules = "";
 
-            follow_mouse = cfg.input.followMouse;
+            follow_mouse = cfg.input.follow-mouse;
             sensitivity = cfg.input.sensitivity;
 
             touchpad = {
-              natural_scroll = cfg.input.touchpad.naturalScroll;
+              natural_scroll = cfg.input.touchpad.natural-scroll;
             };
           };
 
@@ -451,7 +451,7 @@ in
             "match:class ^(wechat)$, match:title negative:^(朋友圈)$, no_shadow 1"
           ];
         }
-        cfg.extraConfig
+        cfg.extra-config
       ];
     };
 

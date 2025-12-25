@@ -11,13 +11,13 @@ in
   options.homeModules.direnv = {
     enable = lib.mkEnableOption "direnv (automatic environment switching)";
 
-    enableNushellIntegration = lib.mkOption {
+    enable-nushell-integration = lib.mkOption {
       type = lib.types.bool;
       default = true;
       description = "Enable Nushell integration for direnv";
     };
 
-    enableNixDirenv = lib.mkOption {
+    enable-nix-direnv = lib.mkOption {
       type = lib.types.bool;
       default = true;
       description = "Enable nix-direnv for fast directory environment loading";
@@ -27,8 +27,8 @@ in
   config = lib.mkIf cfg.enable {
     programs.direnv = {
       enable = true;
-      enableNushellIntegration = cfg.enableNushellIntegration;
-      nix-direnv.enable = cfg.enableNixDirenv;
+      enableNushellIntegration = cfg.enable-nushell-integration;
+      nix-direnv.enable = cfg.enable-nix-direnv;
     };
   };
 }

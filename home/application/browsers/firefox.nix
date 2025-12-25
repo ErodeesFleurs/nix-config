@@ -11,25 +11,25 @@ in
   options.homeModules.firefox = {
     enable = lib.mkEnableOption "Firefox web browser";
 
-    profileName = lib.mkOption {
+    profile-name = lib.mkOption {
       type = lib.types.str;
       default = "default";
       description = "Firefox profile name";
     };
 
-    forceExtensions = lib.mkOption {
+    force-extensions = lib.mkOption {
       type = lib.types.bool;
       default = true;
       description = "Force extensions to be installed";
     };
 
-    enableStylix = lib.mkOption {
+    enable-stylix = lib.mkOption {
       type = lib.types.bool;
       default = true;
       description = "Apply Stylix theme to Firefox";
     };
 
-    extraSettings = lib.mkOption {
+    extra-settings = lib.mkOption {
       type = lib.types.attrs;
       default = { };
       description = "Additional Firefox settings";
@@ -58,9 +58,9 @@ in
     programs.firefox = {
       enable = true;
 
-      profiles.${cfg.profileName} = {
+      profiles.${cfg.profile-name} = {
         extensions = {
-          force = cfg.forceExtensions;
+          force = cfg.force-extensions;
         };
 
         search = {
@@ -68,14 +68,14 @@ in
           force = cfg.search.force;
         };
 
-        settings = cfg.extraSettings;
+        settings = cfg.extra-settings;
       };
     };
 
     # Stylix integration
-    stylix.targets.firefox = lib.mkIf cfg.enableStylix {
+    stylix.targets.firefox = lib.mkIf cfg.enable-stylix {
       colorTheme.enable = true;
-      profileNames = [ cfg.profileName ];
+      profileNames = [ cfg.profile-name ];
     };
   };
 }

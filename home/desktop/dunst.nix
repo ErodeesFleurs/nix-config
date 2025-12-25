@@ -49,87 +49,87 @@ in
           description = "Padding between text and separator";
         };
 
-        horizontalPadding = lib.mkOption {
+        horizontal-padding = lib.mkOption {
           type = lib.types.int;
           default = 15;
           description = "Horizontal padding";
         };
 
-        cornerRadius = lib.mkOption {
+        corner-radius = lib.mkOption {
           type = lib.types.int;
           default = 8;
           description = "Corner radius of notification window";
         };
 
-        frameWidth = lib.mkOption {
+        frame-width = lib.mkOption {
           type = lib.types.int;
           default = 2;
           description = "Width of notification frame";
         };
 
-        frameColor = lib.mkOption {
+        frame-color = lib.mkOption {
           type = lib.types.str;
           default = "#313244";
           description = "Color of notification frame";
         };
 
-        gapSize = lib.mkOption {
+        gap-size = lib.mkOption {
           type = lib.types.int;
           default = 8;
           description = "Gap between notifications";
         };
 
-        iconPosition = lib.mkOption {
+        icon-position = lib.mkOption {
           type = lib.types.str;
           default = "left";
           description = "Position of icon (left, right, off)";
         };
 
-        minIconSize = lib.mkOption {
+        min-icon-size = lib.mkOption {
           type = lib.types.int;
           default = 48;
           description = "Minimum icon size";
         };
 
-        maxIconSize = lib.mkOption {
+        max-icon-size = lib.mkOption {
           type = lib.types.int;
           default = 64;
           description = "Maximum icon size";
         };
 
-        progressBar = {
+        progress-bar = {
           height = lib.mkOption {
             type = lib.types.int;
             default = 8;
             description = "Height of progress bar";
           };
 
-          frameWidth = lib.mkOption {
+          frame-width = lib.mkOption {
             type = lib.types.int;
             default = 1;
             description = "Frame width of progress bar";
           };
 
-          minWidth = lib.mkOption {
+          min-width = lib.mkOption {
             type = lib.types.int;
             default = 150;
             description = "Minimum width of progress bar";
           };
 
-          maxWidth = lib.mkOption {
+          max-width = lib.mkOption {
             type = lib.types.int;
             default = 300;
             description = "Maximum width of progress bar";
           };
         };
 
-        idleThreshold = lib.mkOption {
+        idle-threshold = lib.mkOption {
           type = lib.types.int;
           default = 120;
           description = "Idle threshold in seconds";
         };
 
-        historyLength = lib.mkOption {
+        history-length = lib.mkOption {
           type = lib.types.int;
           default = 20;
           description = "Maximum number of notifications to keep in history";
@@ -141,19 +141,19 @@ in
           description = "Format string for notifications";
         };
 
-        mouseLeftClick = lib.mkOption {
+        mouse-left-click = lib.mkOption {
           type = lib.types.str;
           default = "do_action";
           description = "Action on left mouse click";
         };
 
-        mouseMiddleClick = lib.mkOption {
+        mouse-middle-click = lib.mkOption {
           type = lib.types.str;
           default = "close_all";
           description = "Action on middle mouse click";
         };
 
-        mouseRightClick = lib.mkOption {
+        mouse-right-click = lib.mkOption {
           type = lib.types.str;
           default = "close_current";
           description = "Action on right mouse click";
@@ -214,25 +214,25 @@ in
           ellipsize = "middle";
           offset = cfg.settings.global.offset;
           padding = cfg.settings.global.padding;
-          horizontal_padding = cfg.settings.global.horizontalPadding;
+          horizontal_padding = cfg.settings.global.horizontal-padding;
           text_icon_padding = 15;
-          icon_position = cfg.settings.global.iconPosition;
-          min_icon_size = cfg.settings.global.minIconSize;
-          max_icon_size = cfg.settings.global.maxIconSize;
-          progress_bar_height = cfg.settings.global.progressBar.height;
-          progress_bar_frame_width = cfg.settings.global.progressBar.frameWidth;
-          progress_bar_min_width = cfg.settings.global.progressBar.minWidth;
-          progress_bar_max_width = cfg.settings.global.progressBar.maxWidth;
+          icon_position = cfg.settings.global.icon-position;
+          min_icon_size = cfg.settings.global.min-icon-size;
+          max_icon_size = cfg.settings.global.max-icon-size;
+          progress_bar_height = cfg.settings.global.progress-bar.height;
+          progress_bar_frame_width = cfg.settings.global.progress-bar.frame-width;
+          progress_bar_min_width = cfg.settings.global.progress-bar.min-width;
+          progress_bar_max_width = cfg.settings.global.progress-bar.max-width;
           separator_height = 2;
-          frame_width = cfg.settings.global.frameWidth;
-          frame_color = cfg.settings.global.frameColor;
-          corner_radius = cfg.settings.global.cornerRadius;
+          frame_width = cfg.settings.global.frame-width;
+          frame_color = cfg.settings.global.frame-color;
+          corner_radius = cfg.settings.global.corner-radius;
           transparency = 0;
-          gap_size = cfg.settings.global.gapSize;
+          gap_size = cfg.settings.global.gap-size;
           line_height = 0;
           notification_limit = 0;
-          idle_threshold = cfg.settings.global.idleThreshold;
-          history_length = cfg.settings.global.historyLength;
+          idle_threshold = cfg.settings.global.idle-threshold;
+          history_length = cfg.settings.global.history-length;
           show_age_threshold = 60;
           markup = "full";
           format = cfg.settings.global.format;
@@ -249,9 +249,9 @@ in
           ignore_dbusclose = false;
           force_xwayland = false;
           force_xinerama = false;
-          mouse_left_click = cfg.settings.global.mouseLeftClick;
-          mouse_middle_click = cfg.settings.global.mouseMiddleClick;
-          mouse_right_click = cfg.settings.global.mouseRightClick;
+          mouse_left_click = cfg.settings.global.mouse-left-click;
+          mouse_middle_click = cfg.settings.global.mouse-middle-click;
+          mouse_right_click = cfg.settings.global.mouse-right-click;
         };
 
         experimental = {

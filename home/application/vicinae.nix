@@ -11,13 +11,13 @@ in
   options.homeModules.vicinae = {
     enable = lib.mkEnableOption "Vicinae (neighborhood notification/status tool)";
 
-    autoStart = lib.mkOption {
+    auto-start = lib.mkOption {
       type = lib.types.bool;
       default = true;
       description = "Automatically start Vicinae on login";
     };
 
-    useLayerShell = lib.mkOption {
+    use-layer-shell = lib.mkOption {
       type = lib.types.bool;
       default = false;
       description = "Use layer shell protocol for window positioning";
@@ -37,8 +37,8 @@ in
   config = lib.mkIf cfg.enable {
     services.vicinae = {
       enable = true;
-      autoStart = cfg.autoStart;
-      useLayerShell = cfg.useLayerShell;
+      autoStart = cfg.auto-start;
+      useLayerShell = cfg.use-layer-shell;
       settings = cfg.settings;
     };
   };

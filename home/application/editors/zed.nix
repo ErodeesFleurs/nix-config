@@ -12,10 +12,11 @@ in
   options.homeModules.zed = {
     enable = lib.mkEnableOption "Zed editor";
 
-    extraPackages = lib.mkOption {
+    extra-packages = lib.mkOption {
       type = lib.types.listOf lib.types.package;
       default = with pkgs; [
         package-version-server
+        vscode-json-languageserver
         lua-language-server
         emmylua-ls
         nil
@@ -30,31 +31,34 @@ in
     extensions = lib.mkOption {
       type = lib.types.listOf lib.types.str;
       default = [
-        "emmylua"
-        "nix"
+        "html"
         "toml"
-        "nu"
         "git-firefly"
+        "dockerfile"
+        "lua"
+        "nix"
         "neocmake"
-        "opencode"
+        "nu"
         "gemini"
+        "opencode"
+        "emmylua"
       ];
       description = "List of Zed extensions to install";
     };
 
-    autoUpdate = lib.mkOption {
+    auto-update = lib.mkOption {
       type = lib.types.bool;
       default = false;
       description = "Enable automatic updates";
     };
 
-    autoSignatureHelp = lib.mkOption {
+    auto-signature-help = lib.mkOption {
       type = lib.types.bool;
       default = true;
       description = "Show signature help automatically";
     };
 
-    inlayHints = lib.mkOption {
+    inlay-hints = lib.mkOption {
       type = lib.types.bool;
       default = true;
       description = "Enable inlay hints";
@@ -69,13 +73,13 @@ in
     };
 
     agent = {
-      alwaysAllowToolActions = lib.mkOption {
+      always-allow-tool-actions = lib.mkOption {
         type = lib.types.bool;
         default = true;
         description = "Always allow agent tool actions";
       };
 
-      modelParameters = lib.mkOption {
+      model-parameters = lib.mkOption {
         type = lib.types.listOf lib.types.attrs;
         default = [ ];
         description = "Model parameters for AI agent";
@@ -83,7 +87,7 @@ in
     };
 
     features = {
-      editPredictionProvider = lib.mkOption {
+      edit-prediction-provider = lib.mkOption {
         type = lib.types.str;
         default = "copilot";
         description = "Edit prediction provider (copilot, etc.)";
@@ -92,7 +96,7 @@ in
 
     lsp = {
       rust = {
-        enableClippy = lib.mkOption {
+        enable-clippy = lib.mkOption {
           type = lib.types.bool;
           default = true;
           description = "Use clippy for Rust checking";
@@ -100,7 +104,7 @@ in
       };
     };
 
-    userSettings = lib.mkOption {
+    user-settings = lib.mkOption {
       type = lib.types.attrs;
       default = { };
       description = "Additional user settings to merge";
@@ -110,13 +114,13 @@ in
   config = lib.mkIf cfg.enable {
     programs.zed-editor = {
       enable = true;
-      extraPackages = cfg.extraPackages;
+      extraPackages = cfg.extra-packages;
       extensions = cfg.extensions;
 
       userSettings = lib.mkMerge [
         {
-          auto_signature_help = cfg.autoSignatureHelp;
-          auto_update = cfg.autoUpdate;
+          auto_signature_help = cfg.auto-signature-help;
+          auto_update = cfg.auto-update;
 
           diagnostics = {
             inline = {
@@ -125,21 +129,21 @@ in
           };
 
           inlay_hints = {
-            enabled = cfg.inlayHints;
+            enabled = cfg.inlay-hints;
           };
 
           agent = {
-            always_allow_tool_actions = cfg.agent.alwaysAllowToolActions;
-            model_parameters = cfg.agent.modelParameters;
+            always_allow_tool_actions = cfg.agent.always-allow-tool-actions;
+            model_parameters = cfg.agent.always-allow-tool-actions;
           };
 
           features = {
-            edit_prediction_provider = cfg.features.editPredictionProvider;
+            edit_prediction_provider = cfg.features.edit-prediction-provider;
           };
 
-          lsp = {
+          lsp = with pkgs; {
             rust-analyzer = lib.mkMerge [
-              (lib.mkIf cfg.lsp.rust.enableClippy {
+              (lib.mkIf cfg.lsp.rust.enable-clippy {
                 initialization_options = {
                   check = {
                     command = "clippy";
@@ -148,19 +152,45 @@ in
               })
               {
                 binary = {
-                  path = lib.getExe pkgs.rust-analyzer;
+                  path = lib.getExe rust-analyzer;
+                  ignore_system_version = false;
                 };
               }
             ];
             nix = {
               binary = {
-                path = lib.getExe pkgs.nil;
+                path = lib.getExe nil;
+                ignore_system_version = false;
+              };
+            };
+            json = {
+              binary = {
+                path = lib.getExe vscode-json-languageserver;
+                ignore_system_version = false;
+              };
+            };
+            lua = {
+              binary = {
+                path = lib.getExe lua-language-server;
+                ignore_system_version = false;
+              };
+            };
+            emmylua = {
+              binary = {
+                path = lib.getExe emmylua-ls;
+                ignore_system_version = false;
+              };
+            };
+            python = {
+              binary = {
+                path = lib.getExe ruff;
+                ignore_system_version = false;
               };
             };
           };
 
         }
-        cfg.userSettings
+        cfg.user-settings
       ];
     };
   };

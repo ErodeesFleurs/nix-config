@@ -11,31 +11,31 @@ in
   options.homeModules.terminal.shell.nushell = {
     enable = lib.mkEnableOption "Nushell shell";
 
-    showBanner = lib.mkOption {
+    show-banner = lib.mkOption {
       type = lib.types.bool;
       default = false;
       description = "Show Nushell banner on startup";
     };
 
-    enableYaziIntegration = lib.mkOption {
+    enable-yazi-integration = lib.mkOption {
       type = lib.types.bool;
       default = true;
       description = "Enable Yazi file manager integration";
     };
 
-    enableCarapaceIntegration = lib.mkOption {
+    enable-carapace-integration = lib.mkOption {
       type = lib.types.bool;
       default = true;
       description = "Enable Carapace completion integration";
     };
 
-    sshAuthSock = lib.mkOption {
+    ssh-auth-sock = lib.mkOption {
       type = lib.types.str;
       default = ''$"($env.XDG_RUNTIME_DIR)/ssh-agent"'';
       description = "SSH agent socket path";
     };
 
-    extraConfig = lib.mkOption {
+    extra-config = lib.mkOption {
       type = lib.types.lines;
       default = "";
       description = "Additional Nushell configuration";
@@ -47,11 +47,11 @@ in
       enable = true;
 
       settings = {
-        show_banner = cfg.showBanner;
+        show_banner = cfg.show-banner;
       };
 
       extraConfig = ''
-        ${lib.optionalString cfg.enableYaziIntegration ''
+        ${lib.optionalString cfg.enable-yazi-integration ''
           # Yazi integration
           def --env y [...args] {
             let tmp = (mktemp -t "yazi-cwd.XXXXXX")
@@ -64,7 +64,7 @@ in
           }
         ''}
 
-        ${lib.optionalString cfg.enableCarapaceIntegration ''
+        ${lib.optionalString cfg.enable-carapace-integration ''
           # Carapace completion
           let carapace_completer = {|spans: list<string>|
             carapace $spans.0 nushell ...$spans
@@ -99,9 +99,9 @@ in
         ''}
 
         # SSH agent socket
-        $env.SSH_AUTH_SOCK = ${cfg.sshAuthSock}
+        $env.SSH_AUTH_SOCK = ${cfg.ssh-auth-sock}
 
-        ${cfg.extraConfig}
+        ${cfg.extra-config}
       '';
     };
   };
