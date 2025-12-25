@@ -100,7 +100,7 @@ in
         description = "Show per-core CPU usage";
       };
 
-      showFreq = lib.mkOption {
+      show-freq = lib.mkOption {
         type = lib.types.bool;
         default = true;
         description = "Show CPU frequency";
@@ -133,7 +133,7 @@ in
       };
     };
 
-    processSettings = {
+    process-settings = {
       sorting = lib.mkOption {
         type = lib.types.str;
         default = "cpu lazy";
@@ -259,7 +259,7 @@ in
       };
     };
 
-    miscSettings = {
+    misc-settings = {
       show-uptime = lib.mkOption {
         type = lib.types.bool;
         default = true;

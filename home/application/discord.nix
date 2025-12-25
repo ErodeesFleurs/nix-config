@@ -114,7 +114,7 @@ in
 
       config = {
         frameless = cfg.config.frameless;
-        auto-update = cfg.config.autoUpdate;
+        autoUpdate = cfg.config.auto-update;
         notifyAboutUpdates = cfg.config.notify-about-updates;
         autoUpdateNotification = cfg.config.auto-update-notification;
         plugins = cfg.config.plugins;

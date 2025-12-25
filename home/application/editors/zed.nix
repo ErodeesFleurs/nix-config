@@ -134,7 +134,7 @@ in
 
           agent = {
             always_allow_tool_actions = cfg.agent.always-allow-tool-actions;
-            model_parameters = cfg.agent.always-allow-tool-actions;
+            model_parameters = cfg.agent.model-parameters;
           };
 
           features = {

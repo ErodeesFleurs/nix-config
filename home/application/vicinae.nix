@@ -37,8 +37,13 @@ in
   config = lib.mkIf cfg.enable {
     services.vicinae = {
       enable = true;
-      autoStart = cfg.auto-start;
-      useLayerShell = cfg.use-layer-shell;
+      systemd = {
+        enable = true;
+        autoStart = cfg.auto-start;
+        environment = lib.mkIf cfg.use-layer-shell {
+          USE_LAYER_SHELL = 1;
+        };
+      };
       settings = cfg.settings;
     };
   };
