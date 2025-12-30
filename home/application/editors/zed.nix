@@ -17,13 +17,20 @@ in
       default = with pkgs; [
         package-version-server
         vscode-json-languageserver
+
         lua-language-server
         emmylua-ls
+
         nil
         nixd
+
+        ty
         basedpyright
         ruff
+
         rust-analyzer
+
+        zls
       ];
       description = "Additional packages to install for Zed (language servers, etc.)";
     };
@@ -42,6 +49,7 @@ in
         "gemini"
         "opencode"
         "emmylua"
+        "zig"
       ];
       description = "List of Zed extensions to install";
     };
@@ -153,39 +161,81 @@ in
               {
                 binary = {
                   path = lib.getExe rust-analyzer;
-                  ignore_system_version = false;
                 };
               }
             ];
-            nix = {
+            nil = {
               binary = {
                 path = lib.getExe nil;
-                ignore_system_version = false;
+              };
+            };
+            nixd = {
+              binary = {
+                path = lib.getExe nixd;
               };
             };
             json = {
               binary = {
                 path = lib.getExe vscode-json-languageserver;
-                ignore_system_version = false;
               };
             };
             lua = {
               binary = {
                 path = lib.getExe lua-language-server;
-                ignore_system_version = false;
+              };
+            };
+            lua-language-server = {
+              binary = {
+                path = lib.getExe lua-language-server;
               };
             };
             emmylua = {
               binary = {
                 path = lib.getExe emmylua-ls;
-                ignore_system_version = false;
               };
             };
-            python = {
+            ruff = {
               binary = {
                 path = lib.getExe ruff;
-                ignore_system_version = false;
+                arguments = [ "server" ];
               };
+            };
+            ty = {
+              binary = {
+                path = lib.getExe ty;
+                arguments = [ "server" ];
+              };
+            };
+            biasedpyright = {
+              binary = {
+                path = lib.getExe basedpyright;
+              };
+            };
+            zls = {
+              binary = {
+                path = lib.getExe zls;
+              };
+              settings = {
+                zig_exe_path = lib.getExe zig;
+              };
+            };
+          };
+
+          languages = {
+            Python = {
+              language_servers = [
+                "ruff"
+                "ty"
+                "!basedpyright"
+                "..."
+              ];
+            };
+            "Zig" = {
+              format_on_save = "language_server";
+              language_servers = [
+                "zls"
+                "..."
+              ];
             };
           };
 

@@ -154,7 +154,7 @@
     };
 
     nvidia-container = {
-      enable = true;
+      enable = false;
     };
 
     power = {
