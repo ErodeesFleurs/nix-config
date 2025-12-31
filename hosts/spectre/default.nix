@@ -333,4 +333,9 @@
       extra-args = "--keep-since 7d --keep 3";
     };
   };
+
+  modules.programs.appimage = {
+    enable = true;
+    binfmt = true;
+  };
 }
