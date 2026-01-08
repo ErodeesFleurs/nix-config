@@ -17,7 +17,9 @@
   };
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    nixpkgs = {
+      url = "github:nixos/nixpkgs/nixos-unstable";
+    };
 
     home-manager = {
       url = "github:nix-community/home-manager";
@@ -36,6 +38,12 @@
 
     vicinae = {
       url = "github:vicinaehq/vicinae";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    nur = {
+      url = "github:nix-community/NUR";
+      inputs.nixpkgs.follows = "nixpkgs";
     };
 
     xddxdd-nur = {
@@ -45,6 +53,7 @@
 
     hyprland = {
       url = "github:hyprwm/Hyprland";
+      inputs.nixpkgs.follows = "nixpkgs";
     };
 
     agenix = {
@@ -59,7 +68,7 @@
   };
 
   outputs =
-    inputs@{
+    {
       self,
       nixpkgs,
       home-manager,
@@ -68,43 +77,25 @@
       vicinae,
       agenix,
       ...
-    }:
+    }@inputs:
     let
       system = "x86_64-linux";
 
-      # 加载 overlays
-      overlays = import ./overlays { inherit inputs; };
+      fleursLib = import ./lib {
+        lib = nixpkgs.lib;
+        inherit inputs;
+      };
 
-      # 先导入基础 pkgs，命名为 basePkgs，避免后面重定义同名变量
-      basePkgs = import nixpkgs {
+      overlays = import ./overlays { inherit inputs fleursLib; };
+
+      pkgs = import nixpkgs {
         inherit system;
         config.allowUnfree = true;
         overlays = overlays;
       };
 
-      # 扩展 nixpkgs.lib（而非 basePkgs.lib），这样扩展后的 lib 会包含 nixosSystem
-      finalLib = nixpkgs.lib.extend (
-        final: prev: {
-          fleursLib = import ./lib {
-            lib = final;
-            inherit inputs;
-          };
-        }
-      );
-
-      # 把扩展后的 lib 注入到 pkgs（使得 pkgs.lib == finalLib）
-      pkgs = basePkgs // {
-        lib = finalLib;
-      };
-
-      # 扩展 home-manager 的 lib（以便 Home Manager 模块也能直接用 fleursLib）
-      finalHomeLib = home-manager.lib // {
-        fleursLib = finalLib.fleursLib;
-      };
-
       specialArgs = {
-        inherit inputs self;
-        fleursLib = finalLib.fleursLib;
+        inherit inputs self fleursLib;
       };
 
     in
@@ -113,7 +104,7 @@
       # NixOS 配置
       # 使用: nh os switch .#spectre
       # ==========================================
-      nixosConfigurations.spectre = finalLib.nixosSystem {
+      nixosConfigurations.spectre = nixpkgs.lib.nixosSystem {
         inherit system;
         specialArgs = specialArgs;
         modules = [
@@ -125,7 +116,7 @@
       };
 
       # 使用: nh os switch .#spectre-surface
-      nixosConfigurations.spectre-surface = finalLib.nixosSystem {
+      nixosConfigurations.spectre-surface = nixpkgs.lib.nixosSystem {
         inherit system;
         specialArgs = specialArgs;
         modules = [
@@ -140,8 +131,7 @@
       # Home Manager 配置
       # 使用: nh home switch .#fleurs
       # ==========================================
-      home-manager.backupFileExtension = "backup";
-      homeConfigurations.fleurs = finalHomeLib.homeManagerConfiguration {
+      homeConfigurations.fleurs = home-manager.lib.homeManagerConfiguration {
         pkgs = pkgs;
         extraSpecialArgs = specialArgs;
         modules = [
@@ -155,7 +145,7 @@
       };
 
       # 使用: nh home switch .#fleurs-surface
-      homeConfigurations.fleurs-surface = finalHomeLib.homeManagerConfiguration {
+      homeConfigurations.fleurs-surface = home-manager.lib.homeManagerConfiguration {
         pkgs = pkgs;
         extraSpecialArgs = specialArgs;
         modules = [
@@ -168,9 +158,6 @@
         ];
       };
 
-      # ==========================================
-      # 导出模块
-      # ==========================================
       nixosModules.default =
         { lib, ... }:
         (import ./modules {
@@ -184,9 +171,6 @@
           inputs = { };
         });
 
-      # ==========================================
-      # 格式化器
-      # ==========================================
       formatter.${system} = pkgs.nixfmt-rfc-style;
     };
 }

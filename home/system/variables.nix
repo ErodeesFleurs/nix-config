@@ -37,7 +37,7 @@ in
 
     file-manager = lib.mkOption {
       type = lib.types.str;
-      default = "dolphin";
+      default = "nemo";
       description = "Default file manager";
     };
 
@@ -74,7 +74,6 @@ in
   config = lib.mkIf cfg.enable {
     home.sessionVariables = lib.mkMerge [
       {
-        # Default applications
         BROWSER = cfg.browser;
         TERMINAL = cfg.terminal;
         TERM = cfg.term-type;

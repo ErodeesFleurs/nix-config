@@ -4,11 +4,6 @@
   programs.hyprlock = {
     enable = true;
     settings = {
-      # background = {
-      #   monitor = "";
-      #   path = "~/.config/hypr/wallpapers/os_tan_wallpaper_2.png";
-      # };
-
       general = {
         no_fade_in = false;
         no_fade_out = false;

@@ -34,10 +34,10 @@
           on-resume = "hyprctl dispatch dpms on"; # 打开显示屏
         }
 
-        # {
-        #   timeout = 1800; # 30 分钟
-        #   on-timeout = "systemctl suspend"; # 进入睡眠
-        # }
+        {
+          timeout = 3600; # 60 分钟
+          on-timeout = "systemctl suspend"; # 进入睡眠
+        }
       ];
     };
   };

@@ -55,9 +55,6 @@
   # 桌面环境
   homeModules.hyprland = {
     enable = true;
-    systemd = false;
-    xwayland = true;
-    hyprpolkit = true;
     monitors = [ "eDP-1,2736x1824,0x0,2.0" ];
   };
 
@@ -75,6 +72,8 @@
     force-extensions = true;
     enable-stylix = true;
   };
+
+  homeModules.nemo.enable = true;
 
   homeModules.mpv.enable = true;
   homeModules.obs.enable = true;

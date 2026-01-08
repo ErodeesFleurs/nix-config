@@ -147,8 +147,7 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    # Enable Home Manager Stylix module
-    # This will automatically inherit theme settings from NixOS-level Stylix
+
     stylix = {
       enable = cfg.enable;
       autoEnable = cfg.auto-enable;

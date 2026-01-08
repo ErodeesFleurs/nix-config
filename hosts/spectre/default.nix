@@ -214,10 +214,7 @@
     libinput.enable = true;
   };
 
-  modules.xdg = {
-    enable = true;
-    xdg-open-use-portal = true;
-  };
+  modules.xdg.enable = true;
 
   # ==========================================
   # 音频配置

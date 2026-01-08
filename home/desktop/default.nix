@@ -1,8 +1,5 @@
-{ lib, ... }:
+{ fleursLib, ... }:
 
-let
-  fleursLib = lib.fleursLib;
-in
 {
   imports = fleursLib.importDir ./.;
 }

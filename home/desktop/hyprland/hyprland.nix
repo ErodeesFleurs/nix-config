@@ -13,18 +13,6 @@ in
   options.homeModules.hyprland = {
     enable = lib.mkEnableOption "Hyprland window manager user configuration";
 
-    systemd = lib.mkOption {
-      type = lib.types.bool;
-      default = false;
-      description = "Enable systemd integration";
-    };
-
-    xwayland = lib.mkOption {
-      type = lib.types.bool;
-      default = true;
-      description = "Enable XWayland support";
-    };
-
     terminal = lib.mkOption {
       type = lib.types.str;
       default = "ghostty";
@@ -41,12 +29,6 @@ in
       type = lib.types.bool;
       default = false;
       description = "Enable installing and using hyprlauncher as application launcher";
-    };
-
-    hyprpolkit = lib.mkOption {
-      type = lib.types.bool;
-      default = true;
-      description = "Enable the hyprpolkitagent user systemd service";
     };
 
     browser = lib.mkOption {
@@ -67,188 +49,10 @@ in
       description = "Main modifier key";
     };
 
-    environment = lib.mkOption {
-      type = lib.types.listOf lib.types.str;
-      default = [
-        "LIBVA_DRIVER_NAME,nvidia"
-        "__GLX_VENDOR_LIBRARY_NAME,nvidia"
-        "XCURSOR_SIZE,24"
-        "HYPRCURSOR_THEME,"
-        "HYPRCURSOR_SIZE,24"
-        "HYPRSHOT_DIR,$HOME/Pictures/Screenshots"
-      ];
-      description = "Environment variables";
-    };
-
     monitors = lib.mkOption {
       type = lib.types.listOf lib.types.str;
       default = [ ",preferred,auto,1" ];
       description = "Monitor configuration";
-    };
-
-    exec-once = lib.mkOption {
-      type = lib.types.listOf lib.types.str;
-      default = [
-        "systemctl --user import-environment XDG_SESSION_ID XDG_CURRENT_DESKTOP DBUS_SESSION_BUS_ADDRESS WAYLAND_DISPLAY DISPLAY"
-        "hyprpaper"
-        "hypridle"
-        "swww-daemon"
-        "dunst"
-        "udiskie"
-        "fcitx5 -d"
-        "wl-paste --watch cliphist store"
-        "lxqt-policykit-agent"
-        "SSH_AUTH_SOCK=/run/user/1000/ssh-agent"
-      ];
-      description = "Commands to execute once on startup";
-    };
-
-    general = {
-      gaps-in = lib.mkOption {
-        type = lib.types.int;
-        default = 5;
-        description = "Inner gaps size";
-      };
-
-      gaps-out = lib.mkOption {
-        type = lib.types.int;
-        default = 20;
-        description = "Outer gaps size";
-      };
-
-      border-size = lib.mkOption {
-        type = lib.types.int;
-        default = 2;
-        description = "Border size";
-      };
-
-      resize-on-border = lib.mkOption {
-        type = lib.types.bool;
-        default = false;
-        description = "Resize windows on border";
-      };
-
-      allow-tearing = lib.mkOption {
-        type = lib.types.bool;
-        default = false;
-        description = "Allow screen tearing";
-      };
-
-      layout = lib.mkOption {
-        type = lib.types.str;
-        default = "dwindle";
-        description = "Window layout";
-      };
-    };
-
-    decoration = {
-      rounding = lib.mkOption {
-        type = lib.types.int;
-        default = 10;
-        description = "Corner rounding";
-      };
-
-      active-opacity = lib.mkOption {
-        type = lib.types.float;
-        default = 1.0;
-        description = "Active window opacity";
-      };
-
-      inactive-opacity = lib.mkOption {
-        type = lib.types.float;
-        default = 1.0;
-        description = "Inactive window opacity";
-      };
-
-      blur = {
-        enable = lib.mkOption {
-          type = lib.types.bool;
-          default = true;
-          description = "Enable blur";
-        };
-
-        size = lib.mkOption {
-          type = lib.types.int;
-          default = 10;
-          description = "Blur size";
-        };
-
-        passes = lib.mkOption {
-          type = lib.types.int;
-          default = 1;
-          description = "Blur passes";
-        };
-
-        vibrancy = lib.mkOption {
-          type = lib.types.float;
-          default = 0.1696;
-          description = "Blur vibrancy";
-        };
-      };
-    };
-
-    animations = {
-      enable = lib.mkOption {
-        type = lib.types.bool;
-        default = true;
-        description = "Enable animations";
-      };
-    };
-
-    dwindle = {
-      pseudotile = lib.mkOption {
-        type = lib.types.bool;
-        default = true;
-        description = "Enable pseudotiling";
-      };
-
-      preserve-split = lib.mkOption {
-        type = lib.types.bool;
-        default = true;
-        description = "Preserve split direction";
-      };
-    };
-
-    input = {
-      kb-layout = lib.mkOption {
-        type = lib.types.str;
-        default = "us";
-        description = "Keyboard layout";
-      };
-
-      follow-mouse = lib.mkOption {
-        type = lib.types.int;
-        default = 1;
-        description = "Follow mouse mode";
-      };
-
-      sensitivity = lib.mkOption {
-        type = lib.types.float;
-        default = 0.0;
-        description = "Mouse sensitivity";
-      };
-
-      touchpad = {
-        natural-scroll = lib.mkOption {
-          type = lib.types.bool;
-          default = false;
-          description = "Enable natural scrolling";
-        };
-      };
-    };
-
-    misc = {
-      force-default-wallpaper = lib.mkOption {
-        type = lib.types.int;
-        default = 0;
-        description = "Force default wallpaper (0 or 1)";
-      };
-
-      disable-hyprland-logo = lib.mkOption {
-        type = lib.types.bool;
-        default = true;
-        description = "Disable Hyprland logo";
-      };
     };
 
     extra-config = lib.mkOption {
@@ -261,48 +65,70 @@ in
   config = lib.mkIf cfg.enable {
     wayland.windowManager.hyprland = {
       enable = true;
-      systemd.enable = cfg.systemd;
-      xwayland.enable = cfg.xwayland;
+      systemd.enable = false;
       package = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.hyprland;
       portalPackage =
         inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.xdg-desktop-portal-hyprland;
 
       settings = lib.mkMerge [
         {
-          env = cfg.environment;
+          xwayland = "enable";
+
+          env = [
+            "LIBVA_DRIVER_NAME,nvidia"
+            "__GLX_VENDOR_LIBRARY_NAME,nvidia"
+            "__GL_VRR_ALLOWED,0"
+
+            "XCURSOR_SIZE,24"
+            "HYPRCURSOR_THEME,"
+            "HYPRCURSOR_SIZE,24"
+            "HYPRSHOT_DIR,$HOME/Pictures/Screenshots"
+          ];
+
           monitor = cfg.monitors;
-          exec-once = cfg.exec-once;
+
+          exec-once = [
+            "systemctl --user import-environment DBUS_SESSION_BUS_ADDRESS WAYLAND_DISPLAY DISPLAY"
+            "hyprpaper"
+            "hypridle"
+            "swww-daemon"
+            "dunst"
+            "udiskie"
+            "fcitx5 -d"
+            "wl-paste --watch cliphist store"
+            "SSH_AUTH_SOCK=/run/user/1000/ssh-agent"
+          ];
 
           "$mainMod" = cfg.main-mod;
           "$terminal" = cfg.terminal;
-          "$menu" = if cfg.hyprlauncher then "hyprlauncher" else cfg.menu;
+          "$menu" = cfg.menu;
           "$browser" = cfg.browser;
           "$colorpicker" = cfg.color-picker;
 
           general = {
-            gaps_in = cfg.general.gaps-in;
-            gaps_out = cfg.general.gaps-out;
-            border_size = cfg.general.border-size;
-            resize_on_border = cfg.general.resize-on-border;
-            allow_tearing = cfg.general.allow-tearing;
-            layout = cfg.general.layout;
+            gaps_in = 5;
+            gaps_out = 20;
+            border_size = 2;
+            resize_on_border = false;
+            allow_tearing = false;
+            layout = "dwindle";
           };
 
           decoration = {
-            rounding = cfg.decoration.rounding;
-            active_opacity = cfg.decoration.active-opacity;
-            inactive_opacity = cfg.decoration.inactive-opacity;
+            rounding = 10;
+            active_opacity = 1.0;
+            inactive_opacity = 1.0;
 
             blur = {
-              enabled = cfg.decoration.blur.enable;
-              size = cfg.decoration.blur.size;
-              passes = cfg.decoration.blur.passes;
-              vibrancy = cfg.decoration.blur.vibrancy;
+              enabled = true;
+              size = 10;
+              passes = 1;
+              vibrancy = 0.1696;
             };
           };
 
           animations = {
-            enabled = if cfg.animations.enable then "yes" else "no";
+            enabled = "yes";
 
             bezier = [
               "easeOutQuint,0.23,1,0.32,1"
@@ -333,8 +159,8 @@ in
           };
 
           dwindle = {
-            pseudotile = cfg.dwindle.pseudotile;
-            preserve_split = cfg.dwindle.preserve-split;
+            pseudotile = true;
+            preserve_split = true;
           };
 
           master = {
@@ -342,22 +168,22 @@ in
           };
 
           misc = {
-            force_default_wallpaper = cfg.misc.force-default-wallpaper;
-            disable_hyprland_logo = cfg.misc.disable-hyprland-logo;
+            force_default_wallpaper = 0;
+            disable_hyprland_logo = true;
           };
 
           input = {
-            kb_layout = cfg.input.kb-layout;
+            kb_layout = "us";
             kb_variant = "";
             kb_model = "";
             kb_options = "";
             kb_rules = "";
 
-            follow_mouse = cfg.input.follow-mouse;
-            sensitivity = cfg.input.sensitivity;
+            follow_mouse = 1;
+            sensitivity = 0.0;
 
             touchpad = {
-              natural_scroll = cfg.input.touchpad.natural-scroll;
+              natural_scroll = false;
             };
           };
 
@@ -455,10 +281,7 @@ in
       ];
     };
 
-    # If the user enabled hyprpolkit via this module, enable the global service.
-    # This makes the module integrate with the system-level service option:
-    # `services.hyprpolkitagent.enable = true`.
-    services.hyprpolkitagent.enable = cfg.hyprpolkit;
+    services.hyprpolkitagent.enable = true;
 
     # Add hyprlauncher package when enabled
     home.packages = lib.concatLists [

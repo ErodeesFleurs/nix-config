@@ -56,10 +56,7 @@
   # 桌面环境
   homeModules.hyprland = {
     enable = true;
-    systemd = false;
-    xwayland = true;
     hyprlauncher = false;
-    hyprpolkit = true;
   };
 
   homeModules.ashell = {
@@ -76,6 +73,8 @@
     force-extensions = true;
     enable-stylix = true;
   };
+
+  homeModules.nemo.enable = true;
 
   homeModules.mpv.enable = true;
   homeModules.obs.enable = true;

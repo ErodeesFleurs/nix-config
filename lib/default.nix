@@ -26,28 +26,8 @@ rec {
   # 自动导入目录为模块列表
   autoImport = dir: map (f: import f) (importDir dir);
 
-  # 判断路径是否存在
-  pathExists = path: builtins.pathExists path;
-
   # 条件导入：如果路径存在则导入
-  optionalImport = path: if pathExists path then [ path ] else [ ];
-
-  # 合并多个配置文件
-  mergeConfigs =
-    configs:
-    lib.mkMerge (
-      lib.filter (x: x != null) (
-        map (
-          config:
-          if builtins.isAttrs config then
-            config
-          else if pathExists config then
-            import config
-          else
-            null
-        ) configs
-      )
-    );
+  optionalImport = path': if lib.pathExists path' then [ path' ] else [ ];
 
   # 从目录中过滤并导入特定模块
   importModules =
@@ -90,11 +70,6 @@ rec {
       modules = extraModules;
     };
 
-  # 从输入创建 overlay
-  mkInputOverlay =
-    input: final: prev:
-    input.packages.${prev.system} or { };
-
   # 快捷创建简单的 enable option
   mkBoolOpt =
     default: description:
@@ -118,4 +93,15 @@ rec {
       type = lib.types.listOf elemType;
       inherit default description;
     };
+
+  # 创建输入覆盖层
+  mkInputOverlay = name: input: final: prev: {
+    ${name} =
+      if input ? packages.${prev.system} then
+        input.packages.${prev.system}
+      else if input ? legacyPackages.${prev.system} then
+        input.legacyPackages.${prev.system}
+      else
+        { };
+  };
 }

@@ -14,12 +14,14 @@
       defaultApplicationPackages = [
         config.programs.ghostty.package
         config.programs.zed-editor.package
-        pkgs.kdePackages.ark
         config.programs.firefox.package
+        pkgs.kdePackages.ark
       ];
     };
+
     configFile = {
       "mimeapps.list".force = true;
+      "uwsm/env".source = "${config.home.sessionVariablesPackage}/etc/profile.d/hm-session-vars.sh";
     };
   };
 }

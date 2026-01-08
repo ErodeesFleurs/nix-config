@@ -12,9 +12,17 @@ in
   options.homeModules.zed = {
     enable = lib.mkEnableOption "Zed editor";
 
-    extra-packages = lib.mkOption {
-      type = lib.types.listOf lib.types.package;
-      default = with pkgs; [
+    userSettings = lib.mkOption {
+      type = lib.types.attrs;
+      default = { };
+      description = "Additional user settings to merge";
+    };
+  };
+
+  config = lib.mkIf cfg.enable {
+    programs.zed-editor = {
+      enable = true;
+      extraPackages = with pkgs; [
         package-version-server
         vscode-json-languageserver
 
@@ -32,12 +40,7 @@ in
 
         zls
       ];
-      description = "Additional packages to install for Zed (language servers, etc.)";
-    };
-
-    extensions = lib.mkOption {
-      type = lib.types.listOf lib.types.str;
-      default = [
+      extensions = [
         "html"
         "toml"
         "git-firefly"
@@ -51,119 +54,43 @@ in
         "emmylua"
         "zig"
       ];
-      description = "List of Zed extensions to install";
-    };
-
-    auto-update = lib.mkOption {
-      type = lib.types.bool;
-      default = false;
-      description = "Enable automatic updates";
-    };
-
-    auto-signature-help = lib.mkOption {
-      type = lib.types.bool;
-      default = true;
-      description = "Show signature help automatically";
-    };
-
-    inlay-hints = lib.mkOption {
-      type = lib.types.bool;
-      default = true;
-      description = "Enable inlay hints";
-    };
-
-    diagnostics = {
-      inline = lib.mkOption {
-        type = lib.types.bool;
-        default = true;
-        description = "Show diagnostics inline";
-      };
-    };
-
-    agent = {
-      always-allow-tool-actions = lib.mkOption {
-        type = lib.types.bool;
-        default = true;
-        description = "Always allow agent tool actions";
-      };
-
-      model-parameters = lib.mkOption {
-        type = lib.types.listOf lib.types.attrs;
-        default = [ ];
-        description = "Model parameters for AI agent";
-      };
-    };
-
-    features = {
-      edit-prediction-provider = lib.mkOption {
-        type = lib.types.str;
-        default = "copilot";
-        description = "Edit prediction provider (copilot, etc.)";
-      };
-    };
-
-    lsp = {
-      rust = {
-        enable-clippy = lib.mkOption {
-          type = lib.types.bool;
-          default = true;
-          description = "Use clippy for Rust checking";
-        };
-      };
-    };
-
-    user-settings = lib.mkOption {
-      type = lib.types.attrs;
-      default = { };
-      description = "Additional user settings to merge";
-    };
-  };
-
-  config = lib.mkIf cfg.enable {
-    programs.zed-editor = {
-      enable = true;
-      extraPackages = cfg.extra-packages;
-      extensions = cfg.extensions;
 
       userSettings = lib.mkMerge [
         {
-          auto_signature_help = cfg.auto-signature-help;
-          auto_update = cfg.auto-update;
+          auto_signature_help = false;
+          auto_update = false;
 
           diagnostics = {
             inline = {
-              enabled = cfg.diagnostics.inline;
+              enabled = true;
             };
           };
 
           inlay_hints = {
-            enabled = cfg.inlay-hints;
+            enabled = true;
           };
 
           agent = {
-            always_allow_tool_actions = cfg.agent.always-allow-tool-actions;
-            model_parameters = cfg.agent.model-parameters;
+            always_allow_tool_actions = true;
+            model_parameters = [ ];
           };
 
           features = {
-            edit_prediction_provider = cfg.features.edit-prediction-provider;
+            edit_prediction_provider = "copilot";
           };
 
           lsp = with pkgs; {
-            rust-analyzer = lib.mkMerge [
-              (lib.mkIf cfg.lsp.rust.enable-clippy {
-                initialization_options = {
-                  check = {
-                    command = "clippy";
-                  };
+            rust-analyzer = {
+              initialization_options = {
+                check = {
+                  command = "clippy";
                 };
-              })
-              {
-                binary = {
-                  path = lib.getExe rust-analyzer;
-                };
-              }
-            ];
+              };
+
+              binary = {
+                path = lib.getExe rust-analyzer;
+              };
+            };
             nil = {
               binary = {
                 path = lib.getExe nil;
@@ -231,7 +158,7 @@ in
               ];
             };
             "Zig" = {
-              format_on_save = "language_server";
+              format_on_save = "on";
               language_servers = [
                 "zls"
                 "..."
@@ -240,7 +167,7 @@ in
           };
 
         }
-        cfg.user-settings
+        cfg.userSettings
       ];
     };
   };
