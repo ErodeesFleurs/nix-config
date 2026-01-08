@@ -79,9 +79,9 @@ in
             "__GLX_VENDOR_LIBRARY_NAME,nvidia"
             "__GL_VRR_ALLOWED,0"
 
-            "XDG_CURRENT_DESKTOP,Hyprland"
+            "XDG_CURRENT_DESKTOP,hyprland"
             "XDG_SESSION_TYPE,wayland"
-            "XDG_SESSION_DESKTOP,Hyprland"
+            "XDG_SESSION_DESKTOP,hyprland"
 
             "XCURSOR_SIZE,24"
             "HYPRCURSOR_THEME,"
@@ -92,7 +92,6 @@ in
           monitor = cfg.monitors;
 
           exec-once = [
-            "systemctl --user import-environment DBUS_SESSION_BUS_ADDRESS WAYLAND_DISPLAY DISPLAY"
             "hyprpaper"
             "hypridle"
             "swww-daemon"

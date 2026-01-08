@@ -8,8 +8,6 @@ let
   cfg = config.modules.etc or { };
 in
 {
-  # 在新的 `modules.etc` 命名空间中声明 `/etc` / 系统状态相关选项。
-  # 相关的考虑（例如 machine-id / stateVersion / nixos-init）。
   options.modules.etc = {
     enable = lib.mkEnableOption "etc 与系统状态选项";
 
@@ -67,21 +65,12 @@ in
     # 以便后续的挂载绑定与服务能够找到它们期望的文件和目录。
     environment = lib.mkIf (!cfg.overlay-mutable) {
       etc = {
-        # 当 /etc overlay 为只读/不可变时，写入固定 machine-id。
         "machine-id".text = cfg.machine-id;
-
-        # 写入占位文件以确保当 overlay 不可变时，这些目录在 Nix store 中存在。
-        # 这些通常是空的占位文件，用于让路径在 Nix 管理的 /etc 中出现。
         "NetworkManager/system-connections/.keep".text = "";
         "v2raya/.keep".text = "";
       };
     };
 
-    # 持久性绑定挂载：通常用于将 `/persist` 分区中的数据挂载到 /etc，
-    # 使得运行时的修改存放在只读的 Nix 管理树之外。
-    #
-    # 当 cfg.enable 为 true 时，这些 fileSystems 条目故意保持无条件，
-    # 以便系统尝试绑定预期的 `/persist` 位置。
     fileSystems = {
       "/etc/NetworkManager/system-connections" = {
         device = "/persist/etc/NetworkManager/system-connections";
@@ -102,9 +91,7 @@ in
       };
     };
 
-    # 使用 tmpfiles 确保引导时预期的持久目录存在并具有正确权限。
     systemd.tmpfiles.rules = [
-      # 在 /persist 中创建目录（若不存在）。权限与归属选择保守。
       "d /persist/etc/NetworkManager/system-connections 0700 root root -"
       "d /persist/var/lib/nixos 0755 root root -"
       "d /persist/etc/v2raya 0750 root root -"
