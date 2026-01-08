@@ -89,24 +89,6 @@ in
       };
     };
 
-    kde-apps = {
-      enable = lib.mkOption {
-        type = lib.types.bool;
-        default = true;
-        description = "Enable KDE applications";
-      };
-
-      packages = lib.mkOption {
-        type = lib.types.listOf lib.types.package;
-        default = with pkgs; [
-          kdePackages.okular
-          kdePackages.dolphin
-          kdePackages.dolphin-plugins
-        ];
-        description = "KDE application packages";
-      };
-    };
-
     media-tools = {
       enable = lib.mkOption {
         type = lib.types.bool;
@@ -258,7 +240,6 @@ in
       ++ lib.optionals (cfg.clipboard.enable) cfg.clipboard.packages
       ++ lib.optionals (cfg.system-utils.enable) cfg.system-utils.packages
       ++ lib.optionals (cfg.archive-tools.enable) cfg.archive-tools.packages
-      ++ lib.optionals (cfg.kde-apps.enable) cfg.kde-apps.packages
       ++ lib.optionals (cfg.media-tools.enable) cfg.media-tools.packages
       ++ lib.optionals (cfg.gaming.enable) cfg.gaming.packages
       ++ lib.optionals (cfg.productivity.enable) cfg.productivity.packages

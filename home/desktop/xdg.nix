@@ -29,6 +29,7 @@
       nemo = {
         name = "Nemo";
         exec = "${pkgs.nemo-with-extensions}/bin/nemo";
+        icon = "${pkgs.nemo-with-extensions}/share/icons/hicolor/32x32/apps/nemo.png";
       };
     };
   };

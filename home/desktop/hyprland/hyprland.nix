@@ -7,6 +7,7 @@
 }:
 
 let
+  hyprland-packages = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system};
   cfg = config.homeModules.hyprland;
 in
 {
@@ -66,9 +67,8 @@ in
     wayland.windowManager.hyprland = {
       enable = true;
       systemd.enable = false;
-      package = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.hyprland;
-      portalPackage =
-        inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.xdg-desktop-portal-hyprland;
+      package = hyprland-packages.hyprland;
+      portalPackage = hyprland-packages.xdg-desktop-portal-hyprland;
 
       settings = lib.mkMerge [
         {
@@ -78,6 +78,10 @@ in
             "LIBVA_DRIVER_NAME,nvidia"
             "__GLX_VENDOR_LIBRARY_NAME,nvidia"
             "__GL_VRR_ALLOWED,0"
+
+            "XDG_CURRENT_DESKTOP,Hyprland"
+            "XDG_SESSION_TYPE,wayland"
+            "XDG_SESSION_DESKTOP,Hyprland"
 
             "XCURSOR_SIZE,24"
             "HYPRCURSOR_THEME,"
