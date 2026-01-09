@@ -66,7 +66,7 @@ in
   config = lib.mkIf cfg.enable {
     wayland.windowManager.hyprland = {
       enable = true;
-      systemd.enable = false;
+      systemd.enable = true;
       package = hyprland-packages.hyprland;
       portalPackage = hyprland-packages.xdg-desktop-portal-hyprland;
 
@@ -79,14 +79,17 @@ in
             "__GLX_VENDOR_LIBRARY_NAME,nvidia"
             "__GL_VRR_ALLOWED,0"
 
-            "XDG_CURRENT_DESKTOP,hyprland"
+            "GTK_USE_PORTAL, 1"
+            "XDG_CURRENT_DESKTOP,Hyprland"
             "XDG_SESSION_TYPE,wayland"
-            "XDG_SESSION_DESKTOP,hyprland"
+            "XDG_SESSION_DESKTOP,Hyprland"
 
             "XCURSOR_SIZE,24"
             "HYPRCURSOR_THEME,"
             "HYPRCURSOR_SIZE,24"
-            "HYPRSHOT_DIR,$HOME/Pictures/Screenshots"
+            "HYPRSHOT_DIR,$XDG_CONFIG_HOME/Pictures/Screenshots"
+
+            "SSH_AUTH_SOCK,/run/user/1000/ssh-agent"
           ];
 
           monitor = cfg.monitors;
@@ -99,7 +102,6 @@ in
             "udiskie"
             "fcitx5 -d"
             "wl-paste --watch cliphist store"
-            "SSH_AUTH_SOCK=/run/user/1000/ssh-agent"
           ];
 
           "$mainMod" = cfg.main-mod;

@@ -19,19 +19,13 @@ in
       default = true;
       description = "Enable XWayland support";
     };
-
-    with-uwsm = lib.mkOption {
-      type = lib.types.bool;
-      default = true;
-      description = "Enable UWSM integration";
-    };
   };
 
   config = lib.mkIf cfg.enable {
     programs.hyprland = {
       enable = true;
       xwayland.enable = cfg.xwayland;
-      withUWSM = cfg.with-uwsm;
+      withUWSM = false;
       package = hyprland-packages.hyprland;
       portalPackage = hyprland-packages.xdg-desktop-portal-hyprland;
     };

@@ -100,11 +100,7 @@
 
     in
     {
-      # ==========================================
-      # NixOS 配置
-      # 使用: nh os switch .#spectre
-      # ==========================================
-      nixosConfigurations.spectre = nixpkgs.lib.nixosSystem {
+      nixosConfigurations."spectre" = nixpkgs.lib.nixosSystem {
         inherit system;
         specialArgs = specialArgs;
         modules = [
@@ -115,8 +111,7 @@
         ];
       };
 
-      # 使用: nh os switch .#spectre-surface
-      nixosConfigurations.spectre-surface = nixpkgs.lib.nixosSystem {
+      nixosConfigurations."spectre-surface" = nixpkgs.lib.nixosSystem {
         inherit system;
         specialArgs = specialArgs;
         modules = [
@@ -127,11 +122,7 @@
         ];
       };
 
-      # ==========================================
-      # Home Manager 配置
-      # 使用: nh home switch .#fleurs
-      # ==========================================
-      homeConfigurations.fleurs = home-manager.lib.homeManagerConfiguration {
+      homeConfigurations."fleurs@spectre" = home-manager.lib.homeManagerConfiguration {
         pkgs = pkgs;
         extraSpecialArgs = specialArgs;
         modules = [
@@ -144,8 +135,7 @@
         ];
       };
 
-      # 使用: nh home switch .#fleurs-surface
-      homeConfigurations.fleurs-surface = home-manager.lib.homeManagerConfiguration {
+      homeConfigurations."fleurs@spectre-surface" = home-manager.lib.homeManagerConfiguration {
         pkgs = pkgs;
         extraSpecialArgs = specialArgs;
         modules = [
@@ -156,6 +146,13 @@
           ./home
           ./users/fleurs-surface
         ];
+      };
+
+      packages.${system} = {
+        spectre = self.nixosConfigurations."spectre";
+        spectre-surface = self.nixosConfigurations."spectre-surface";
+        fleurs = self.homeConfigurations."fleurs@spectre".activationPackage;
+        fleurs-surface = self.homeConfigurations."fleurs@spectre-surface".activationPackage;
       };
 
       nixosModules.default =

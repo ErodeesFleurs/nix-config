@@ -204,7 +204,6 @@
   modules.programs.hyprland = {
     enable = true;
     xwayland = true;
-    with-uwsm = true;
   };
 
   modules.xserver = {

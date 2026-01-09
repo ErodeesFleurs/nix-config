@@ -5,16 +5,10 @@ let
 in
 {
   options.modules.programs.systemd = {
-    enable = lib.mkEnableOption "Small systemd/program helpers / systemd 小工具";
+    enable = lib.mkEnableOption "systemd 小工具";
 
     uwsm = {
-      enable = lib.mkOption {
-        type = lib.types.bool;
-        default = true;
-        description = ''
-          启用 uwsm 程序/服务（如果系统包中存在该程序）。
-        '';
-      };
+      enable = lib.mkEnableOption "启用 UWSM 管理器";
     };
   };
 

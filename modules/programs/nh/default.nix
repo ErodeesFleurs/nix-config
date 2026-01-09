@@ -1,16 +1,3 @@
-/*
-  nix-config/modules/system/nh.nix
-  nh module — Nix helper utilities (nh)
-
-  CN: 本模块为 nh（Nix Helper）提供声明式配置接口，例如自动清理选项与 flake 路径。
-  EN: This module exposes declarative configuration for the `nh` helper utility, e.g.
-      automatic cleanup and flake path settings.
-
-  说明:
-  - 保持原有行为与选项名称不变，仅增强文档、注释为中英双语并整理结构。
-  - 当同时启用 nh.clean 和 nix.gc.automatic 时，模块会发出警告（避免冲突）。
-*/
-
 {
   config,
   lib,
