@@ -330,8 +330,5 @@
     };
   };
 
-  modules.programs.appimage = {
-    enable = true;
-    binfmt = true;
-  };
+  modules.programs.appimage.enable = true;
 }
