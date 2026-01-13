@@ -44,18 +44,14 @@ in
     programs.nh = {
       enable = true;
 
-      # Configure automatic cleaning if requested
       clean = lib.mkIf cfg.clean.enable {
         enable = true;
         extraArgs = cfg.clean.extra-args;
       };
 
-      # Flake path consumed by nh
       flake = cfg.flake;
     };
 
-    # Warn the user if both nh.clean and nix.gc.automatic are enabled to avoid conflict.
-    # The NixOS `warnings` option expects a list of strings; produce a list when the condition holds.
     warnings = lib.optional (cfg.clean.enable && (config.nix.gc.automatic or false)) [
       "nh.clean 与 nix.gc.automatic 同时启用，可能导致冲突，请禁用其中一项。"
     ];

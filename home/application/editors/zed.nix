@@ -71,7 +71,16 @@ in
           };
 
           agent = {
-            always_allow_tool_actions = true;
+            inline_assistant_model = {
+              provider = "copilot_chat";
+              model = "gpt-5-mini";
+            };
+            default_profile = "write";
+            default_model = {
+              provider = "copilot_chat";
+              model = "claude-sonnet-4.5";
+            };
+            always_allow_tool_actions = false;
             model_parameters = [ ];
           };
 
