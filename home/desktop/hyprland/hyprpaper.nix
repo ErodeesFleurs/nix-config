@@ -11,7 +11,7 @@
       # };
 
       ipc = true;
-      splash = true;
+      # splash = true;
       splash_offset = 20;
       splash_opacity = 0.8;
     };
