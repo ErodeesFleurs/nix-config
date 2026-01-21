@@ -1,12 +1,8 @@
 {
   config,
   pkgs,
-  inputs,
   ...
 }:
-let
-  hyprland-packages = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system};
-in
 {
   xdg = {
     enable = true;
@@ -58,7 +54,7 @@ in
       configPackages = [ ];
 
       extraPortals = with pkgs; [
-        hyprland-packages.xdg-desktop-portal-hyprland
+        xdg-desktop-portal-hyprland
         xdg-desktop-portal-gtk
       ];
 

@@ -2,12 +2,10 @@
   config,
   lib,
   pkgs,
-  inputs,
   ...
 }:
 
 let
-  hyprland-packages = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system};
   cfg = config.modules.xdg;
 in
 {
@@ -34,7 +32,7 @@ in
       configPackages = [ ];
 
       extraPortals = with pkgs; [
-        hyprland-packages.xdg-desktop-portal-hyprland
+        xdg-desktop-portal-hyprland
         xdg-desktop-portal-gtk
       ];
 

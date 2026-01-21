@@ -2,12 +2,10 @@
   config,
   lib,
   pkgs,
-  inputs,
   ...
 }:
 
 let
-  hyprland-packages = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system};
   cfg = config.modules.programs.hyprland;
 in
 {
@@ -26,8 +24,8 @@ in
       enable = true;
       xwayland.enable = cfg.xwayland;
       withUWSM = false;
-      package = hyprland-packages.hyprland;
-      portalPackage = hyprland-packages.xdg-desktop-portal-hyprland;
+      package = pkgs.hyprland;
+      portalPackage = pkgs.xdg-desktop-portal-hyprland;
     };
   };
 }

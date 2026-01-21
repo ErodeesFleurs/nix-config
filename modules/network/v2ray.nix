@@ -8,6 +8,7 @@ with lib;
 
 let
   cfg = config.modules.network.v2ray;
+  enable_persistent = !config.modules.etc.overlay-mutable;
 in
 {
   options.modules.network.v2ray = {
@@ -71,5 +72,26 @@ in
     };
 
     services.v2raya.enable = cfg.enable-v2raya;
+
+    systemd.tmpfiles.rules = lib.mkIf enable_persistent [
+      "d /persist/etc/v2raya 0750 root root -"
+    ];
+
+    environment = lib.mkIf enable_persistent {
+      etc = {
+        "v2raya/.keep".text = "";
+      };
+    };
+
+    fileSystems = lib.mkIf enable_persistent {
+      "/etc/v2raya" = {
+        device = "/persist/etc/v2raya";
+        options = [
+          "bind"
+          "rw"
+        ];
+        noCheck = true;
+      };
+    };
   };
 }

@@ -1,13 +1,11 @@
 {
   config,
   lib,
-  inputs,
   pkgs,
   ...
 }:
 
 let
-  hyprland-packages = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system};
   cfg = config.homeModules.hyprland;
 in
 {
@@ -67,8 +65,8 @@ in
     wayland.windowManager.hyprland = {
       enable = true;
       systemd.enable = true;
-      package = hyprland-packages.hyprland;
-      portalPackage = hyprland-packages.xdg-desktop-portal-hyprland;
+      package = pkgs.hyprland;
+      portalPackage = pkgs.xdg-desktop-portal-hyprland;
 
       settings = lib.mkMerge [
         {

@@ -66,35 +66,12 @@ in
     environment = lib.mkIf (!cfg.overlay-mutable) {
       etc = {
         "machine-id".text = cfg.machine-id;
-        "NetworkManager/system-connections/.keep".text = "";
-        "v2raya/.keep".text = "";
-      };
-    };
 
-    fileSystems = {
-      "/etc/NetworkManager/system-connections" = {
-        device = "/persist/etc/NetworkManager/system-connections";
-        options = [
-          "bind"
-          "rw"
-        ];
-        noCheck = true;
-      };
-
-      "/etc/v2raya" = {
-        device = "/persist/etc/v2raya";
-        options = [
-          "bind"
-          "rw"
-        ];
-        noCheck = true;
       };
     };
 
     systemd.tmpfiles.rules = [
-      "d /persist/etc/NetworkManager/system-connections 0700 root root -"
       "d /persist/var/lib/nixos 0755 root root -"
-      "d /persist/etc/v2raya 0750 root root -"
     ];
   };
 }

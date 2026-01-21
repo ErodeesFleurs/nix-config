@@ -1,7 +1,6 @@
 {
   config,
   lib,
-  pkgs,
   ...
 }:
 
@@ -9,6 +8,7 @@ with lib;
 
 let
   cfg = config.modules.network.wlan;
+  enable_persistent = !config.modules.etc.overlay-mutable;
 in
 {
   options.modules.network.wlan = {
@@ -80,9 +80,25 @@ in
       indicator = cfg.show-indicator;
     };
 
-    # 添加网络管理相关工具
-    environment.systemPackages = with pkgs; [
-      networkmanagerapplet
+    systemd.tmpfiles.rules = lib.mkIf enable_persistent [
+      "d /persist/etc/NetworkManager/system-connections 0700 root root -"
     ];
+
+    environment = lib.mkIf enable_persistent {
+      etc = {
+        "NetworkManager/system-connections/.keep".text = "";
+      };
+    };
+
+    fileSystems = lib.mkIf enable_persistent {
+      "/etc/NetworkManager/system-connections" = {
+        device = "/persist/etc/NetworkManager/system-connections";
+        options = [
+          "bind"
+          "rw"
+        ];
+        noCheck = true;
+      };
+    };
   };
 }
