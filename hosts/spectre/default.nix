@@ -23,12 +23,27 @@
     trusted-public-keys = [ "hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc=" ];
   };
 
-  modules.security.sudo = {
-    enable = true;
-    use-rust = true;
-    enable-polkit = true;
-    wheel-needs-password = true;
-    extra-rules = [ ];
+  modules.security = {
+    sudo = {
+      enable = true;
+      use-rust = true;
+      enable-polkit = true;
+      wheel-needs-password = true;
+      extra-rules = [ ];
+    };
+
+    agenix = {
+      identity-paths = [
+        "/home/fleurs/.ssh/id_ed25519"
+        "/home/fleurs/.ssh/dae_ed25519"
+      ];
+
+      secrets = {
+        "config.dae" = {
+          file = ../../secrets/config.dae.age;
+        };
+      };
+    };
   };
 
   modules.etc = {
@@ -289,7 +304,7 @@
 
     dae = {
       enable = true;
-      enable-daed = true;
+      enable-daed = false;
     };
   };
 

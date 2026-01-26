@@ -268,6 +268,11 @@
       enable-udp = true;
       enable-v2raya = true;
     };
+
+    dae = {
+      enable = true;
+      enable-daed = false;
+    };
   };
 
   # 防止休眠后 WIFI 无法连接的问题

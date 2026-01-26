@@ -2,7 +2,6 @@
   config,
   lib,
   pkgs,
-  age,
   ...
 }:
 
@@ -16,10 +15,12 @@ in
     enable-daed = lib.mkEnableOption "Daed support";
   };
 
-  config = lib.mkIf cfg.enable {
+  config = lib.mkIf (cfg.enable || cfg.enable-daed) {
 
     services.dae = {
-      enable = true;
+      enable = cfg.enable;
+
+      package = pkgs.dae;
 
       openFirewall = {
         enable = true;
@@ -30,44 +31,35 @@ in
         v2ray-domain-list-community
       ];
 
-      assetsPath = "/etc/dae";
-
-      configFile = age.secrets.monitrc.file;
+      configFile = config.age.secrets."config.dae".path;
     };
 
     services.daed = {
-      enable = true;
+      enable = cfg.enable-daed;
+
+      package = pkgs.daed;
 
       openFirewall = {
         enable = true;
         port = 12345;
       };
 
+      listen = "127.0.0.1:2023";
+
       configDir = "/etc/daed";
     };
 
     systemd.tmpfiles.rules = lib.mkIf enable_persistent [
-      "d /persist/etc/dae 0750 root root -"
       "d /persist/etc/daed 0750 root root -"
     ];
 
     environment = lib.mkIf enable_persistent {
       etc = {
-        "dae/.keep".text = "";
         "daed/.keep".text = "";
       };
     };
 
     fileSystems = lib.mkIf enable_persistent {
-      "/etc/dae" = {
-        device = "/persist/etc/dae";
-        options = [
-          "bind"
-          "rw"
-        ];
-        noCheck = true;
-      };
-
       "/etc/daed" = {
         device = "/persist/etc/daed";
         options = [
