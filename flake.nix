@@ -54,6 +54,11 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    daeuniverse = {
+      url = "github:daeuniverse/flake.nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     fleurs-nur = {
       url = "github:ErodeesFleurs/fleurs-nur";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -68,6 +73,7 @@
       stylix,
       nixcord,
       vicinae,
+      daeuniverse,
       agenix,
       ...
     }@inputs:
@@ -98,7 +104,10 @@
         specialArgs = specialArgs;
         modules = [
           { nixpkgs.pkgs = pkgs; }
+          daeuniverse.nixosModules.dae
+          daeuniverse.nixosModules.daed
           stylix.nixosModules.stylix
+          agenix.nixosModules.default
           ./modules
           ./hosts/spectre
         ];
@@ -109,7 +118,10 @@
         specialArgs = specialArgs;
         modules = [
           { nixpkgs.pkgs = pkgs; }
+          daeuniverse.nixosModules.dae
+          daeuniverse.nixosModules.daed
           stylix.nixosModules.stylix
+          agenix.nixosModules.default
           ./modules
           ./hosts/spectre-surface
         ];

@@ -1,13 +1,9 @@
 { config, lib, ... }:
 
 let
-  # 如果提供了显式的 `modules.nix`，则优先使用；仅使用新的命名空间。
   cfg = config.modules.nix or { };
 in
 {
-  ####################################################################
-  # 选项：声明 `modules.nix` 选项集
-  ####################################################################
   options.modules.nix = {
     enable = lib.mkEnableOption "Nix subsystem configuration / Nix 设置";
 
@@ -60,9 +56,6 @@ in
     };
   };
 
-  ####################################################################
-  # 实现：仅使用 config.modules.nix
-  ####################################################################
   config = lib.mkIf (cfg.enable) {
     # 从所选配置应用的 Nix 设置
     nix = {
@@ -87,7 +80,6 @@ in
       # 自动 GC 配置（仅在 autoGC 为 true 时启用）
       gc = lib.mkIf cfg.auto-gc {
         automatic = true;
-        # 默认按周调度；如有需要通过 options.modules.nix.gcOptions 保持可配置
         dates = "weekly";
         options = cfg.gc-options;
       };

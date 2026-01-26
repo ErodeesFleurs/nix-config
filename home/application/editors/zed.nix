@@ -41,17 +41,16 @@ in
         zls
       ];
       extensions = [
-        "html"
-        "toml"
-        "git-firefly"
         "dockerfile"
-        "lua"
-        "nix"
-        "neocmake"
-        "nu"
-        "gemini"
-        "opencode"
         "emmylua"
+        "git-firefly"
+        "html"
+        "lua"
+        "neocmake"
+        "nix"
+        "nu"
+        "opencode"
+        "toml"
         "zig"
       ];
 
@@ -110,14 +109,10 @@ in
                 path = lib.getExe nixd;
               };
             };
-            json = {
+            json-language-server = {
               binary = {
                 path = lib.getExe vscode-json-languageserver;
-              };
-            };
-            lua = {
-              binary = {
-                path = lib.getExe lua-language-server;
+                arguments = [ "--stdio" ];
               };
             };
             lua-language-server = {
@@ -142,7 +137,7 @@ in
                 arguments = [ "server" ];
               };
             };
-            biasedpyright = {
+            basedpyright = {
               binary = {
                 path = lib.getExe basedpyright;
               };
@@ -153,6 +148,7 @@ in
               };
               settings = {
                 zig_exe_path = lib.getExe zig;
+                global_cache_path = "${config.xdg.cacheHome}/zls";
               };
             };
           };
@@ -166,7 +162,7 @@ in
                 "..."
               ];
             };
-            "Zig" = {
+            Zig = {
               format_on_save = "on";
               language_servers = [
                 "zls"

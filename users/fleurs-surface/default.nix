@@ -80,7 +80,7 @@
   homeModules.starbound.enable = true;
 
   homeModules.discord = {
-    enable = true;
+    enable = false;
     vesktop.enable = true;
   };
 

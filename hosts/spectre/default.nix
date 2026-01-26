@@ -286,6 +286,11 @@
       enable-udp = true;
       enable-v2raya = true;
     };
+
+    dae = {
+      enable = true;
+      enable-daed = true;
+    };
   };
 
   # ==========================================

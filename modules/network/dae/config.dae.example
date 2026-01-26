@@ -1,0 +1,74 @@
+global {
+    tproxy_port: 12345
+    tproxy_port_protect: true
+    pprof_port: 0
+    so_mark_from_dae: 0
+    log_level: info
+
+    lan_interface: virbr0
+    wan_interface: auto
+
+    disable_waiting_network: true
+    enable_local_tcp_fast_redirect: false
+
+    auto_config_kernel_parameter: true
+
+    tcp_check_url: 'http://cp.cloudflare.com,1.1.1.1,2606:4700:4700::1111'
+    tcp_check_http_method: HEAD
+    udp_check_dns: 'dns.google.com:53,8.8.8.8,2001:4860:4860::8888'
+    check_interval: 30s
+    check_tolerance: 50ms
+
+    dial_mode: domain
+    allow_insecure: false
+    sniffing_timeout: 100ms
+
+    tls_fragment: false
+    utls_imitate: chrome_auto
+    tls_implementation: tls
+    tls_fragment_length: '50-100'
+    tls_fragment_interval: '10-20'
+
+    mptcp: false
+
+    bandwidth_max_tx: '200 mbps'
+    bandwidth_max_rx: '1 gbps'
+}
+
+subscription {
+}
+
+node {
+}
+
+dns {
+  upstream {
+    googledns: 'tcp+udp://dns.google:53'
+    alidns: 'udp://dns.alidns.com:53'
+  }
+  routing {
+    request {
+      qname(geosite:cn) -> alidns
+      fallback: googledns
+    }
+  }
+}
+
+
+group {
+    proxy {
+        policy: min_moving_avg
+    }
+}
+
+routing {
+    pname(NetworkManager) -> direct
+    pname(systemd-networkd) -> direct
+    dip(224.0.0.0/3, 'ff00::/8') -> direct
+    dscp(4) -> direct
+    dip(geoip:private) -> direct
+    dip(geoip:cn) -> direct
+    domain(geosite:cn) -> direct
+
+    fallback: proxy
+}
