@@ -351,4 +351,6 @@
   };
 
   modules.programs.appimage.enable = true;
+
+  modules.programs.localsend.enable = true;
 }
