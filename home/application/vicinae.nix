@@ -1,6 +1,7 @@
 {
   config,
   lib,
+  pkgs,
   ...
 }:
 
@@ -45,6 +46,8 @@ in
         };
       };
       settings = cfg.settings;
+
+      package = pkgs.vicinae;
     };
   };
 }
