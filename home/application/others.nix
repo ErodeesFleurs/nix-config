@@ -10,12 +10,14 @@ let
 in
 {
   options.homeModules.others = {
-    aseprite = lib.mkEnableOption "Aseprite (pixel art tool)";
+    aseprite = {
+      enable = lib.mkEnableOption "Aseprite (pixel art tool)";
+    };
   };
 
   config = {
     home.packages = with pkgs; [
-      (lib.mkIf cfg.aseprite aseprite)
+      (lib.mkIf cfg.aseprite.enable aseprite)
     ];
   };
 }
