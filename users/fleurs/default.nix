@@ -115,6 +115,8 @@
     base16-scheme = "${pkgs.base16-schemes}/share/themes/gruvbox-light-soft.yaml";
   };
 
+  homeModules.thunderbird.enable = true;
+
   # XDG 配置
   xdg = {
     enable = true;
