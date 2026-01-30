@@ -15,6 +15,7 @@ in
   config = lib.mkIf cfg.enable {
     programs.thunderbird = {
       enable = true;
+      profiles = { };
     };
   };
 }

@@ -117,6 +117,8 @@
 
   homeModules.thunderbird.enable = true;
 
+  homeModules.others.aseprite.enable = true;
+
   # XDG 配置
   xdg = {
     enable = true;
