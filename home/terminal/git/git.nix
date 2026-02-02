@@ -109,7 +109,7 @@ in
 
           # Core settings
           core = {
-            editor = "vim";
+            editor = "hx";
             autocrlf = "input";
           };
 

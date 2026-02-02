@@ -30,6 +30,7 @@
     user-name = "ErodeesFleurs";
     user-email = "862959461@qq.com";
     delta.enable = true;
+    lfs.enable = true;
   };
 
   # 终端工具
