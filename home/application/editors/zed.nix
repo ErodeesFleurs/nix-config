@@ -42,6 +42,7 @@ in
       ];
       extensions = [
         "dockerfile"
+        "make"
         "emmylua"
         "git-firefly"
         "html"
@@ -169,6 +170,13 @@ in
                 "..."
               ];
             };
+          };
+
+          file_types = {
+            "C++" = [
+              "cppm"
+              "ixx"
+            ];
           };
 
         }
