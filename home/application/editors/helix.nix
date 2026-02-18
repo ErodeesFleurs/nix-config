@@ -44,7 +44,7 @@ in
         taplo
 
         # Zig
-        # zls
+        zls
 
         # JSON
         vscode-json-languageserver

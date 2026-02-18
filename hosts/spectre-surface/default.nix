@@ -181,6 +181,14 @@
         enable = true;
       };
     };
+
+    logitech = {
+      enable = true;
+      wireless = {
+        enable = true;
+        enable-graphical = true;
+      };
+    };
   };
 
   # ==========================================
