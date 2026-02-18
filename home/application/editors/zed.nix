@@ -37,7 +37,6 @@ in
         ruff
 
         rust-analyzer
-
         zls
       ];
       extensions = [

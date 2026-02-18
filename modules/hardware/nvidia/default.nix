@@ -161,7 +161,7 @@ in
               patches = (old.patches or [ ]) ++ [
                 # (pkgs.fetchpatch {
                 #   name = "get_dev_pagemap.patch";
-                #   url = "https://github.com/NVIDIA/open-gpu-kernel-modules/commit/3e230516034d29e84ca023fe95e284af5cd5a065.patch";
+                #   url = "https://github.com/NVIDIA/open-gpu-kernel-modules/commit/16e88bbbaa3e1f4f1a49cd82bc6d55a695dd1027.patch";
                 #   hash = "sha256-BhL4mtuY5W+eLofwhHVnZnVf0msDj7XBxskZi8e6/k8=";
                 # })
                 # 说不定啥时候又有bug。

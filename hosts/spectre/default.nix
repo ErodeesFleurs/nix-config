@@ -151,7 +151,7 @@
       modesetting = true;
       open = true;
       nvidia-settings = true;
-      package = "stable";
+      package = "beta";
       power-management = {
         enable = true;
         finegrained = true;

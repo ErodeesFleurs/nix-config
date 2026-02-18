@@ -46,7 +46,7 @@ in
 
       package = lib.mkOption {
         type = lib.types.package;
-        default = pkgs.wineWowPackages.stable;
+        default = pkgs.wineWow64Packages.stable;
         description = "Wine package to use";
       };
     };

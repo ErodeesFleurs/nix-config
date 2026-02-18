@@ -26,9 +26,6 @@ in
         nixd
         nixfmt
 
-        # AI assistance
-        helix-gpt
-
         # Rust
         rust-analyzer
 
@@ -47,7 +44,7 @@ in
         taplo
 
         # Zig
-        zls
+        # zls
 
         # JSON
         vscode-json-languageserver
