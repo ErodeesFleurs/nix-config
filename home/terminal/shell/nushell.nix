@@ -19,7 +19,7 @@ in
 
     enable-yazi-integration = lib.mkOption {
       type = lib.types.bool;
-      default = true;
+      default = false;
       description = "Enable Yazi file manager integration";
     };
 

@@ -20,7 +20,6 @@
   homeModules.terminal.shell.nushell = {
     enable = true;
     show-banner = false;
-    enable-yazi-integration = true;
     enable-carapace-integration = true;
   };
 
