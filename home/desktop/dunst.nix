@@ -175,12 +175,6 @@ in
             default = 6;
             description = "Timeout for normal urgency notifications";
           };
-
-          highlight = lib.mkOption {
-            type = lib.types.str;
-            default = "#cba6f7";
-            description = "Highlight color for normal urgency";
-          };
         };
 
         critical = {
@@ -188,12 +182,6 @@ in
             type = lib.types.int;
             default = 0;
             description = "Timeout for critical urgency notifications (0 = no timeout)";
-          };
-
-          highlight = lib.mkOption {
-            type = lib.types.str;
-            default = "#cba6f7";
-            description = "Highlight color for critical urgency";
           };
         };
       };
@@ -263,12 +251,10 @@ in
         };
 
         urgency_normal = {
-          highlight = cfg.settings.urgency.normal.highlight;
           timeout = cfg.settings.urgency.normal.timeout;
         };
 
         urgency_critical = {
-          highlight = cfg.settings.urgency.critical.highlight;
           timeout = cfg.settings.urgency.critical.timeout;
         };
       };
