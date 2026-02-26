@@ -1,16 +1,3 @@
-/*
-  nix-config/modules/system/power.nix
-  电源与省电配置模块 — Power management module
-
-  CN: 该模块为系统电源相关配置提供集中化选项，包括 TLP、powertop、UPower 及 CPU 调频策略。
-  EN: This module centralizes power-related configuration for the system, including TLP, powertop,
-      UPower and CPU frequency governor settings.
-
-  说明：
-  - 保持默认行为不变，仅补充中英文注释并整理选项说明与系统包列表。
-  - 尽量不改变原有逻辑（例如 cpuFreqGovernor 的赋值方式保留原样以避免意外副作用）。
-*/
-
 {
   config,
   lib,

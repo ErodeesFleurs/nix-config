@@ -9,7 +9,7 @@ let
   cfg = config.modules.hardware.nvidia;
 in
 {
-  imports = [ ./container ];
+  imports = [ ./container.nix ];
 
   options.modules.hardware.nvidia = {
     enable = lib.mkEnableOption "NVIDIA GPU support";

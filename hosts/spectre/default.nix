@@ -207,25 +207,20 @@
     };
   };
 
-  # ==========================================
+  # 容器配置
+  modules.virtualization = {
+    podman.enable = true;
+  };
+
   # 桌面环境
-  # ==========================================
-  modules.display-manager.sddm = {
-    enable = false;
-    wayland = true;
-    auto-numlock = true;
-  };
-  modules.display-manager.tuigreet = {
-    enable = true;
+  modules.display-manager = {
+    sddm.enable = false;
+    tuigreet.enable = true;
   };
 
-  modules.compositor.hyprland = {
-    enable = true;
-    xwayland = true;
-  };
-
-  modules.compositor.niri = {
-    enable = true;
+  modules.compositor = {
+    hyprland.enable = false;
+    niri.enable = true;
   };
 
   modules.xserver = {

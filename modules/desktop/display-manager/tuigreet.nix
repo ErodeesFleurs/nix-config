@@ -5,8 +5,6 @@
   ...
 }:
 let
-  tuigreet = "${lib.getExe pkgs.greetd.tuigreet}";
-  niri-session = lib.getExe' config.modules.compositor.niri.package "niri-session";
   cfg = config.modules.display-manager.tuigreet;
 in
 {
@@ -15,18 +13,19 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+    environment.defaultPackages = with pkgs; [ tuigreet ];
+
     services.greetd = {
       enable = true;
+      useTextGreeter = true;
       settings = {
         default_session = {
           command = ''
-            ${tuigreet} \
-            --sessions ${niri-session} \
+            tuigreet \
             --time \
             --time-format '%Y-%m-%d %H:%M' \
             --asterisks \
-            --remember \
-            --remember-sessiony'';
+            --remember'';
           user = "greeter";
         };
       };
