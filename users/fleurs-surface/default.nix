@@ -78,6 +78,10 @@
     enable-stylix = true;
   };
 
+  home-modules.application = {
+    playerctl.enable = true;
+  };
+
   homeModules.nemo.enable = true;
 
   homeModules.mpv.enable = true;

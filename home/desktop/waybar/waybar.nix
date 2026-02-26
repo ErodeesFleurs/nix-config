@@ -50,8 +50,8 @@ in
             format = "{:%B %d, %H:%M}";
             tooltip-format = "{:%A, %Y (%S)}";
             interval = 1;
-            on-click = "fuzzel --no-icons";
-            on-click-right = "fuzzel-logout-menu";
+            on-click = "vicinae toggle";
+            # on-click-right = "fuzzel-logout-menu";
           };
 
           mpris = {
