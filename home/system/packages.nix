@@ -48,6 +48,7 @@ in
           sshpass
           adwaita-icon-theme
           wineWow64Packages.waylandFull
+          winetricks
         ];
         description = "System utility packages";
       };
