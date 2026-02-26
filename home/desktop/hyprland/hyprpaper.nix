@@ -1,19 +1,19 @@
-{ ... }:
-
+{ config, lib, ... }:
+let
+  cfg = config.homeModules.hyprpaper;
+in
 {
-  services.hyprpaper = {
-    enable = true;
-    settings = {
-      # wallpaper = lib.mkForce {
-      #   monitor = "";
-      #   path = "${../../../assets/wallpaper.jpg}";
-      #   fit_mode = "cover";
-      # };
-
-      ipc = true;
-      # splash = true;
-      splash_offset = 20;
-      splash_opacity = 0.8;
+  options.homeModules.hyprpaper = {
+    enable = lib.mkEnableOption "Hyprpaper wallpaper manager user configuration";
+  };
+  config = lib.mkIf cfg.enable {
+    services.hyprpaper = {
+      enable = true;
+      settings = {
+        ipc = true;
+        splash_offset = 20;
+        splash_opacity = 0.8;
+      };
     };
   };
 }

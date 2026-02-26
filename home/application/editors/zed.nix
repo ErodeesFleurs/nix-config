@@ -79,12 +79,7 @@ in
               provider = "copilot_chat";
               model = "claude-sonnet-4.5";
             };
-            always_allow_tool_actions = false;
             model_parameters = [ ];
-          };
-
-          features = {
-            edit_prediction_provider = "copilot";
           };
 
           lsp = with pkgs; {

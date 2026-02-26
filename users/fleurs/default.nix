@@ -55,8 +55,11 @@
 
   # 桌面环境
   homeModules.hyprland = {
-    enable = true;
+    enable = false;
     hyprlauncher = false;
+  };
+  homeModules.hyprpaper = {
+    enable = false;
   };
 
   homeModules.ashell = {
@@ -64,6 +67,11 @@
     systemd = true;
     position = "Top";
     app-launcher-cmd = "vicinae toggle";
+  };
+
+  homeModules.desktop.swww = {
+    enable = true;
+    extra-args = [ ];
   };
 
   # 应用程序
