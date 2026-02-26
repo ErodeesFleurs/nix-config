@@ -97,7 +97,6 @@
 
   homeModules.packages = {
     enable = true;
-    hyprland-tools.enable = true;
   };
 
   # 环境变量

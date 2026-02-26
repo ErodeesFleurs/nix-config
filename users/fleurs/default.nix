@@ -78,6 +78,8 @@
     extra-args = [ ];
   };
 
+  home-modules.desktop.waybar.enable = true;
+
   # 应用程序
   homeModules.firefox = {
     enable = true;
@@ -110,7 +112,6 @@
 
   homeModules.packages = {
     enable = true;
-    hyprland-tools.enable = true;
   };
 
   # 环境变量

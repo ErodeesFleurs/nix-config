@@ -40,7 +40,10 @@
       enable = true;
 
       config = {
-        common.default = [ "gtk" ];
+        common.default = [
+          "gnome"
+          "gtk"
+        ];
         hyprland = {
           default = [
             "hyprland"
@@ -54,7 +57,7 @@
       configPackages = [ ];
 
       extraPortals = with pkgs; [
-        xdg-desktop-portal-hyprland
+        xdg-desktop-portal-gnome
         xdg-desktop-portal-gtk
       ];
 

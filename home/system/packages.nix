@@ -216,8 +216,7 @@ in
   config = lib.mkIf cfg.enable {
 
     home.packages =
-      lib.optionals (cfg.hyprland-tools.enable) cfg.hyprland-tools.packages
-      ++ lib.optionals (cfg.clipboard.enable) cfg.clipboard.packages
+      lib.optionals (cfg.clipboard.enable) cfg.clipboard.packages
       ++ lib.optionals (cfg.system-utils.enable) cfg.system-utils.packages
       ++ lib.optionals (cfg.archive-tools.enable) cfg.archive-tools.packages
       ++ lib.optionals (cfg.media-tools.enable) cfg.media-tools.packages
