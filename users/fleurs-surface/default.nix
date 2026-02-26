@@ -58,8 +58,8 @@
     monitors = [ "eDP-1,2736x1824,0x0,2.0" ];
   };
 
-  homeModules.ashell = {
-    enable = true;
+  home-modules.ashell = {
+    enable = false;
     systemd = true;
     position = "Top";
     app-launcher-cmd = "vicinae toggle";

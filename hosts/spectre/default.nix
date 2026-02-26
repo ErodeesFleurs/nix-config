@@ -210,10 +210,13 @@
   # ==========================================
   # 桌面环境
   # ==========================================
-  modules.display-manager = {
-    enable = true;
+  modules.display-manager.sddm = {
+    enable = false;
     wayland = true;
     auto-numlock = true;
+  };
+  modules.display-manager.tuigreet = {
+    enable = true;
   };
 
   modules.compositor.hyprland = {

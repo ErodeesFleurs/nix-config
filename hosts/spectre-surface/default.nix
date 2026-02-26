@@ -192,7 +192,7 @@
   # ==========================================
   # 桌面环境
   # ==========================================
-  modules.display-manager = {
+  modules.display-manager.sddm = {
     enable = true;
     wayland = true;
     auto-numlock = false;

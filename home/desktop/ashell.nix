@@ -5,10 +5,10 @@
 }:
 
 let
-  cfg = config.homeModules.ashell;
+  cfg = config.home-modules.ashell;
 in
 {
-  options.homeModules.ashell = {
+  options.home-modules.ashell = {
     enable = lib.mkEnableOption "Ashell desktop shell";
 
     systemd = lib.mkOption {

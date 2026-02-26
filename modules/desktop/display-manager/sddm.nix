@@ -6,10 +6,10 @@
 }:
 
 let
-  cfg = config.modules.display-manager;
+  cfg = config.modules.display-manager.sddm;
 in
 {
-  options.modules.display-manager = {
+  options.modules.display-manager.sddm = {
     enable = lib.mkEnableOption "SDDM display manager";
 
     wayland = lib.mkOption {

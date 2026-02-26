@@ -46,6 +46,7 @@ in
           networkmanagerapplet
           sshfs
           sshpass
+          adwaita-icon-theme
         ];
         description = "System utility packages";
       };
