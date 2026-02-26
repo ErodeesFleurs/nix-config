@@ -47,6 +47,7 @@ in
           sshfs
           sshpass
           adwaita-icon-theme
+          wineWow64Packages.waylandFull
         ];
         description = "System utility packages";
       };

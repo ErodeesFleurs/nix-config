@@ -37,6 +37,7 @@ in
             "cpu"
             "memory"
             "battery"
+            "mpris"
           ];
 
           "niri/window" = {
