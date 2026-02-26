@@ -283,30 +283,9 @@
 
   networking.networkmanager.wifi.powersave = false;
 
-  # ==========================================
   # 游戏配置
-  # ==========================================
-  modules.programs.gaming = {
-    enable = true;
-    enable-gamemode = true;
-    enable-performance-optimizations = true;
-    wine.enable = false;
-  };
-
-  modules.programs.steam = {
-    enable = true;
-    remote-play = {
-      enable = true;
-      open-firewall = true;
-    };
-    dedicated-server = {
-      enable = true;
-      open-firewall = true;
-    };
-    extest = true;
-    gamescope-session = true;
-    protontricks = true;
-  };
+  modules.programs.gaming.enable = true;
+  modules.programs.steam.enable = true;
 
   modules.programs.nh = {
     enable = true;
@@ -318,9 +297,7 @@
 
   modules.programs.localsend.enable = true;
 
-  # ==========================================
   # 主题配置
-  # ==========================================
   modules.stylix = {
     enable = true;
     polarity = "light";

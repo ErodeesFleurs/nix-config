@@ -11,152 +11,33 @@ in
 {
   options.modules.programs.gaming = {
     enable = lib.mkEnableOption "Gaming support and optimizations";
-
-    enable-performance-optimizations = lib.mkOption {
-      type = lib.types.bool;
-      default = true;
-      description = "Enable performance optimizations for gaming";
-    };
-
-    enable-gamemode = lib.mkOption {
-      type = lib.types.bool;
-      default = true;
-      description = "Enable Feral GameMode for performance optimization";
-    };
-
-    extra-packages = lib.mkOption {
-      type = lib.types.listOf lib.types.package;
-      default = [ ];
-      description = "Additional gaming-related packages";
-      example = lib.literalExpression ''
-        with pkgs; [
-          lutris
-          heroic
-          legendary-gl
-        ]
-      '';
-    };
-
-    wine = {
-      enable = lib.mkOption {
-        type = lib.types.bool;
-        default = true;
-        description = "Enable Wine for running Windows games";
-      };
-
-      package = lib.mkOption {
-        type = lib.types.package;
-        default = pkgs.wineWow64Packages.stable;
-        description = "Wine package to use";
-      };
-    };
-
-    open-ports = {
-      tcp = lib.mkOption {
-        type = lib.types.listOf lib.types.port;
-        default = [ ];
-        description = "Additional TCP ports to open for gaming";
-        example = [
-          27015
-          7777
-        ];
-      };
-
-      udp = lib.mkOption {
-        type = lib.types.listOf lib.types.port;
-        default = [ ];
-        description = "Additional UDP ports to open for gaming";
-        example = [
-          27015
-          7777
-        ];
-      };
-    };
   };
 
   config = lib.mkIf cfg.enable {
-    # Enable GameMode for performance
-    programs.gamemode = lib.mkIf cfg.enable-gamemode {
+    programs.gamemode = {
       enable = true;
       enableRenice = true;
       settings = {
         general = {
           renice = 10;
         };
+
         gpu = {
           apply_gpu_optimisations = "accept-responsibility";
           gpu_device = 0;
           amd_performance_level = "high";
         };
+
+        custom = {
+          start = "${pkgs.libnotify}/bin/notify-send 'GameMode started'";
+          end = "${pkgs.libnotify}/bin/notify-send 'GameMode ended'";
+        };
       };
     };
 
-    # Install gaming utilities
-    environment.systemPackages =
-      with pkgs;
-      [
-        # Monitoring tools
-        mangohud
-        goverlay
-      ]
-      ++ lib.optionals cfg.wine.enable [
-        cfg.wine.package
-        winetricks
-      ]
-      ++ cfg.extra-packages;
-
-    # Wine support
-    hardware.graphics = lib.mkIf cfg.wine.enable {
+    hardware.graphics = {
       enable32Bit = true;
     };
 
-    # Performance optimizations
-    boot.kernel.sysctl = lib.mkIf cfg.enable-performance-optimizations {
-      # Reduce swappiness for better gaming performance
-      "vm.swappiness" = lib.mkDefault 10;
-
-      # Increase file handle limits
-      "fs.file-max" = lib.mkDefault 2097152;
-
-      # Network optimizations
-      "net.core.rmem_max" = lib.mkDefault 16777216;
-      "net.core.wmem_max" = lib.mkDefault 16777216;
-      "net.ipv4.tcp_rmem" = lib.mkDefault "4096 87380 16777216";
-      "net.ipv4.tcp_wmem" = lib.mkDefault "4096 65536 16777216";
-    };
-
-    # Open firewall ports for gaming
-    networking.firewall = lib.mkIf (cfg.open-ports.tcp != [ ] || cfg.open-ports.udp != [ ]) {
-      allowedTCPPorts = cfg.open-ports.tcp;
-      allowedUDPPorts = cfg.open-ports.udp;
-    };
-
-    # Gaming session environment variables
-    environment.sessionVariables = {
-      # Enable MangoHud by default (can be toggled with Shift_R+F12)
-      MANGOHUD = lib.mkDefault "0";
-
-      # AMD GPU optimizations
-      AMD_VULKAN_ICD = lib.mkDefault "RADV";
-
-      # Enable Steam integration
-      STEAM_RUNTIME = lib.mkDefault "1";
-    };
-
-    # Security limits for gaming
-    security.pam.loginLimits = lib.mkIf cfg.enable-performance-optimizations [
-      {
-        domain = "*";
-        type = "hard";
-        item = "memlock";
-        value = "unlimited";
-      }
-      {
-        domain = "*";
-        type = "soft";
-        item = "memlock";
-        value = "unlimited";
-      }
-    ];
   };
 }
