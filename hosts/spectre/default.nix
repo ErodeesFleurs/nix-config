@@ -172,12 +172,7 @@
       enable = false;
     };
 
-    power = {
-      enable = true;
-      enable-tlp = true;
-      enable-powertop = true;
-      enable-upower = true;
-    };
+    power.enable = true;
 
     printing = {
       enable = true;
