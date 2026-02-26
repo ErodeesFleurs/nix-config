@@ -63,22 +63,11 @@
   networking.useDHCP = lib.mkDefault true;
   # networking.interfaces.wlp1s0.useDHCP = lib.mkDefault true;
 
-  # ==========================================
   # 显示配置
-  # ==========================================
-  # Surface Pro 5 的高 DPI 屏幕
   hardware.graphics = {
     enable = true;
   };
 
-  # ==========================================
-  # 电源管理
-  # ==========================================
-  powerManagement.cpuFreqGovernor = lib.mkDefault "powersave";
-
-  # ==========================================
-  # 其他硬件
-  # ==========================================
   # 蓝牙
   hardware.bluetooth.enable = true;
 

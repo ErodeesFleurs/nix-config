@@ -137,9 +137,6 @@
     enable-systemd-initrd = true;
     efi-can-touch-variables = true;
     enable-iommu = false;
-    extra-kernel-params = [
-      "mem_sleep_default=deep" # 深度睡眠模式
-    ];
   };
 
   # ==========================================
@@ -151,7 +148,7 @@
       enable-32bit = true;
       vulkan.enable = true;
       vaapi.enable = true;
-      vdpau.enable = false; # Intel 不需要 VDPAU
+      vdpau.enable = false;
     };
 
     power.enable = true;
@@ -184,23 +181,20 @@
     };
   };
 
-  # ==========================================
   # 桌面环境
-  # ==========================================
-  modules.display-manager.sddm = {
-    enable = true;
-    wayland = true;
-    auto-numlock = false;
+  modules.display-manager = {
+    sddm.enable = false;
+    tuigreet.enable = true;
   };
 
-  modules.compositor.hyprland = {
-    enable = true;
-    xwayland = true;
+  modules.compositor = {
+    hyprland.enable = false;
+    niri.enable = true;
   };
 
   modules.xserver = {
     enable = true;
-    video-drivers = [ "modesetting" ]; # Intel 集显使用 modesetting
+    video-drivers = [ "modesetting" ];
     layout = "cn";
     libinput = {
       enable = true;
@@ -214,18 +208,14 @@
 
   modules.xdg.enable = true;
 
-  # ==========================================
   # 音频配置
-  # ==========================================
   modules.pipewire = {
     enable = true;
     alsa-32bit = true;
     pulse = true;
   };
 
-  # ==========================================
   # 网络配置
-  # ==========================================
   modules.network = {
     wlan = {
       enable = true;
@@ -291,7 +281,6 @@
     };
   };
 
-  # 防止休眠后 WIFI 无法连接的问题
   networking.networkmanager.wifi.powersave = false;
 
   # ==========================================

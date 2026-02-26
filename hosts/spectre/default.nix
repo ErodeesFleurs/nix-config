@@ -122,9 +122,7 @@
     };
   };
 
-  # ==========================================
   # 启动配置
-  # ==========================================
   modules.boot = {
     enable = true;
     use-latest-kernel = true;
@@ -134,9 +132,7 @@
     enable-iommu = true;
   };
 
-  # ==========================================
   # 硬件配置
-  # ==========================================
   modules.hardware = {
     graphics = {
       enable = true;
@@ -347,7 +343,8 @@
     };
   };
 
-  modules.programs.appimage.enable = true;
-
-  modules.programs.localsend.enable = true;
+  modules.programs = {
+    appimage.enable = true;
+    localsend.enable = true;
+  };
 }

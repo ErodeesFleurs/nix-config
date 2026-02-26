@@ -73,12 +73,10 @@
     app-launcher-cmd = "vicinae toggle";
   };
 
-  homeModules.desktop.swww = {
-    enable = true;
-    extra-args = [ ];
+  home-modules.desktop = {
+    swww.enable = true;
+    waybar.enable = true;
   };
-
-  home-modules.desktop.waybar.enable = true;
 
   # 应用程序
   homeModules.firefox = {
