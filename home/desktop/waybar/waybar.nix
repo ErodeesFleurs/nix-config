@@ -86,21 +86,21 @@ in
               "󰤨"
             ];
             tooltip-format = "{ifname} - {ipaddr}\nDown Speed: {bandwidthDownBytes}\nUp Speed: {bandwidthUpBytes}";
-            on-click-right = "foot nmtui";
+            on-click-right = "ghostty -e nmtui";
           };
 
           cpu = {
             interval = 10;
             format = " {usage}%";
             max-length = 10;
-            on-click-right = "foot btop";
+            on-click-right = "ghostty -e btop";
           };
 
           memory = {
             interval = 10;
             format = " {}%";
             max-length = 10;
-            on-click-right = "foot btop";
+            on-click-right = "ghostty -e btop";
           };
 
           battery = {

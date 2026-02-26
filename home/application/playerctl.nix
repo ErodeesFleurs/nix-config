@@ -8,7 +8,7 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    services.playerctl = {
+    services.playerctld = {
       enable = true;
     };
   };
