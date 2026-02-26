@@ -9,7 +9,7 @@ let
 in
 {
   options.modules.virtualization.podman = {
-    enable = cfg.enable;
+    enable = lib.mkEnableOption "Podman container runtime and related tools";
   };
 
   config = lib.mkIf cfg.enable {
