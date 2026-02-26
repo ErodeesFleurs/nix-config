@@ -216,9 +216,13 @@
     auto-numlock = true;
   };
 
-  modules.programs.hyprland = {
+  modules.compositor.hyprland = {
     enable = true;
     xwayland = true;
+  };
+
+  modules.compositor.niri = {
+    enable = true;
   };
 
   modules.xserver = {
