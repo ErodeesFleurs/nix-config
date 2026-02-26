@@ -61,6 +61,11 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    niri = {
+      url = "github:sodiboo/niri-flake";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     fleurs-nur = {
       url = "github:ErodeesFleurs/fleurs-nur";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -77,6 +82,7 @@
       vicinae,
       daeuniverse,
       agenix,
+      niri,
       ...
     }@inputs:
     let
@@ -109,6 +115,7 @@
           daeuniverse.nixosModules.dae
           daeuniverse.nixosModules.daed
           stylix.nixosModules.stylix
+          niri.nixosModules.niri
           agenix.nixosModules.default
           ./modules
           ./hosts/spectre
@@ -123,6 +130,7 @@
           daeuniverse.nixosModules.dae
           daeuniverse.nixosModules.daed
           stylix.nixosModules.stylix
+          niri.nixosModules.niri
           agenix.nixosModules.default
           ./modules
           ./hosts/spectre-surface
@@ -136,6 +144,8 @@
           stylix.homeModules.stylix
           nixcord.homeModules.nixcord
           vicinae.homeManagerModules.default
+          niri.homeModules.niri
+          niri.homeModules.stylix
           agenix.homeManagerModules.default
           ./home
           ./users/fleurs
@@ -149,6 +159,8 @@
           stylix.homeModules.stylix
           nixcord.homeModules.nixcord
           vicinae.homeManagerModules.default
+          niri.homeModules.niri
+          niri.homeModules.stylix
           agenix.homeManagerModules.default
           ./home
           ./users/fleurs-surface

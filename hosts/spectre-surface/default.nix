@@ -198,7 +198,7 @@
     auto-numlock = false;
   };
 
-  modules.programs.hyprland = {
+  modules.compositor.hyprland = {
     enable = true;
     xwayland = true;
   };
@@ -248,7 +248,7 @@
     ssh = {
       enable = true;
       enable-server = false;
-      enable-agent = true;
+      enable-agent = false;
       known-hosts = {
         "github.com".publicKey =
           "github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl";

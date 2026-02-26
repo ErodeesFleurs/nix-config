@@ -15,18 +15,12 @@ in
       default = pkgs.niri;
       description = "The Niri package to use";
     };
-    use-nautilus = lib.mkOption {
-      type = lib.types.bool;
-      default = true;
-      description = "Whether to use Nautilus as the file manager in Niri";
-    };
   };
 
   config = lib.mkIf cfg.enable {
     programs.niri = {
       enable = true;
       package = cfg.package;
-      useNautilus = cfg.use-nautilus;
     };
   };
 
