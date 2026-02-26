@@ -62,6 +62,10 @@
     enable = false;
   };
 
+  home-modules.application = {
+    udiskie.enable = true;
+  };
+
   homeModules.ashell = {
     enable = true;
     systemd = true;

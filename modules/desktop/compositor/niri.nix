@@ -22,6 +22,8 @@ in
       enable = true;
       package = cfg.package;
     };
+
+    environment.defaultPackages = with pkgs; [ xwayland-satellite ];
   };
 
 }

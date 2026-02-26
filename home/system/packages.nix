@@ -13,25 +13,6 @@ in
   options.homeModules.packages = {
     enable = lib.mkEnableOption "user packages and utilities";
 
-    hyprland-tools = {
-      enable = lib.mkOption {
-        type = lib.types.bool;
-        default = true;
-        description = "Enable Hyprland ecosystem tools";
-      };
-
-      packages = lib.mkOption {
-        type = lib.types.listOf lib.types.package;
-        default = with pkgs; [
-          hyprpicker
-          hyprsunset
-          hyprcursor
-          hyprshot
-        ];
-        description = "Hyprland-related packages";
-      };
-    };
-
     clipboard = {
       enable = lib.mkOption {
         type = lib.types.bool;
@@ -59,7 +40,6 @@ in
       packages = lib.mkOption {
         type = lib.types.listOf lib.types.package;
         default = with pkgs; [
-          udiskie
           libnotify
           brightnessctl
           usbutils

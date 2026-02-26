@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, lib, ... }:
 {
   programs.niri = {
     enable = true;
@@ -76,6 +76,24 @@
         "Mod+Print".action.screenshot-screen = { };
         "Mod+Shift+Print".action.screenshot-window = { };
       };
+
+      window-rules = [
+        {
+          geometry-corner-radius = {
+            top-left = 12.0;
+            top-right = 12.0;
+            bottom-left = 12.0;
+            bottom-right = 12.0;
+          };
+          clip-to-geometry = true;
+        }
+      ];
+
+      xwayland-satellite = {
+        enable = true;
+        path = lib.getExe pkgs.xwayland-satellite;
+      };
     };
+
   };
 }

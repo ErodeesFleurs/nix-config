@@ -93,10 +93,6 @@ in
           monitor = cfg.monitors;
 
           exec-once = [
-            "hyprpaper"
-            "hypridle"
-            "swww-daemon"
-            "dunst"
             "udiskie"
             "fcitx5 -d"
             "wl-paste --watch cliphist store"
