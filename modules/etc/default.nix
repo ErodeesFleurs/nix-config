@@ -46,27 +46,21 @@ in
 
   # 实现：根据所配置的命名空间应用行为（优先使用 modules.etc）。
   config = lib.mkIf cfg.enable {
-    # 确保与 /etc overlay 与系统状态相关的基础 system.* 系统级设置在此处被应用。
     system = {
-      # 将 stateVersion 与 nixos-init 与其它系统级相关项放在一起管理。
       stateVersion = cfg.state-version;
       nixos-init.enable = cfg.enable-init;
 
-      # /etc overlay 配置：始终启用，是否可写由选项控制
       etc = {
         overlay = {
           enable = true;
-          mutable = cfg.overlay-mutable;
+          mutable = false;
         };
       };
     };
 
-    # 当 /etc overlay 为不可变时，需要在 /etc 下填充一组最小文件，
-    # 以便后续的挂载绑定与服务能够找到它们期望的文件和目录。
-    environment = lib.mkIf (!cfg.overlay-mutable) {
+    environment = {
       etc = {
         "machine-id".text = cfg.machine-id;
-
       };
     };
 
