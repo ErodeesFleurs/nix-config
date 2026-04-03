@@ -66,7 +66,7 @@
   };
 
   home-modules.desktop = {
-    swww.enable = true;
+    awww.enable = true;
     waybar.enable = true;
   };
 

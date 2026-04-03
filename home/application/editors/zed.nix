@@ -46,6 +46,7 @@ in
         "git-firefly"
         "html"
         "lua"
+        "xmake"
         "neocmake"
         "nix"
         "nu"
