@@ -62,6 +62,7 @@ in
     fileSystems = lib.mkIf enable_persistent {
       "/etc/daed" = {
         device = "/persist/etc/daed";
+        fsType = "none";
         options = [
           "bind"
           "rw"

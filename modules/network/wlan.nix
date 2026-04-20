@@ -93,6 +93,7 @@ in
     fileSystems = lib.mkIf enable_persistent {
       "/etc/NetworkManager/system-connections" = {
         device = "/persist/etc/NetworkManager/system-connections";
+        fsType = "none";
         options = [
           "bind"
           "rw"

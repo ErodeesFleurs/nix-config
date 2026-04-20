@@ -86,6 +86,7 @@ in
     fileSystems = lib.mkIf enable_persistent {
       "/etc/v2raya" = {
         device = "/persist/etc/v2raya";
+        fsType = "none";
         options = [
           "bind"
           "rw"
