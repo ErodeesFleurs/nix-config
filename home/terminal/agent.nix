@@ -10,11 +10,6 @@
         prune_tool_outputs = true;
       };
 
-      cache = {
-        enabled = true;
-        provider = "auto";
-      };
-
       plugin = [
         "opencode-worktree"
         "opencode-skillful"
