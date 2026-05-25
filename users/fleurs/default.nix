@@ -10,7 +10,6 @@
 
     # 特定软件包
     packages = with pkgs; [
-      vscode
       rar
       go-musicfox
       aria2
