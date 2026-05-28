@@ -183,9 +183,9 @@ in
         type = lib.types.listOf lib.types.package;
         default = with pkgs; [
           # aseprite
+          # blender
           steamcmd
           baidupcs-go
-          blender
         ];
         description = "Development tool packages";
       };
