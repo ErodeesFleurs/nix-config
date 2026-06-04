@@ -20,12 +20,13 @@ in
       useTextGreeter = true;
       settings = {
         default_session = {
-          command = ''
-            tuigreet \
-            --time \
-            --time-format '%Y-%m-%d %H:%M' \
-            --asterisks \
-            --remember'';
+          command = lib.concatStringsSep " " [
+            "${pkgs.tuigreet}/bin/tuigreet"
+            "--time"
+            "--time-format '%Y-%m-%d %H:%M'"
+            "--asterisks"
+            "--remember"
+          ];
           user = "greeter";
         };
       };
