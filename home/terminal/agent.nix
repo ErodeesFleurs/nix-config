@@ -10,6 +10,8 @@
         prune_tool_outputs = true;
       };
 
+      lsp = true;
+
       plugin = [
         "opencode-worktree"
         "opencode-skillful"
