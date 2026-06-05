@@ -175,9 +175,6 @@ in
         terminal = cfg.opacity.terminal;
       };
 
-      # Temporary workaround for nixpkgs removing services.kmscon.extraConfig/fonts.
-      targets.kmscon.enable = false;
-
       enableReleaseChecks = cfg.enable-release-checks;
     };
   };
