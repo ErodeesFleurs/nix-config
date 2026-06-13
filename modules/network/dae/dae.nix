@@ -2,6 +2,7 @@
   config,
   lib,
   pkgs,
+  inputs,
   ...
 }:
 
@@ -20,7 +21,7 @@ in
     services.dae = {
       enable = cfg.enable;
 
-      package = pkgs.dae;
+      package = inputs.daeuniverse.packages.${pkgs.stdenv.hostPlatform.system}.dae-unstable;
 
       openFirewall = {
         enable = true;
