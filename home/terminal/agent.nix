@@ -5,9 +5,6 @@
     settings = {
       compaction = {
         auto = true;
-        strategy = "summarize";
-        threshold = 0.8;
-        prune_tool_outputs = true;
       };
 
       lsp = true;
@@ -15,6 +12,11 @@
       plugin = [
         "opencode-worktree"
         "opencode-skillful"
+        "opencode-notificator"
+        "opencode-pty"
+        "opencode-dynamic-context-pruning"
+        "opencode-goal-plugin"
+        "superpowers@git+https://github.com/obra/superpowers.git"
       ];
     };
   };
