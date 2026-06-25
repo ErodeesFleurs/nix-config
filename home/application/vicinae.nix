@@ -36,7 +36,7 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    services.vicinae = {
+    programs.vicinae = {
       enable = true;
       systemd = {
         enable = true;
