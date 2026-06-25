@@ -18,6 +18,26 @@ in
       dockerCompat = true;
     };
 
+    users.users.fleurs = {
+      subUidRanges = [
+        {
+          startUid = 100000;
+          count = 65536;
+        }
+      ];
+      subGidRanges = [
+        {
+          startGid = 100000;
+          count = 65536;
+        }
+      ];
+    };
+
+    environment.etc = {
+      "subuid".text = "fleurs:100000:65536\n";
+      "subgid".text = "fleurs:100000:65536\n";
+    };
+
     environment.systemPackages = with pkgs; [
       podman-compose
     ];

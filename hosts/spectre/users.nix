@@ -19,7 +19,6 @@
           "docker"
           "libvirtd"
         ];
-        autoSubUidGidRange = true;
       };
     };
   };
