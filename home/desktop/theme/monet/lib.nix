@@ -4,19 +4,17 @@ let
   homeDir = config.home.homeDirectory;
   currentSymlink = "${homeDir}/.local/share/themes/current";
 
-  toHomePath =
-    path:
-    if lib.hasPrefix "/" path then
-      path
-    else
-      "${homeDir}/${path}";
+  toHomePath = path: if lib.hasPrefix "/" path then path else "${homeDir}/${path}";
 
   mkThemeLink =
     {
       name,
       target,
       source,
-      after ? [ "initThemeLinks" "cleanupDarkmanLegacyHooks" ],
+      after ? [
+        "initThemeLinks"
+        "cleanupDarkmanLegacyHooks"
+      ],
       postLink ? "",
       activationName ? "link${name}Theme",
     }:
@@ -52,7 +50,7 @@ let
     replacement:
     if builtins.isString replacement then
       {
-        placeholder = replacement;
+        token = replacement;
         color = replacement;
         transform = "hex";
       }
@@ -72,30 +70,32 @@ let
     let
       raw = ''.colors.${color}["${polarity}"].color'';
     in
-    ({
+    builtins.getAttr transform {
       hex = raw;
       noHash = ''${raw} | ltrimstr("#")'';
-    }).${transform};
+    };
 
   mkSubstituteArg =
-    polarity:
-    replacement:
+    polarity: replacement:
     let
       normalized = normalizeReplacement replacement;
     in
-    "--replace-fail ${lib.escapeShellArg "@${normalized.placeholder}@"} \"$(jq -r ${
-      lib.escapeShellArg (colorFilter polarity normalized)
-    } colors.json)\"";
+    "--replace-fail ${lib.escapeShellArg "@${normalized.token}@"} \"$(jq -r ${lib.escapeShellArg (colorFilter polarity normalized)} colors.json)\"";
 
   mkLiteralSubstituteArg =
     {
-      placeholder,
+      token,
       value,
     }:
-    "--replace-fail ${lib.escapeShellArg "@${placeholder}@"} ${lib.escapeShellArg value}";
+    "--replace-fail ${lib.escapeShellArg "@${token}@"} ${lib.escapeShellArg value}";
 in
 {
-  inherit homeDir currentSymlink mkThemeLink mkXdgPlaceholder;
+  inherit
+    homeDir
+    currentSymlink
+    mkThemeLink
+    mkXdgPlaceholder
+    ;
 
   renderTemplate =
     {
@@ -110,8 +110,7 @@ in
     let
       allReplacements = (map normalizeReplacement colors) ++ (map normalizeReplacement replacements);
       substituteArgs = lib.concatStringsSep " \\\n        " (
-        (map (mkSubstituteArg polarity) allReplacements)
-        ++ (map mkLiteralSubstituteArg literalReplacements)
+        (map (mkSubstituteArg polarity) allReplacements) ++ (map mkLiteralSubstituteArg literalReplacements)
       );
       appendCommands = lib.concatMapStringsSep "\n" (path: "cat ${path} >> \"${target}\"") append;
     in

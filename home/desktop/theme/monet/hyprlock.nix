@@ -16,39 +16,39 @@ themeLib.mkApp {
       inherit polarity;
       replacements = [
         {
-          placeholder = "outline_variant_rgb";
+          token = "outline_variant_rgb";
           color = "outline_variant";
           transform = "noHash";
         }
         {
-          placeholder = "surface_container_high_rgb";
+          token = "surface_container_high_rgb";
           color = "surface_container_high";
           transform = "noHash";
         }
         {
-          placeholder = "on_surface_rgb";
+          token = "on_surface_rgb";
           color = "on_surface";
           transform = "noHash";
         }
         {
-          placeholder = "primary_rgb";
+          token = "primary_rgb";
           color = "primary";
           transform = "noHash";
         }
         {
-          placeholder = "error_rgb";
+          token = "error_rgb";
           color = "error";
           transform = "noHash";
         }
         {
-          placeholder = "on_surface_variant_rgb";
+          token = "on_surface_variant_rgb";
           color = "on_surface_variant";
           transform = "noHash";
         }
       ];
       literalReplacements = [
         {
-          placeholder = "font_family";
+          token = "font_family";
           value = font;
         }
       ];

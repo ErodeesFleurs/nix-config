@@ -20,7 +20,7 @@ themeLib.mkApp {
       ];
       literalReplacements = [
         {
-          placeholder = "home_dir";
+          token = "home_dir";
           value = homeDir;
         }
       ];

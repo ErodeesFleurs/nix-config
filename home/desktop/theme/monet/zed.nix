@@ -35,7 +35,7 @@ themeLib.mkApp {
       ];
       literalReplacements = [
         {
-          placeholder = "appearance";
+          token = "appearance";
           value = polarity;
         }
       ];
