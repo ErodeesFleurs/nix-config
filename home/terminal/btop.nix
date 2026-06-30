@@ -286,7 +286,7 @@ in
 
       theme-background = lib.mkOption {
         type = lib.types.bool;
-        default = false;
+        default = true;
         description = "Use theme background";
       };
     };

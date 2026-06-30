@@ -21,7 +21,7 @@ in
 
         width = lib.mkOption {
           type = lib.types.int;
-          default = 300;
+          default = 360;
           description = "Width of notification window";
         };
 
@@ -45,25 +45,25 @@ in
 
         padding = lib.mkOption {
           type = lib.types.int;
-          default = 15;
+          default = 20;
           description = "Padding between text and separator";
         };
 
         horizontal-padding = lib.mkOption {
           type = lib.types.int;
-          default = 15;
+          default = 20;
           description = "Horizontal padding";
         };
 
         corner-radius = lib.mkOption {
           type = lib.types.int;
-          default = 8;
+          default = 24;
           description = "Corner radius of notification window";
         };
 
         frame-width = lib.mkOption {
           type = lib.types.int;
-          default = 2;
+          default = 1;
           description = "Width of notification frame";
         };
 
@@ -75,7 +75,7 @@ in
 
         gap-size = lib.mkOption {
           type = lib.types.int;
-          default = 8;
+          default = 12;
           description = "Gap between notifications";
         };
 
@@ -100,7 +100,7 @@ in
         progress-bar = {
           height = lib.mkOption {
             type = lib.types.int;
-            default = 8;
+            default = 6;
             description = "Height of progress bar";
           };
 

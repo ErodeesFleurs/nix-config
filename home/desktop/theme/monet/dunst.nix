@@ -44,7 +44,7 @@ let
       offset = settings.global.offset;
       padding = settings.global.padding;
       horizontal_padding = settings.global.horizontal-padding;
-      text_icon_padding = 15;
+      text_icon_padding = 16;
       icon_position = settings.global.icon-position;
       min_icon_size = settings.global.min-icon-size;
       max_icon_size = settings.global.max-icon-size;
@@ -52,7 +52,7 @@ let
       progress_bar_frame_width = settings.global.progress-bar.frame-width;
       progress_bar_min_width = settings.global.progress-bar.min-width;
       progress_bar_max_width = settings.global.progress-bar.max-width;
-      separator_height = 2;
+      separator_height = 0;
       frame_width = settings.global.frame-width;
       frame_color = settings.global.frame-color;
       corner_radius = settings.global.corner-radius;
@@ -94,21 +94,21 @@ let
     lib.mapAttrsToList renderSection (
       lib.recursiveUpdate baseSections {
         global = {
-          frame_color = "__M3_OUTLINE__";
+          frame_color = "__M3_OUTLINE_VARIANT__";
           highlight = "__M3_PRIMARY__";
           separator_color = "frame";
         };
 
         urgency_low = {
-          background = "__M3_SURFACE_CONTAINER__";
+          background = "__M3_SURFACE_CONTAINER_LOW__";
           foreground = "__M3_ON_SURFACE_VARIANT__";
-          frame_color = "__M3_OUTLINE__";
+          frame_color = "__M3_OUTLINE_VARIANT__";
         };
 
         urgency_normal = {
-          background = "__M3_SURFACE__";
+          background = "__M3_SURFACE_CONTAINER_HIGH__";
           foreground = "__M3_ON_SURFACE__";
-          frame_color = "__M3_PRIMARY__";
+          frame_color = "__M3_OUTLINE_VARIANT__";
         };
 
         urgency_critical = {
@@ -132,11 +132,11 @@ in
       DUNSTEOF
 
       substituteInPlace "$out/dunst/dunstrc" \
-        --replace-fail __M3_SURFACE__ "$(jq -r '.colors.surface["${polarity}"].color' colors.json)" \
-        --replace-fail __M3_SURFACE_CONTAINER__ "$(jq -r '.colors.surface_container["${polarity}"].color' colors.json)" \
+        --replace-fail __M3_SURFACE_CONTAINER_LOW__ "$(jq -r '.colors.surface_container_low["${polarity}"].color' colors.json)" \
+        --replace-fail __M3_SURFACE_CONTAINER_HIGH__ "$(jq -r '.colors.surface_container_high["${polarity}"].color' colors.json)" \
         --replace-fail __M3_ON_SURFACE__ "$(jq -r '.colors.on_surface["${polarity}"].color' colors.json)" \
         --replace-fail __M3_ON_SURFACE_VARIANT__ "$(jq -r '.colors.on_surface_variant["${polarity}"].color' colors.json)" \
-        --replace-fail __M3_OUTLINE__ "$(jq -r '.colors.outline["${polarity}"].color' colors.json)" \
+        --replace-fail __M3_OUTLINE_VARIANT__ "$(jq -r '.colors.outline_variant["${polarity}"].color' colors.json)" \
         --replace-fail __M3_PRIMARY__ "$(jq -r '.colors.primary["${polarity}"].color' colors.json)" \
         --replace-fail __M3_ERROR__ "$(jq -r '.colors.error["${polarity}"].color' colors.json)" \
         --replace-fail __M3_ERROR_CONTAINER__ "$(jq -r '.colors.error_container["${polarity}"].color' colors.json)" \
