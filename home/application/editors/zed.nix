@@ -54,6 +54,7 @@ in
         "opencode"
         "toml"
         "zig"
+        "ron"
       ];
 
       userSettings = lib.mkMerge [
