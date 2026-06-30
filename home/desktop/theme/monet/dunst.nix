@@ -16,9 +16,9 @@ let
     else if builtins.isInt value || builtins.isFloat value then
       toString value
     else if builtins.isString value then
-      value
+      builtins.toJSON value
     else if builtins.isPath value then
-      toString value
+      builtins.toJSON (toString value)
     else if builtins.isList value then
       lib.concatMapStringsSep "," mkValueString value
     else
@@ -154,7 +154,7 @@ in
         if [ -d "$(dirname "$DUNST_CONFIG")" ] && [ -f "$THEME_DUNST" ]; then
           $DRY_RUN_CMD rm -f "$DUNST_CONFIG"
           $DRY_RUN_CMD ln -sfn "$THEME_DUNST" "$DUNST_CONFIG"
-          ${pkgs.dunst}/bin/dunstctl reload 2>/dev/null || ${pkgs.procps}/bin/pkill -HUP dunst 2>/dev/null || true
+          ${pkgs.dunst}/bin/dunstctl reload "$THEME_DUNST" 2>/dev/null || ${pkgs.procps}/bin/pkill -HUP dunst 2>/dev/null || true
         fi
       '';
 }
