@@ -6,6 +6,7 @@
 }:
 let
   cfg = config.home-modules.desktop.waybar;
+  m3FallbackStyle = builtins.readFile ../../../assets/waybar/m3-expressive-dark.css;
 in
 {
   options.home-modules.desktop.waybar = {
@@ -28,7 +29,8 @@ in
           exclusive = true;
           start_hidden = false;
           reload_style_on_change = true;
-          height = 32;
+          height = 38;
+          spacing = 2;
           modules-left = [
             "niri/workspaces"
             "niri/window"
@@ -54,7 +56,7 @@ in
           };
 
           clock = {
-            format = "{:%B %d, %H:%M}";
+            format = "{:%b %d  %H:%M}";
             tooltip-format = "{:%A, %Y (%S)}";
             interval = 1;
             on-click = "vicinae toggle";
@@ -111,8 +113,8 @@ in
           };
 
           battery = {
-            format = "{icon} {capacity}";
-            format-charging = "󰂄 {capacity}";
+            format = "{icon} {capacity}%";
+            format-charging = "󰂄 {capacity}%";
             format-icons = [
               "󰂎"
               "󰁺"
@@ -137,9 +139,9 @@ in
           "custom/darkman" = {
             exec = ''
               if [ "$(readlink ${config.home.homeDirectory}/.local/share/themes/current)" = dark ]; then
-                printf '{"text":"🌙","tooltip":"Night mode — click for day","class":"dark"}'
+                printf '{"text":"󰖔","tooltip":"Night mode — click for day","class":"dark"}'
               else
-                printf '{"text":"☀️","tooltip":"Day mode — click for night","class":"light"}'
+                printf '{"text":"󰖨","tooltip":"Day mode — click for night","class":"light"}'
               fi
             '';
             interval = 10;
@@ -163,95 +165,7 @@ in
           };
         };
       };
-      style = ''
-        window#waybar {
-            background-color: transparent;
-            margin-bottom: 2pt;
-        }
-
-        tooltip label {
-            margin: -5px -3px;
-        }
-
-        #clock {
-            margin-left: 2pt;
-            margin-right: 2pt;
-            border: 2px solid;
-            border-radius: 8px;
-            padding: 0 12px;
-            transition: none;
-        }
-
-        #workspaces {
-            margin-left: 2pt;
-            border-left: 2px solid;
-            border-bottom: 2px solid;
-            border-top: 2px solid;
-            border-radius: 8px 0 0 8px;
-            padding: 0 6px;
-            transition: none;
-        }
-
-        #window {
-            border-right: 2px solid;
-            border-top: 2px solid;
-            border-bottom: 2px solid;
-            border-radius: 0 8px 8px 0;
-            padding: 0 12px;
-            transition: none;
-        }
-
-        window#waybar.empty #window {
-            background-color: transparent;
-            border: none;
-        }
-
-        window#waybar.empty #workspaces {
-            border-right: 2px solid;
-            border-radius: 8px;
-        }
-
-        #tray {
-            border-left: 2px solid;
-            border-bottom: 2px solid;
-            border-top: 2px solid;
-            border-radius: 8px 0 0 8px;
-            padding: 0 12px;
-        }
-
-        #network,
-        #cpu,
-        #memory {
-            border-top: 2px solid;
-            border-bottom: 2px solid;
-            padding: 0 12px;
-            transition: none;
-        }
-
-        #battery {
-            margin-right: 2pt;
-            border-right: 2px solid;
-            border-top: 2px solid;
-            border-bottom: 2px solid;
-            border-radius: 0 8px 8px 0;
-            padding: 0 12px;
-            transition: none;
-        }
-
-        #workspaces button {
-            padding: 0 2px;
-        }
-
-        #custom-darkman {
-            margin-left: 2pt;
-            border-left: 2px solid;
-            border-bottom: 2px solid;
-            border-top: 2px solid;
-            border-radius: 8px 0 0 8px;
-            padding: 0 12px;
-            transition: none;
-        }
-      '';
+      style = m3FallbackStyle;
     };
   };
 }

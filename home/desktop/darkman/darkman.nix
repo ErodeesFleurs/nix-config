@@ -15,6 +15,9 @@ let
   themeBase = "${homeDir}/.local/share/themes";
   currentSymlink = "${themeBase}/current";
 
+  m3LightWaybarCss = builtins.readFile ../../../assets/waybar/m3-expressive-light.css;
+  m3DarkWaybarCss = builtins.readFile ../../../assets/waybar/m3-expressive-dark.css;
+
   # ── 构建一个 polarity 变体的所有主题文件 ────────
   mkThemeDerivation =
     {
@@ -151,84 +154,7 @@ in
     light = {
       waybarCss = lib.mkOption {
         type = lib.types.lines;
-        default = ''
-          window#waybar {
-              background-color: transparent;
-              margin-bottom: 2pt;
-          }
-          tooltip label {
-              margin: -5px -3px;
-          }
-          #clock {
-              margin-left: 2pt;
-              margin-right: 2pt;
-              border: 2px solid @theme_fg_color;
-              border-radius: 8px;
-              padding: 0 12px;
-              transition: none;
-          }
-          #workspaces {
-              margin-left: 2pt;
-              border-left: 2px solid @theme_fg_color;
-              border-bottom: 2px solid @theme_fg_color;
-              border-top: 2px solid @theme_fg_color;
-              border-radius: 8px 0 0 8px;
-              padding: 0 6px;
-              transition: none;
-          }
-          #window {
-              border-right: 2px solid @theme_fg_color;
-              border-top: 2px solid @theme_fg_color;
-              border-bottom: 2px solid @theme_fg_color;
-              border-radius: 0 8px 8px 0;
-              padding: 0 12px;
-              transition: none;
-          }
-          window#waybar.empty #window {
-              background-color: transparent;
-              border: none;
-          }
-          window#waybar.empty #workspaces {
-              border-right: 2px solid @theme_fg_color;
-              border-radius: 8px;
-          }
-          #tray {
-              border-left: 2px solid @theme_fg_color;
-              border-bottom: 2px solid @theme_fg_color;
-              border-top: 2px solid @theme_fg_color;
-              border-radius: 8px 0 0 8px;
-              padding: 0 12px;
-          }
-          #network,
-          #cpu,
-          #memory {
-              border-top: 2px solid @theme_fg_color;
-              border-bottom: 2px solid @theme_fg_color;
-              padding: 0 12px;
-              transition: none;
-          }
-          #battery {
-              margin-right: 2pt;
-              border-right: 2px solid @theme_fg_color;
-              border-top: 2px solid @theme_fg_color;
-              border-bottom: 2px solid @theme_fg_color;
-              border-radius: 0 8px 8px 0;
-              padding: 0 12px;
-              transition: none;
-          }
-          #workspaces button {
-              padding: 0 2px;
-          }
-          #custom-darkman {
-              margin-left: 2pt;
-              border-left: 2px solid @theme_fg_color;
-              border-bottom: 2px solid @theme_fg_color;
-              border-top: 2px solid @theme_fg_color;
-              border-radius: 8px 0 0 8px;
-              padding: 0 12px;
-              transition: none;
-          }
-        '';
+        default = m3LightWaybarCss;
         description = "Waybar CSS for light mode";
       };
 
@@ -267,84 +193,7 @@ in
     dark = {
       waybarCss = lib.mkOption {
         type = lib.types.lines;
-        default = ''
-          window#waybar {
-              background-color: transparent;
-              margin-bottom: 2pt;
-          }
-          tooltip label {
-              margin: -5px -3px;
-          }
-          #clock {
-              margin-left: 2pt;
-              margin-right: 2pt;
-              border: 2px solid @theme_fg_color;
-              border-radius: 8px;
-              padding: 0 12px;
-              transition: none;
-          }
-          #workspaces {
-              margin-left: 2pt;
-              border-left: 2px solid @theme_fg_color;
-              border-bottom: 2px solid @theme_fg_color;
-              border-top: 2px solid @theme_fg_color;
-              border-radius: 8px 0 0 8px;
-              padding: 0 6px;
-              transition: none;
-          }
-          #window {
-              border-right: 2px solid @theme_fg_color;
-              border-top: 2px solid @theme_fg_color;
-              border-bottom: 2px solid @theme_fg_color;
-              border-radius: 0 8px 8px 0;
-              padding: 0 12px;
-              transition: none;
-          }
-          window#waybar.empty #window {
-              background-color: transparent;
-              border: none;
-          }
-          window#waybar.empty #workspaces {
-              border-right: 2px solid @theme_fg_color;
-              border-radius: 8px;
-          }
-          #tray {
-              border-left: 2px solid @theme_fg_color;
-              border-bottom: 2px solid @theme_fg_color;
-              border-top: 2px solid @theme_fg_color;
-              border-radius: 8px 0 0 8px;
-              padding: 0 12px;
-          }
-          #network,
-          #cpu,
-          #memory {
-              border-top: 2px solid @theme_fg_color;
-              border-bottom: 2px solid @theme_fg_color;
-              padding: 0 12px;
-              transition: none;
-          }
-          #battery {
-              margin-right: 2pt;
-              border-right: 2px solid @theme_fg_color;
-              border-top: 2px solid @theme_fg_color;
-              border-bottom: 2px solid @theme_fg_color;
-              border-radius: 0 8px 8px 0;
-              padding: 0 12px;
-              transition: none;
-          }
-          #workspaces button {
-              padding: 0 2px;
-          }
-          #custom-darkman {
-              margin-left: 2pt;
-              border-left: 2px solid @theme_fg_color;
-              border-bottom: 2px solid @theme_fg_color;
-              border-top: 2px solid @theme_fg_color;
-              border-radius: 8px 0 0 8px;
-              padding: 0 12px;
-              transition: none;
-          }
-        '';
+        default = m3DarkWaybarCss;
         description = "Waybar CSS for dark mode";
       };
 
