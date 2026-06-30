@@ -8,10 +8,24 @@
 let
   themeLib = import ./lib.nix { inherit config lib; };
   waybar = import ./waybar.nix { inherit pkgs themeLib waybarBodyCssPath; };
-  dunst = import ./dunst.nix { inherit config lib pkgs themeLib; };
+  dunst = import ./dunst.nix {
+    inherit
+      config
+      lib
+      pkgs
+      themeLib
+      ;
+  };
   btop = import ./btop.nix { inherit config themeLib; };
   ghostty = import ./ghostty.nix { inherit config themeLib; };
-  firefox = import ./firefox.nix { inherit config lib pkgs themeLib; };
+  firefox = import ./firefox.nix {
+    inherit
+      config
+      lib
+      pkgs
+      themeLib
+      ;
+  };
   hyprlock = import ./hyprlock.nix { inherit config themeLib; };
   yazi = import ./yazi.nix { inherit config themeLib; };
   gitui = import ./gitui.nix { inherit config themeLib; };
@@ -20,6 +34,7 @@ let
   fastfetch = import ./fastfetch.nix { inherit config themeLib; };
   starship = import ./starship.nix { inherit config themeLib; };
   mpv = import ./mpv.nix { inherit config themeLib; };
+  niri = import ./niri.nix { inherit config themeLib; };
 
   apps = [
     waybar
@@ -35,6 +50,7 @@ let
     fastfetch
     starship
     mpv
+    niri
   ];
 in
 themeLib.collect apps
