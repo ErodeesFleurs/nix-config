@@ -16,6 +16,10 @@
       font-size = 12;
       shell-integration-features = "ssh-terminfo,ssh-env";
       theme = "monet";
+      window-padding-x = 12;
+      window-padding-y = 12;
+      window-padding-balance = true;
+      window-padding-color = "background";
     };
   };
 }
