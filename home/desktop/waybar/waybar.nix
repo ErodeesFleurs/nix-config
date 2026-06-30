@@ -1,4 +1,9 @@
-{ config, lib, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 let
   cfg = config.home-modules.desktop.waybar;
 in
@@ -32,6 +37,7 @@ in
             "clock"
           ];
           modules-right = [
+            "custom/darkman"
             "tray"
             "network"
             "cpu"
@@ -127,6 +133,34 @@ in
             };
             interval = 30;
           };
+
+          "custom/darkman" = {
+            exec = ''
+              if [ "$(readlink ${config.home.homeDirectory}/.local/share/themes/current)" = dark ]; then
+                printf '{"text":"🌙","tooltip":"Night mode — click for day","class":"dark"}'
+              else
+                printf '{"text":"☀️","tooltip":"Day mode — click for night","class":"light"}'
+              fi
+            '';
+            interval = 10;
+            return-type = "json";
+            on-click = ''
+              CURRENT=$(readlink ${config.home.homeDirectory}/.local/share/themes/current)
+              if [ "$CURRENT" = dark ]; then
+                if ${pkgs.darkman}/bin/darkman set light 2>/dev/null; then
+                  :
+                else
+                  ${config.home.homeDirectory}/.local/share/darkman/switch-theme.sh light
+                fi
+              else
+                if ${pkgs.darkman}/bin/darkman set dark 2>/dev/null; then
+                  :
+                else
+                  ${config.home.homeDirectory}/.local/share/darkman/switch-theme.sh dark
+                fi
+              fi
+            '';
+          };
         };
       };
       style = ''
@@ -206,6 +240,16 @@ in
 
         #workspaces button {
             padding: 0 2px;
+        }
+
+        #custom-darkman {
+            margin-left: 2pt;
+            border-left: 2px solid;
+            border-bottom: 2px solid;
+            border-top: 2px solid;
+            border-radius: 8px 0 0 8px;
+            padding: 0 12px;
+            transition: none;
         }
       '';
     };

@@ -8,6 +8,8 @@
 let
   cfg = config.home-modules.desktop.darkman;
   homeDir = config.home.homeDirectory;
+  shellArg = value: lib.escapeShellArg (toString value);
+  wallpaperArg = wallpaper: if wallpaper == null then "''" else shellArg wallpaper;
 
   # ── 主题文件基础路径 ────────────────────────────
   themeBase = "${homeDir}/.local/share/themes";
@@ -25,7 +27,7 @@ let
         nativeBuildInputs = [ pkgs.jq ];
       }
       ''
-        mkdir -p $out/waybar $out/qt5ct
+        mkdir -p $out/waybar $out/qt5ct $out/qt6ct
 
         # Waybar CSS
         cat > "$out/waybar/style.css" << 'WAYBAREOF'
@@ -39,6 +41,13 @@ let
         custom_palette=false
         QT5EOF
 
+        # Qt6ct 配置文件
+        cat > "$out/qt6ct/qt6ct.conf" << 'QT6EOF'
+        [Appearance]
+        style=${qt5ctStyle}
+        custom_palette=false
+        QT6EOF
+
         # 主题元数据 JSON — 供外部脚本查询当前状态
         cat > "$out/theme.json" << JSONEOF
         {
@@ -49,59 +58,67 @@ let
       '';
 
   # ── Darkman hook 脚本：翻转 current 链接并重载应用 ──
-  mkHookScript =
-    target:
-    let
-      theme = if target == "dark" then cfg.dark else cfg.light;
-      wallpaper = theme.wallpaper;
-      notifyMsg = if target == "dark" then "夜间模式已激活" else "日间模式已激活";
-    in
-    pkgs.writeShellScript "darkman-${target}-hook" ''
-      set -euo pipefail
+  mkHookScript = pkgs.writeShellScript "darkman-switch-theme-hook" ''
+    set -euo pipefail
 
-      THEME_TARGET="${themeBase}/${target}"
+    target="''${1:-}"
 
-      if [ ! -d "$THEME_TARGET" ]; then
-        echo "ERROR: theme directory not found: $THEME_TARGET" >&2
-        exit 1
-      fi
+    case "$target" in
+      dark)
+        GTK_THEME=${shellArg cfg.dark.gtkTheme}
+        COLOR_SCHEME="prefer-dark"
+        CURSOR_THEME=${shellArg cfg.dark.cursorTheme}
+        CURSOR_SIZE=${toString cfg.dark.cursorSize}
+        WALLPAPER=${wallpaperArg cfg.dark.wallpaper}
+        NOTIFY_MSG="夜间模式已激活"
+        ;;
+      light)
+        GTK_THEME=${shellArg cfg.light.gtkTheme}
+        COLOR_SCHEME="prefer-light"
+        CURSOR_THEME=${shellArg cfg.light.cursorTheme}
+        CURSOR_SIZE=${toString cfg.light.cursorSize}
+        WALLPAPER=${wallpaperArg cfg.light.wallpaper}
+        NOTIFY_MSG="日间模式已激活"
+        ;;
+      *)
+        echo "ERROR: expected darkman mode argument: dark or light" >&2
+        exit 2
+        ;;
+    esac
 
-      # ── 翻转 current 软链接 (原子操作) ──
-      ln -sfn "${target}" "${currentSymlink}"
+    THEME_TARGET="${themeBase}/$target"
 
-      # ── GTK 主题 (gsettings 即时生效) ──
-      if command -v gsettings &>/dev/null; then
-        gsettings set org.gnome.desktop.interface gtk-theme "${theme.gtkTheme}" || true
-        COLOR_SCHEME="${if target == "dark" then "prefer-dark" else "prefer-light"}"
-        gsettings set org.gnome.desktop.interface color-scheme "$COLOR_SCHEME" || true
-        gsettings set org.gnome.desktop.interface cursor-theme "${theme.cursorTheme}" || true
-        gsettings set org.gnome.desktop.interface cursor-size ${toString theme.cursorSize} || true
-      fi
+    if [ ! -d "$THEME_TARGET" ]; then
+      echo "ERROR: theme directory not found: $THEME_TARGET" >&2
+      exit 1
+    fi
 
-      # ── Waybar — 发送 USR2 信号触发重载 ──
-      ${pkgs.procps}/bin/pkill -SIGUSR2 waybar || true
+    # ── 翻转 current 软链接 (原子操作) ──
+    ln -sfn "$target" "${currentSymlink}"
 
-      # ── Wallpaper — 切换壁纸 ──
-      ${
-        if wallpaper != null then
-          ''
-            if command -v awww &>/dev/null; then
-              ${pkgs.awww}/bin/awww set "${wallpaper}" || true
-            fi
-          ''
-        else
-          ''
-            :
-          ''
-      }
+    # ── GTK 主题 (gsettings 即时生效) ──
+    if command -v gsettings &>/dev/null; then
+      gsettings set org.gnome.desktop.interface gtk-theme "$GTK_THEME" || true
+      gsettings set org.gnome.desktop.interface color-scheme "$COLOR_SCHEME" || true
+      gsettings set org.gnome.desktop.interface cursor-theme "$CURSOR_THEME" || true
+      gsettings set org.gnome.desktop.interface cursor-size "$CURSOR_SIZE" || true
+    fi
 
-      # ── 通知 ──
-      if command -v notify-send &>/dev/null; then
-        ${pkgs.libnotify}/bin/notify-send "${notifyMsg}" || true
-      fi
+    # ── Waybar — 发送 USR2 信号触发重载 ──
+    ${pkgs.procps}/bin/pkill -SIGUSR2 waybar || true
 
-      echo "[darkman] switched to ${target} mode"
-    '';
+    # ── Wallpaper — 切换壁纸 ──
+    if [ -n "$WALLPAPER" ] && command -v awww &>/dev/null; then
+      ${pkgs.awww}/bin/awww img "$WALLPAPER" || true
+    fi
+
+    # ── 通知 ──
+    if command -v notify-send &>/dev/null; then
+      ${pkgs.libnotify}/bin/notify-send "$NOTIFY_MSG" || true
+    fi
+
+    echo "[darkman] switched to $target mode"
+  '';
 
 in
 {
@@ -201,6 +218,15 @@ in
           }
           #workspaces button {
               padding: 0 2px;
+          }
+          #custom-darkman {
+              margin-left: 2pt;
+              border-left: 2px solid @theme_fg_color;
+              border-bottom: 2px solid @theme_fg_color;
+              border-top: 2px solid @theme_fg_color;
+              border-radius: 8px 0 0 8px;
+              padding: 0 12px;
+              transition: none;
           }
         '';
         description = "Waybar CSS for light mode";
@@ -309,6 +335,15 @@ in
           #workspaces button {
               padding: 0 2px;
           }
+          #custom-darkman {
+              margin-left: 2pt;
+              border-left: 2px solid @theme_fg_color;
+              border-bottom: 2px solid @theme_fg_color;
+              border-top: 2px solid @theme_fg_color;
+              border-radius: 8px 0 0 8px;
+              padding: 0 12px;
+              transition: none;
+          }
         '';
         description = "Waybar CSS for dark mode";
       };
@@ -377,6 +412,9 @@ in
       };
     };
 
+    # programs.waybar.style 会先生成静态文件；后续 activation 会替换为 current symlink。
+    xdg.configFile."waybar/style.css".force = lib.mkForce true;
+
     # ── 初始化 current 软链接 (默认为 light) ────────
     home.activation.initDarkmanTheme = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
       # 确保 current 软链接存在
@@ -393,20 +431,30 @@ in
       $DRY_RUN_CMD ln -sfn ${currentSymlink}/qt6ct ${homeDir}/.config/qt6ct
     '';
 
+    # ── 清理旧的错误 hook 路径 ────────────────────────
+    home.activation.cleanupDarkmanLegacyHooks = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+      # darkman 2.x 会把 ~/.local/share/darkman 下的可执行条目当作现代 hook。
+      # 旧配置误把 legacy 目录放在 darkman/ 内，导致 darkman 试图执行目录本身。
+      $DRY_RUN_CMD rm -rf ${homeDir}/.local/share/darkman/dark-mode.d
+      $DRY_RUN_CMD rm -rf ${homeDir}/.local/share/darkman/light-mode.d
+    '';
+
     # ── Waybar CSS symlink ───────────────────────────
     #    home-manager 的 programs.waybar.style 会生成 style.css,
     #    我们在 activation 中覆盖为指向 theme/current 的软链接
-    home.activation.linkWaybarTheme = lib.hm.dag.entryAfter [ "initDarkmanTheme" ] ''
-      WAYBAR_STYLE="${homeDir}/.config/waybar/style.css"
-      THEME_STYLE="${currentSymlink}/waybar/style.css"
+    home.activation.linkWaybarTheme =
+      lib.hm.dag.entryAfter [ "initDarkmanTheme" "cleanupDarkmanLegacyHooks" ]
+        ''
+          WAYBAR_STYLE="${homeDir}/.config/waybar/style.css"
+          THEME_STYLE="${currentSymlink}/waybar/style.css"
 
-      if [ -d "$(dirname "$WAYBAR_STYLE")" ] && [ -f "$THEME_STYLE" ]; then
-        $DRY_RUN_CMD rm -f "$WAYBAR_STYLE"
-        $DRY_RUN_CMD ln -sfn "$THEME_STYLE" "$WAYBAR_STYLE"
-        # 如果 waybar 已在运行，触发重载
-        ${pkgs.procps}/bin/pkill -SIGUSR2 waybar 2>/dev/null || true
-      fi
-    '';
+          if [ -d "$(dirname "$WAYBAR_STYLE")" ] && [ -f "$THEME_STYLE" ]; then
+            $DRY_RUN_CMD rm -f "$WAYBAR_STYLE"
+            $DRY_RUN_CMD ln -sfn "$THEME_STYLE" "$WAYBAR_STYLE"
+            # 如果 waybar 已在运行，触发重载
+            ${pkgs.procps}/bin/pkill -SIGUSR2 waybar 2>/dev/null || true
+          fi
+        '';
 
     # ── Darkman systemd 用户服务 ─────────────────────
     systemd.user.services.darkman = {
@@ -454,12 +502,8 @@ in
 
     # ── Darkman hook 脚本 ────────────────────────────
     xdg.dataFile = {
-      "darkman/dark-mode.d/switch-theme.sh" = {
-        source = mkHookScript "dark";
-        executable = true;
-      };
-      "darkman/light-mode.d/switch-theme.sh" = {
-        source = mkHookScript "light";
+      "darkman/switch-theme.sh" = {
+        source = mkHookScript;
         executable = true;
       };
     };
