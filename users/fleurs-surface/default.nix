@@ -68,6 +68,11 @@
   home-modules.desktop = {
     awww.enable = true;
     waybar.enable = true;
+    darkman = {
+      enable = true;
+      light.wallpaper = ../../assets/wallpaper.jpg;
+      dark.wallpaper = ../../assets/wallpaper.jpg;
+    };
   };
 
   # 应用程序
