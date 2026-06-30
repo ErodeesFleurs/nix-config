@@ -47,9 +47,69 @@ let
     };
 
   mergeAttrs = lib.foldl' (acc: value: acc // value) { };
+
+  normalizeReplacement =
+    replacement:
+    if builtins.isString replacement then
+      {
+        placeholder = replacement;
+        color = replacement;
+        transform = "hex";
+      }
+    else
+      {
+        transform = "hex";
+      }
+      // replacement;
+
+  colorFilter =
+    polarity:
+    {
+      color,
+      transform,
+      ...
+    }:
+    let
+      raw = ''.colors.${color}["${polarity}"].color'';
+    in
+    ({
+      hex = raw;
+      noHash = ''${raw} | ltrimstr("#")'';
+    }).${transform};
+
+  mkSubstituteArg =
+    polarity:
+    replacement:
+    let
+      normalized = normalizeReplacement replacement;
+    in
+    "--replace-fail ${lib.escapeShellArg "@${normalized.placeholder}@"} \"$(jq -r ${
+      lib.escapeShellArg (colorFilter polarity normalized)
+    } colors.json)\"";
 in
 {
   inherit homeDir currentSymlink mkThemeLink mkXdgPlaceholder;
+
+  renderTemplate =
+    {
+      source,
+      target,
+      polarity,
+      colors ? [ ],
+      replacements ? [ ],
+      append ? [ ],
+    }:
+    let
+      allReplacements = (map normalizeReplacement colors) ++ (map normalizeReplacement replacements);
+      substituteArgs = lib.concatStringsSep " \\\n        " (map (mkSubstituteArg polarity) allReplacements);
+      appendCommands = lib.concatMapStringsSep "\n" (path: "cat ${path} >> \"${target}\"") append;
+    in
+    ''
+      cp ${source} "${target}"
+      substituteInPlace "${target}" \
+        ${substituteArgs}
+      ${appendCommands}
+    '';
 
   mkApp =
     {

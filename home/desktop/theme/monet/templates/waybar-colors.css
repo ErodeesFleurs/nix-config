@@ -1,0 +1,17 @@
+@define-color m3_surface @surface@;
+@define-color m3_surface_container @surface_container@;
+@define-color m3_surface_container_high @surface_container_high@;
+@define-color m3_on_surface @on_surface@;
+@define-color m3_on_surface_variant @on_surface_variant@;
+@define-color m3_outline @outline@;
+@define-color m3_primary @primary@;
+@define-color m3_on_primary @on_primary@;
+@define-color m3_primary_container @primary_container@;
+@define-color m3_on_primary_container @on_primary_container@;
+@define-color m3_secondary_container @secondary_container@;
+@define-color m3_on_secondary_container @on_secondary_container@;
+@define-color m3_tertiary_container @error_container@;
+@define-color m3_on_tertiary_container @on_error_container@;
+@define-color m3_warning_container @primary_container@;
+@define-color m3_on_warning_container @on_primary_container@;
+

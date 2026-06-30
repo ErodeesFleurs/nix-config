@@ -10,32 +10,28 @@ themeLib.mkApp {
 
   generate =
     { polarity }:
-    ''
-      jq -r '
-        def c($name): .colors[$name]["${polarity}"].color;
-        [
-          "@define-color m3_surface " + c("surface") + ";",
-          "@define-color m3_surface_container " + c("surface_container") + ";",
-          "@define-color m3_surface_container_high " + c("surface_container_high") + ";",
-          "@define-color m3_on_surface " + c("on_surface") + ";",
-          "@define-color m3_on_surface_variant " + c("on_surface_variant") + ";",
-          "@define-color m3_outline " + c("outline") + ";",
-          "@define-color m3_primary " + c("primary") + ";",
-          "@define-color m3_on_primary " + c("on_primary") + ";",
-          "@define-color m3_primary_container " + c("primary_container") + ";",
-          "@define-color m3_on_primary_container " + c("on_primary_container") + ";",
-          "@define-color m3_secondary_container " + c("secondary_container") + ";",
-          "@define-color m3_on_secondary_container " + c("on_secondary_container") + ";",
-          "@define-color m3_tertiary_container " + c("error_container") + ";",
-          "@define-color m3_on_tertiary_container " + c("on_error_container") + ";",
-          "@define-color m3_warning_container " + c("primary_container") + ";",
-          "@define-color m3_on_warning_container " + c("on_primary_container") + ";",
-          ""
-        ] | .[]
-      ' colors.json > "$out/waybar/style.css"
-
-      cat ${waybarBodyCssPath} >> "$out/waybar/style.css"
-    '';
+    themeLib.renderTemplate {
+      source = ./templates/waybar-colors.css;
+      target = "$out/waybar/style.css";
+      inherit polarity;
+      colors = [
+        "surface"
+        "surface_container"
+        "surface_container_high"
+        "on_surface"
+        "on_surface_variant"
+        "outline"
+        "primary"
+        "on_primary"
+        "primary_container"
+        "on_primary_container"
+        "secondary_container"
+        "on_secondary_container"
+        "error_container"
+        "on_error_container"
+      ];
+      append = [ waybarBodyCssPath ];
+    };
 
   xdgPlaceholders = [
     {
