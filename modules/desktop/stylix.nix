@@ -14,7 +14,7 @@ in
 
     image = lib.mkOption {
       type = lib.types.path;
-      default = ../../../assets/wallpaper.jpg;
+      default = ../../assets/wallpaper.jpg;
       description = "Wallpaper image for theming";
     };
 
@@ -78,7 +78,7 @@ in
       monospace = {
         package = lib.mkOption {
           type = lib.types.package;
-          default = pkgs.nerd-fonts.dejavu-sans-mono;
+          default = pkgs.nerd-fonts.caskaydia-mono;
           description = "Monospace font package";
         };
 

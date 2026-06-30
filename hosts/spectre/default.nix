@@ -205,7 +205,6 @@
 
   # 桌面环境
   modules.display-manager = {
-    sddm.enable = false;
     tuigreet.enable = true;
   };
 

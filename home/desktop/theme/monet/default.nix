@@ -13,6 +13,7 @@ let
   firefox = import ./firefox.nix { inherit config lib pkgs; };
   hyprlock = import ./hyprlock.nix { inherit config lib; };
   yazi = import ./yazi.nix { inherit config lib; };
+  gitui = import ./gitui.nix { inherit config lib; };
 
   apps = [
     waybar
@@ -22,6 +23,7 @@ let
     firefox
     hyprlock
     yazi
+    gitui
   ];
   enabledApps = builtins.filter (app: app.enable) apps;
 in
