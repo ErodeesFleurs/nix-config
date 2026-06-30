@@ -6,6 +6,7 @@
 
 let
   cfg = config.homeModules.mpv;
+  theme = config.homeModules.theme;
 in
 {
   options.homeModules.mpv = {
@@ -162,9 +163,14 @@ in
           screenshot-png-compression = lib.mkIf (cfg.screenshot.format == "png") 7;
 
           # OSD
+          include = "${config.home.homeDirectory}/.config/mpv/monet.conf";
+          osd-font = theme.fonts.sans-serif.name;
           osd-font-size = cfg.osd.font-size;
           osd-duration = cfg.osd.duration;
           osd-bar = cfg.osd.enable;
+
+          # Subtitles
+          sub-font = theme.fonts.sans-serif.name;
 
           # YouTube-DL
           ytdl-format = cfg.ytdl-format;

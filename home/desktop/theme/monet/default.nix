@@ -17,6 +17,8 @@ let
   helix = import ./helix.nix { inherit config lib; };
   zed = import ./zed.nix { inherit config lib; };
   fastfetch = import ./fastfetch.nix { inherit config lib; };
+  starship = import ./starship.nix { inherit config lib; };
+  mpv = import ./mpv.nix { inherit config lib; };
 
   apps = [
     waybar
@@ -30,6 +32,8 @@ let
     helix
     zed
     fastfetch
+    starship
+    mpv
   ];
   enabledApps = builtins.filter (app: app.enable) apps;
 in
