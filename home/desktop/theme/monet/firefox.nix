@@ -2,6 +2,7 @@
   config,
   lib,
   pkgs,
+  themeLib,
 }:
 
 let
@@ -17,125 +18,35 @@ in
   generate =
     { polarity }:
     ''
-      jq -r '
-        def c($name): .colors[$name]["${polarity}"].color;
-        [
-          ":root {",
-          "  --m3-surface: " + c("surface") + ";",
-          "  --m3-surface-container: " + c("surface_container") + ";",
-          "  --m3-surface-container-high: " + c("surface_container_high") + ";",
-          "  --m3-on-surface: " + c("on_surface") + ";",
-          "  --m3-on-surface-variant: " + c("on_surface_variant") + ";",
-          "  --m3-outline-variant: " + c("outline_variant") + ";",
-          "  --m3-primary: " + c("primary") + ";",
-          "  --m3-primary-container: " + c("primary_container") + ";",
-          "  --m3-on-primary-container: " + c("on_primary_container") + ";",
-          "}"
-        ] | .[]
-      ' colors.json > "$out/firefox/userChrome.css"
+      ${themeLib.renderTemplate {
+        source = ./templates/firefox-userChrome.css;
+        target = "$out/firefox/userChrome.css";
+        inherit polarity;
+        colors = [
+          "surface"
+          "surface_container"
+          "surface_container_high"
+          "on_surface"
+          "on_surface_variant"
+          "outline_variant"
+          "primary"
+          "primary_container"
+          "on_primary_container"
+        ];
+      }}
 
-      cat >> "$out/firefox/userChrome.css" << 'CHROMECSS'
-
-      #navigator-toolbox {
-        background-color: var(--m3-surface-container) !important;
-        border-bottom: 1px solid var(--m3-outline-variant) !important;
-        color: var(--m3-on-surface) !important;
-      }
-
-      #TabsToolbar,
-      #nav-bar,
-      #PersonalToolbar {
-        background-color: transparent !important;
-        color: var(--m3-on-surface) !important;
-      }
-
-      #urlbar-background,
-      #searchbar {
-        background-color: var(--m3-surface-container-high) !important;
-        border-color: var(--m3-outline-variant) !important;
-        border-radius: 18px !important;
-      }
-
-      #urlbar[focused="true"] #urlbar-background {
-        border-color: var(--m3-primary) !important;
-        box-shadow: 0 0 0 1px var(--m3-primary) !important;
-      }
-
-      .tab-background {
-        border-radius: 14px !important;
-        margin-block: 4px !important;
-      }
-
-      .tabbrowser-tab[selected] .tab-background {
-        background-color: var(--m3-primary-container) !important;
-        color: var(--m3-on-primary-container) !important;
-      }
-
-      .tabbrowser-tab[selected] .tab-label {
-        color: var(--m3-on-primary-container) !important;
-      }
-
-      toolbarbutton,
-      .toolbarbutton-1 {
-        color: var(--m3-on-surface-variant) !important;
-      }
-
-      toolbarbutton:hover,
-      .toolbarbutton-1:hover {
-        background-color: color-mix(in srgb, var(--m3-primary) 12%, transparent) !important;
-        border-radius: 999px !important;
-        color: var(--m3-on-surface) !important;
-      }
-
-      menupopup,
-      panel {
-        --panel-background: var(--m3-surface-container) !important;
-        --panel-color: var(--m3-on-surface) !important;
-        --panel-border-color: var(--m3-outline-variant) !important;
-      }
-      CHROMECSS
-
-      jq -r '
-        def c($name): .colors[$name]["${polarity}"].color;
-        [
-          ":root {",
-          "  --m3-surface: " + c("surface") + ";",
-          "  --m3-surface-container: " + c("surface_container") + ";",
-          "  --m3-on-surface: " + c("on_surface") + ";",
-          "  --m3-on-surface-variant: " + c("on_surface_variant") + ";",
-          "  --m3-primary: " + c("primary") + ";",
-          "}"
-        ] | .[]
-      ' colors.json > "$out/firefox/userContent.css"
-
-      cat >> "$out/firefox/userContent.css" << 'CONTENTCSS'
-
-      @-moz-document url("about:home"), url("about:newtab"), url("about:privatebrowsing") {
-        body,
-        .activity-stream {
-          background: var(--m3-surface) !important;
-          color: var(--m3-on-surface) !important;
-        }
-
-        .search-wrapper input,
-        .fake-textbox {
-          background: var(--m3-surface-container) !important;
-          color: var(--m3-on-surface) !important;
-          border-radius: 24px !important;
-          border: 1px solid color-mix(in srgb, var(--m3-primary) 35%, transparent) !important;
-        }
-
-        .top-site-outer .tile {
-          background: var(--m3-surface-container) !important;
-          border-radius: 18px !important;
-        }
-
-        .section-title,
-        .top-site-outer .title {
-          color: var(--m3-on-surface-variant) !important;
-        }
-      }
-      CONTENTCSS
+      ${themeLib.renderTemplate {
+        source = ./templates/firefox-userContent.css;
+        target = "$out/firefox/userContent.css";
+        inherit polarity;
+        colors = [
+          "surface"
+          "surface_container"
+          "on_surface"
+          "on_surface_variant"
+          "primary"
+        ];
+      }}
     '';
 
   activation.linkFirefoxTheme =

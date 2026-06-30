@@ -11,7 +11,7 @@ let
   dunst = import ./dunst.nix { inherit config lib pkgs themeLib; };
   btop = import ./btop.nix { inherit config themeLib; };
   ghostty = import ./ghostty.nix { inherit config themeLib; };
-  firefox = import ./firefox.nix { inherit config lib pkgs; };
+  firefox = import ./firefox.nix { inherit config lib pkgs themeLib; };
   hyprlock = import ./hyprlock.nix { inherit config themeLib; };
   yazi = import ./yazi.nix { inherit config themeLib; };
   gitui = import ./gitui.nix { inherit config themeLib; };

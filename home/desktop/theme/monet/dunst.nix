@@ -93,27 +93,27 @@ let
     lib.mapAttrsToList renderSection (
       lib.recursiveUpdate baseSections {
         global = {
-          frame_color = "__M3_OUTLINE_VARIANT__";
-          highlight = "__M3_PRIMARY__";
+          frame_color = "@outline_variant@";
+          highlight = "@primary@";
           separator_color = "frame";
         };
 
         urgency_low = {
-          background = "__M3_SURFACE_CONTAINER_LOW__";
-          foreground = "__M3_ON_SURFACE_VARIANT__";
-          frame_color = "__M3_OUTLINE_VARIANT__";
+          background = "@surface_container_low@";
+          foreground = "@on_surface_variant@";
+          frame_color = "@outline_variant@";
         };
 
         urgency_normal = {
-          background = "__M3_SURFACE_CONTAINER_HIGH__";
-          foreground = "__M3_ON_SURFACE__";
-          frame_color = "__M3_OUTLINE_VARIANT__";
+          background = "@surface_container_high@";
+          foreground = "@on_surface@";
+          frame_color = "@outline_variant@";
         };
 
         urgency_critical = {
-          background = "__M3_ERROR_CONTAINER__";
-          foreground = "__M3_ON_ERROR_CONTAINER__";
-          frame_color = "__M3_ERROR__";
+          background = "@error_container@";
+          foreground = "@on_error_container@";
+          frame_color = "@error@";
         };
       }
     )
@@ -125,22 +125,22 @@ themeLib.mkApp {
 
   generate =
     { polarity }:
-    ''
-      cat > "$out/dunst/dunstrc" << 'DUNSTEOF'
-      ${template}
-      DUNSTEOF
-
-      substituteInPlace "$out/dunst/dunstrc" \
-        --replace-fail __M3_SURFACE_CONTAINER_LOW__ "$(jq -r '.colors.surface_container_low["${polarity}"].color' colors.json)" \
-        --replace-fail __M3_SURFACE_CONTAINER_HIGH__ "$(jq -r '.colors.surface_container_high["${polarity}"].color' colors.json)" \
-        --replace-fail __M3_ON_SURFACE__ "$(jq -r '.colors.on_surface["${polarity}"].color' colors.json)" \
-        --replace-fail __M3_ON_SURFACE_VARIANT__ "$(jq -r '.colors.on_surface_variant["${polarity}"].color' colors.json)" \
-        --replace-fail __M3_OUTLINE_VARIANT__ "$(jq -r '.colors.outline_variant["${polarity}"].color' colors.json)" \
-        --replace-fail __M3_PRIMARY__ "$(jq -r '.colors.primary["${polarity}"].color' colors.json)" \
-        --replace-fail __M3_ERROR__ "$(jq -r '.colors.error["${polarity}"].color' colors.json)" \
-        --replace-fail __M3_ERROR_CONTAINER__ "$(jq -r '.colors.error_container["${polarity}"].color' colors.json)" \
-        --replace-fail __M3_ON_ERROR_CONTAINER__ "$(jq -r '.colors.on_error_container["${polarity}"].color' colors.json)"
-    '';
+    themeLib.renderTemplate {
+      source = builtins.toFile "dunstrc.monet.in" template;
+      target = "$out/dunst/dunstrc";
+      inherit polarity;
+      colors = [
+        "surface_container_low"
+        "surface_container_high"
+        "on_surface"
+        "on_surface_variant"
+        "outline_variant"
+        "primary"
+        "error"
+        "error_container"
+        "on_error_container"
+      ];
+    };
 
   xdgPlaceholders = [
     { path = "dunst/dunstrc"; }

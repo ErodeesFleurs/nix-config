@@ -1,0 +1,69 @@
+:root {
+  --m3-surface: @surface@;
+  --m3-surface-container: @surface_container@;
+  --m3-surface-container-high: @surface_container_high@;
+  --m3-on-surface: @on_surface@;
+  --m3-on-surface-variant: @on_surface_variant@;
+  --m3-outline-variant: @outline_variant@;
+  --m3-primary: @primary@;
+  --m3-primary-container: @primary_container@;
+  --m3-on-primary-container: @on_primary_container@;
+}
+
+#navigator-toolbox {
+  background-color: var(--m3-surface-container) !important;
+  border-bottom: 1px solid var(--m3-outline-variant) !important;
+  color: var(--m3-on-surface) !important;
+}
+
+#TabsToolbar,
+#nav-bar,
+#PersonalToolbar {
+  background-color: transparent !important;
+  color: var(--m3-on-surface) !important;
+}
+
+#urlbar-background,
+#searchbar {
+  background-color: var(--m3-surface-container-high) !important;
+  border-color: var(--m3-outline-variant) !important;
+  border-radius: 18px !important;
+}
+
+#urlbar[focused="true"] #urlbar-background {
+  border-color: var(--m3-primary) !important;
+  box-shadow: 0 0 0 1px var(--m3-primary) !important;
+}
+
+.tab-background {
+  border-radius: 14px !important;
+  margin-block: 4px !important;
+}
+
+.tabbrowser-tab[selected] .tab-background {
+  background-color: var(--m3-primary-container) !important;
+  color: var(--m3-on-primary-container) !important;
+}
+
+.tabbrowser-tab[selected] .tab-label {
+  color: var(--m3-on-primary-container) !important;
+}
+
+toolbarbutton,
+.toolbarbutton-1 {
+  color: var(--m3-on-surface-variant) !important;
+}
+
+toolbarbutton:hover,
+.toolbarbutton-1:hover {
+  background-color: color-mix(in srgb, var(--m3-primary) 12%, transparent) !important;
+  border-radius: 999px !important;
+  color: var(--m3-on-surface) !important;
+}
+
+menupopup,
+panel {
+  --panel-background: var(--m3-surface-container) !important;
+  --panel-color: var(--m3-on-surface) !important;
+  --panel-border-color: var(--m3-outline-variant) !important;
+}

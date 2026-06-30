@@ -1,0 +1,33 @@
+:root {
+  --m3-surface: @surface@;
+  --m3-surface-container: @surface_container@;
+  --m3-on-surface: @on_surface@;
+  --m3-on-surface-variant: @on_surface_variant@;
+  --m3-primary: @primary@;
+}
+
+@-moz-document url("about:home"), url("about:newtab"), url("about:privatebrowsing") {
+  body,
+  .activity-stream {
+    background: var(--m3-surface) !important;
+    color: var(--m3-on-surface) !important;
+  }
+
+  .search-wrapper input,
+  .fake-textbox {
+    background: var(--m3-surface-container) !important;
+    color: var(--m3-on-surface) !important;
+    border-radius: 24px !important;
+    border: 1px solid color-mix(in srgb, var(--m3-primary) 35%, transparent) !important;
+  }
+
+  .top-site-outer .tile {
+    background: var(--m3-surface-container) !important;
+    border-radius: 18px !important;
+  }
+
+  .section-title,
+  .top-site-outer .title {
+    color: var(--m3-on-surface-variant) !important;
+  }
+}

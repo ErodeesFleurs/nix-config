@@ -9,151 +9,37 @@ themeLib.mkApp {
 
   generate =
     { polarity }:
-    ''
-      jq -r '
-        def c($name): .colors[$name]["${polarity}"].color;
-        def a($name): c($name) + "ff";
-        def alpha($name; $value): c($name) + $value;
-        [
-          "{",
-          "  \"$schema\": \"https://zed.dev/schema/themes/v0.2.0.json\",",
-          "  \"name\": \"Monet MD3\",",
-          "  \"author\": \"matugen\",",
-          "  \"themes\": [",
-          "    {",
-          "      \"name\": \"Monet MD3\",",
-          "      \"appearance\": \"${polarity}\",",
-          "      \"style\": {",
-          "        \"border\": \"" + a("outline_variant") + "\",",
-          "        \"border.variant\": \"" + a("outline_variant") + "\",",
-          "        \"border.focused\": \"" + a("primary") + "\",",
-          "        \"border.selected\": \"" + a("primary") + "\",",
-          "        \"border.transparent\": \"#00000000\",",
-          "        \"border.disabled\": \"" + alpha("outline_variant"; "80") + "\",",
-          "        \"elevated_surface.background\": \"" + a("surface_container_high") + "\",",
-          "        \"surface.background\": \"" + a("surface_container") + "\",",
-          "        \"background\": \"" + a("surface") + "\",",
-          "        \"element.background\": \"" + a("surface_container_high") + "\",",
-          "        \"element.hover\": \"" + a("surface_container_highest") + "\",",
-          "        \"element.active\": \"" + a("primary_container") + "\",",
-          "        \"element.selected\": \"" + a("primary_container") + "\",",
-          "        \"element.disabled\": \"" + alpha("surface_container"; "99") + "\",",
-          "        \"drop_target.background\": \"" + alpha("primary"; "40") + "\",",
-          "        \"ghost_element.background\": \"#00000000\",",
-          "        \"ghost_element.hover\": \"" + alpha("primary"; "1f") + "\",",
-          "        \"ghost_element.active\": \"" + alpha("primary"; "2e") + "\",",
-          "        \"ghost_element.selected\": \"" + alpha("primary"; "2e") + "\",",
-          "        \"ghost_element.disabled\": \"#00000000\",",
-          "        \"text\": \"" + a("on_surface") + "\",",
-          "        \"text.muted\": \"" + a("on_surface_variant") + "\",",
-          "        \"text.placeholder\": \"" + alpha("on_surface_variant"; "bf") + "\",",
-          "        \"text.disabled\": \"" + alpha("on_surface_variant"; "80") + "\",",
-          "        \"text.accent\": \"" + a("primary") + "\",",
-          "        \"icon\": \"" + a("on_surface") + "\",",
-          "        \"icon.muted\": \"" + a("on_surface_variant") + "\",",
-          "        \"icon.disabled\": \"" + alpha("on_surface_variant"; "80") + "\",",
-          "        \"icon.placeholder\": \"" + alpha("on_surface_variant"; "bf") + "\",",
-          "        \"icon.accent\": \"" + a("primary") + "\",",
-          "        \"status_bar.background\": \"" + a("surface_container") + "\",",
-          "        \"title_bar.background\": \"" + a("surface") + "\",",
-          "        \"title_bar.inactive_background\": \"" + a("surface_container_low") + "\",",
-          "        \"toolbar.background\": \"" + a("surface_container_low") + "\",",
-          "        \"tab_bar.background\": \"" + a("surface_container") + "\",",
-          "        \"tab.inactive_background\": \"" + a("surface_container") + "\",",
-          "        \"tab.active_background\": \"" + a("surface") + "\",",
-          "        \"search.match_background\": \"" + alpha("primary"; "33") + "\",",
-          "        \"search.active_match_background\": \"" + alpha("tertiary"; "4d") + "\",",
-          "        \"panel.background\": \"" + a("surface_container") + "\",",
-          "        \"panel.focused_border\": \"" + a("primary") + "\",",
-          "        \"pane.focused_border\": \"" + a("primary") + "\",",
-          "        \"scrollbar.thumb.background\": \"" + alpha("on_surface_variant"; "4c") + "\",",
-          "        \"scrollbar.thumb.hover_background\": \"" + a("surface_container_highest") + "\",",
-          "        \"scrollbar.thumb.border\": \"" + a("surface_container_highest") + "\",",
-          "        \"scrollbar.track.background\": \"#00000000\",",
-          "        \"scrollbar.track.border\": \"" + a("surface_container") + "\",",
-          "        \"editor.foreground\": \"" + a("on_surface") + "\",",
-          "        \"editor.background\": \"" + a("surface") + "\",",
-          "        \"editor.gutter.background\": \"" + a("surface") + "\",",
-          "        \"editor.subheader.background\": \"" + a("surface_container") + "\",",
-          "        \"editor.active_line.background\": \"" + alpha("surface_container"; "bf") + "\",",
-          "        \"editor.highlighted_line.background\": \"" + a("surface_container_low") + "\",",
-          "        \"editor.line_number\": \"" + a("outline") + "\",",
-          "        \"editor.active_line_number\": \"" + a("primary") + "\",",
-          "        \"editor.hover_line_number\": \"" + a("on_surface_variant") + "\",",
-          "        \"editor.invisible\": \"" + alpha("outline"; "99") + "\",",
-          "        \"editor.wrap_guide\": \"" + alpha("outline_variant"; "80") + "\",",
-          "        \"editor.active_wrap_guide\": \"" + a("outline_variant") + "\",",
-          "        \"editor.document_highlight.read_background\": \"" + alpha("primary"; "1a") + "\",",
-          "        \"editor.document_highlight.write_background\": \"" + alpha("tertiary"; "26") + "\",",
-          "        \"terminal.background\": \"" + a("surface") + "\",",
-          "        \"terminal.foreground\": \"" + a("on_surface") + "\",",
-          "        \"terminal.bright_foreground\": \"" + a("on_surface") + "\",",
-          "        \"terminal.dim_foreground\": \"" + a("on_surface_variant") + "\",",
-          "        \"terminal.ansi.black\": \"" + a("surface_container_lowest") + "\",",
-          "        \"terminal.ansi.bright_black\": \"" + a("outline") + "\",",
-          "        \"terminal.ansi.red\": \"" + a("error") + "\",",
-          "        \"terminal.ansi.bright_red\": \"" + a("error") + "\",",
-          "        \"terminal.ansi.green\": \"" + a("secondary") + "\",",
-          "        \"terminal.ansi.bright_green\": \"" + a("secondary") + "\",",
-          "        \"terminal.ansi.yellow\": \"" + a("tertiary") + "\",",
-          "        \"terminal.ansi.bright_yellow\": \"" + a("tertiary") + "\",",
-          "        \"terminal.ansi.blue\": \"" + a("primary") + "\",",
-          "        \"terminal.ansi.bright_blue\": \"" + a("primary") + "\",",
-          "        \"terminal.ansi.magenta\": \"" + a("tertiary") + "\",",
-          "        \"terminal.ansi.bright_magenta\": \"" + a("tertiary") + "\",",
-          "        \"terminal.ansi.cyan\": \"" + a("secondary") + "\",",
-          "        \"terminal.ansi.bright_cyan\": \"" + a("secondary") + "\",",
-          "        \"terminal.ansi.white\": \"" + a("on_surface") + "\",",
-          "        \"terminal.ansi.bright_white\": \"" + a("on_surface") + "\",",
-          "        \"link_text.hover\": \"" + a("primary") + "\",",
-          "        \"version_control.added\": \"" + a("secondary") + "\",",
-          "        \"version_control.modified\": \"" + a("tertiary") + "\",",
-          "        \"version_control.deleted\": \"" + a("error") + "\",",
-          "        \"created\": \"" + a("secondary") + "\",",
-          "        \"created.background\": \"" + alpha("secondary_container"; "4d") + "\",",
-          "        \"deleted\": \"" + a("error") + "\",",
-          "        \"deleted.background\": \"" + alpha("error_container"; "4d") + "\",",
-          "        \"error\": \"" + a("error") + "\",",
-          "        \"error.background\": \"" + alpha("error_container"; "4d") + "\",",
-          "        \"hint\": \"" + a("secondary") + "\",",
-          "        \"hint.background\": \"" + alpha("secondary_container"; "4d") + "\",",
-          "        \"info\": \"" + a("primary") + "\",",
-          "        \"info.background\": \"" + alpha("primary_container"; "4d") + "\",",
-          "        \"modified\": \"" + a("tertiary") + "\",",
-          "        \"modified.background\": \"" + alpha("tertiary_container"; "4d") + "\",",
-          "        \"success\": \"" + a("secondary") + "\",",
-          "        \"success.background\": \"" + alpha("secondary_container"; "4d") + "\",",
-          "        \"warning\": \"" + a("tertiary") + "\",",
-          "        \"warning.background\": \"" + alpha("tertiary_container"; "4d") + "\",",
-          "        \"players\": [",
-          "          { \"cursor\": \"" + a("primary") + "\", \"background\": \"" + a("primary") + "\", \"selection\": \"" + alpha("primary"; "3d") + "\" },",
-          "          { \"cursor\": \"" + a("secondary") + "\", \"background\": \"" + a("secondary") + "\", \"selection\": \"" + alpha("secondary"; "3d") + "\" },",
-          "          { \"cursor\": \"" + a("tertiary") + "\", \"background\": \"" + a("tertiary") + "\", \"selection\": \"" + alpha("tertiary"; "3d") + "\" },",
-          "          { \"cursor\": \"" + a("error") + "\", \"background\": \"" + a("error") + "\", \"selection\": \"" + alpha("error"; "3d") + "\" }",
-          "        ],",
-          "        \"syntax\": {",
-          "          \"attribute\": { \"color\": \"" + a("tertiary") + "\" },",
-          "          \"boolean\": { \"color\": \"" + a("tertiary") + "\" },",
-          "          \"comment\": { \"color\": \"" + a("outline") + "\", \"font_style\": \"italic\" },",
-          "          \"constant\": { \"color\": \"" + a("tertiary") + "\" },",
-          "          \"constructor\": { \"color\": \"" + a("secondary") + "\" },",
-          "          \"function\": { \"color\": \"" + a("primary") + "\" },",
-          "          \"keyword\": { \"color\": \"" + a("primary") + "\", \"font_weight\": 700 },",
-          "          \"number\": { \"color\": \"" + a("tertiary") + "\" },",
-          "          \"operator\": { \"color\": \"" + a("tertiary") + "\" },",
-          "          \"property\": { \"color\": \"" + a("secondary") + "\" },",
-          "          \"punctuation\": { \"color\": \"" + a("on_surface_variant") + "\" },",
-          "          \"string\": { \"color\": \"" + a("secondary") + "\" },",
-          "          \"type\": { \"color\": \"" + a("secondary") + "\" },",
-          "          \"variable\": { \"color\": \"" + a("on_surface") + "\" }",
-          "        }",
-          "      }",
-          "    }",
-          "  ]",
-          "}"
-        ] | .[]
-      ' colors.json > "$out/zed/themes/monet-md3.json"
-    '';
+    themeLib.renderTemplate {
+      source = ./templates/zed-md3.json;
+      target = "$out/zed/themes/monet-md3.json";
+      inherit polarity;
+      colors = [
+        "outline_variant"
+        "primary"
+        "surface_container_high"
+        "surface_container"
+        "surface"
+        "surface_container_highest"
+        "primary_container"
+        "on_surface"
+        "on_surface_variant"
+        "surface_container_low"
+        "tertiary"
+        "outline"
+        "surface_container_lowest"
+        "error"
+        "secondary"
+        "secondary_container"
+        "error_container"
+        "tertiary_container"
+      ];
+      literalReplacements = [
+        {
+          placeholder = "appearance";
+          value = polarity;
+        }
+      ];
+    };
 
   links = [
     {

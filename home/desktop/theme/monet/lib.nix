@@ -86,6 +86,13 @@ let
     "--replace-fail ${lib.escapeShellArg "@${normalized.placeholder}@"} \"$(jq -r ${
       lib.escapeShellArg (colorFilter polarity normalized)
     } colors.json)\"";
+
+  mkLiteralSubstituteArg =
+    {
+      placeholder,
+      value,
+    }:
+    "--replace-fail ${lib.escapeShellArg "@${placeholder}@"} ${lib.escapeShellArg value}";
 in
 {
   inherit homeDir currentSymlink mkThemeLink mkXdgPlaceholder;
@@ -97,11 +104,15 @@ in
       polarity,
       colors ? [ ],
       replacements ? [ ],
+      literalReplacements ? [ ],
       append ? [ ],
     }:
     let
       allReplacements = (map normalizeReplacement colors) ++ (map normalizeReplacement replacements);
-      substituteArgs = lib.concatStringsSep " \\\n        " (map (mkSubstituteArg polarity) allReplacements);
+      substituteArgs = lib.concatStringsSep " \\\n        " (
+        (map (mkSubstituteArg polarity) allReplacements)
+        ++ (map mkLiteralSubstituteArg literalReplacements)
+      );
       appendCommands = lib.concatMapStringsSep "\n" (path: "cat ${path} >> \"${target}\"") append;
     in
     ''
