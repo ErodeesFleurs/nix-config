@@ -317,9 +317,4 @@
     localsend.enable = true;
   };
 
-  # 主题配置
-  modules.stylix = {
-    enable = true;
-    polarity = "light";
-  };
 }

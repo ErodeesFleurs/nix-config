@@ -77,10 +77,5 @@ in
           // cfg.extra-settings;
       };
     };
-
-    stylix.targets.firefox = {
-      enable = lib.mkForce false;
-      colorTheme.enable = lib.mkForce false;
-    };
   };
 }

@@ -1,11 +1,9 @@
-{ config, lib, ... }:
+{ config, ... }:
 
 let
   theme = config.homeModules.theme;
 in
 {
-  stylix.targets.ghostty.enable = lib.mkForce false;
-
   programs.ghostty = {
     enable = true;
     enableBashIntegration = true;

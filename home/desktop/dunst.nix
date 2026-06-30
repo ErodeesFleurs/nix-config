@@ -189,8 +189,6 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    stylix.targets.dunst.enable = lib.mkForce false;
-
     services.dunst = {
       enable = true;
       settings = {

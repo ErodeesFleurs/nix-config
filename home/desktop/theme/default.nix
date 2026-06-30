@@ -1,9 +1,13 @@
 {
+  config,
   lib,
   pkgs,
   ...
 }:
 
+let
+  cfg = config.homeModules.theme;
+in
 {
   options.homeModules.theme = {
     wallpaper = lib.mkOption {
@@ -96,6 +100,26 @@
         default = 24;
         description = "Cursor size";
       };
+    };
+  };
+
+  config = {
+    home.packages = [
+      cfg.fonts.emoji.package
+      cfg.fonts.monospace.package
+      cfg.fonts.sans-serif.package
+      cfg.fonts.serif.package
+      cfg.cursor.package
+    ];
+
+    fonts.fontconfig.enable = true;
+
+    home.pointerCursor = {
+      package = cfg.cursor.package;
+      name = cfg.cursor.name;
+      size = cfg.cursor.size;
+      gtk.enable = true;
+      x11.enable = true;
     };
   };
 }

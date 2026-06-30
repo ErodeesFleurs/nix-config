@@ -182,7 +182,5 @@ in
         cfg.userSettings
       ];
     };
-
-    stylix.targets.zed.enable = lib.mkForce false;
   };
 }

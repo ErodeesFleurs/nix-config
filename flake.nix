@@ -31,11 +31,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    stylix = {
-      url = "github:danth/stylix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
     vicinae = {
       url = "github:vicinaehq/vicinae";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -77,7 +72,6 @@
       self,
       nixpkgs,
       home-manager,
-      stylix,
       nixcord,
       vicinae,
       daeuniverse,
@@ -114,7 +108,6 @@
           { nixpkgs.pkgs = pkgs; }
           daeuniverse.nixosModules.dae
           daeuniverse.nixosModules.daed
-          stylix.nixosModules.stylix
           niri.nixosModules.niri
           agenix.nixosModules.default
           ./modules
@@ -129,7 +122,6 @@
           { nixpkgs.pkgs = pkgs; }
           daeuniverse.nixosModules.dae
           daeuniverse.nixosModules.daed
-          stylix.nixosModules.stylix
           niri.nixosModules.niri
           agenix.nixosModules.default
           ./modules
@@ -141,11 +133,9 @@
         pkgs = pkgs;
         extraSpecialArgs = specialArgs;
         modules = [
-          stylix.homeModules.stylix
           nixcord.homeModules.nixcord
           vicinae.homeManagerModules.default
           niri.homeModules.niri
-          niri.homeModules.stylix
           agenix.homeManagerModules.default
           ./home
           ./users/fleurs
@@ -156,11 +146,9 @@
         pkgs = pkgs;
         extraSpecialArgs = specialArgs;
         modules = [
-          stylix.homeModules.stylix
           nixcord.homeModules.nixcord
           vicinae.homeManagerModules.default
           niri.homeModules.niri
-          niri.homeModules.stylix
           agenix.homeManagerModules.default
           ./home
           ./users/fleurs-surface

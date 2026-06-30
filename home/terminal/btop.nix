@@ -293,8 +293,6 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    stylix.targets.btop.enable = lib.mkForce false;
-
     programs.btop = {
       enable = true;
 

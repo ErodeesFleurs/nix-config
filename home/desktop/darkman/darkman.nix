@@ -304,11 +304,6 @@ in
   # Config
   # ═══════════════════════════════════════════════════
   config = lib.mkIf cfg.enable {
-    # ── 避免与 stylix GTK/Qt targets 冲突 ────────────
-    #    (如果 stylix 模块也设置了 target，darkman 会覆盖)
-    stylix.targets.gtk.enable = lib.mkForce false;
-    stylix.targets.kde.enable = lib.mkForce false;
-
     # ── 确保必要工具已安装 ──────────────────────────
     home.packages = [
       pkgs.darkman

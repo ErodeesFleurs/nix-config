@@ -291,7 +291,5 @@ in
         cfg.languages
       ];
     };
-
-    stylix.targets.helix.enable = lib.mkForce false;
   };
 }

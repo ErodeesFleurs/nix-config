@@ -119,11 +119,6 @@
     terminal = "ghostty";
   };
 
-  # 主题配置
-  homeModules.stylix = {
-    enable = true;
-  };
-
   homeModules.thunderbird.enable = false;
 
   homeModules.others.aseprite.enable = true;
