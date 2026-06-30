@@ -322,6 +322,5 @@
   modules.stylix = {
     enable = true;
     polarity = "light";
-    base16-scheme = "${pkgs.base16-schemes}/share/themes/gruvbox-light-soft.yaml";
   };
 }

@@ -17,12 +17,14 @@ let
 
   m3LightWaybarCss = builtins.readFile ../../../assets/waybar/m3-expressive-light.css;
   m3DarkWaybarCss = builtins.readFile ../../../assets/waybar/m3-expressive-dark.css;
+  m3WaybarBodyCssPath = ../../../assets/waybar/m3-expressive-body.css;
 
   # ── 构建一个 polarity 变体的所有主题文件 ────────
   mkThemeDerivation =
     {
       polarity,
       waybarCss,
+      wallpaper,
       qt5ctStyle,
     }:
     pkgs.runCommand "darkman-theme-${polarity}"
@@ -33,9 +35,49 @@ let
         mkdir -p $out/waybar $out/qt5ct $out/qt6ct
 
         # Waybar CSS
-        cat > "$out/waybar/style.css" << 'WAYBAREOF'
-        ${waybarCss}
-        WAYBAREOF
+        ${
+          if cfg.monet.enable && wallpaper != null then
+            ''
+              ${pkgs.matugen}/bin/matugen image \
+                --json hex \
+                --mode ${polarity} \
+                --type ${cfg.monet.scheme} \
+                --source-color-index ${toString cfg.monet.sourceColorIndex} \
+                --fallback-color ${lib.escapeShellArg cfg.monet.fallbackColor} \
+                '${wallpaper}' > colors.json
+
+              jq -r '
+                def c($name): .colors[$name]["${polarity}"].color;
+                [
+                  "@define-color m3_surface " + c("surface") + ";",
+                  "@define-color m3_surface_container " + c("surface_container") + ";",
+                  "@define-color m3_surface_container_high " + c("surface_container_high") + ";",
+                  "@define-color m3_on_surface " + c("on_surface") + ";",
+                  "@define-color m3_on_surface_variant " + c("on_surface_variant") + ";",
+                  "@define-color m3_outline " + c("outline") + ";",
+                  "@define-color m3_primary " + c("primary") + ";",
+                  "@define-color m3_on_primary " + c("on_primary") + ";",
+                  "@define-color m3_primary_container " + c("primary_container") + ";",
+                  "@define-color m3_on_primary_container " + c("on_primary_container") + ";",
+                  "@define-color m3_secondary_container " + c("secondary_container") + ";",
+                  "@define-color m3_on_secondary_container " + c("on_secondary_container") + ";",
+                  "@define-color m3_tertiary_container " + c("error_container") + ";",
+                  "@define-color m3_on_tertiary_container " + c("on_error_container") + ";",
+                  "@define-color m3_warning_container " + c("primary_container") + ";",
+                  "@define-color m3_on_warning_container " + c("on_primary_container") + ";",
+                  ""
+                ] | .[]
+              ' colors.json > "$out/waybar/style.css"
+
+              cat ${m3WaybarBodyCssPath} >> "$out/waybar/style.css"
+            ''
+          else
+            ''
+              cat > "$out/waybar/style.css" << 'WAYBAREOF'
+              ${waybarCss}
+              WAYBAREOF
+            ''
+        }
 
         # Qt5ct 配置文件
         cat > "$out/qt5ct/qt5ct.conf" << 'QT5EOF'
@@ -227,6 +269,42 @@ in
         description = "Cursor size for dark mode";
       };
     };
+
+    monet = {
+      enable = lib.mkOption {
+        type = lib.types.bool;
+        default = true;
+        description = "Generate Material You / Monet colors from the configured wallpaper";
+      };
+
+      scheme = lib.mkOption {
+        type = lib.types.enum [
+          "scheme-content"
+          "scheme-expressive"
+          "scheme-fidelity"
+          "scheme-fruit-salad"
+          "scheme-monochrome"
+          "scheme-neutral"
+          "scheme-rainbow"
+          "scheme-tonal-spot"
+          "scheme-vibrant"
+        ];
+        default = "scheme-tonal-spot";
+        description = "Matugen dynamic color scheme variant. scheme-tonal-spot matches Android Monet defaults most closely.";
+      };
+
+      sourceColorIndex = lib.mkOption {
+        type = lib.types.int;
+        default = 0;
+        description = "Matugen source color index selected from the wallpaper palette";
+      };
+
+      fallbackColor = lib.mkOption {
+        type = lib.types.str;
+        default = "#7b7562";
+        description = "Fallback source color used by matugen when wallpaper extraction cannot produce a color";
+      };
+    };
   };
 
   # ═══════════════════════════════════════════════════
@@ -250,6 +328,7 @@ in
       ".local/share/themes/light".source = mkThemeDerivation {
         polarity = "light";
         waybarCss = cfg.light.waybarCss;
+        wallpaper = cfg.light.wallpaper;
         qt5ctStyle = cfg.light.qt5ctStyle;
       };
 
@@ -257,6 +336,7 @@ in
       ".local/share/themes/dark".source = mkThemeDerivation {
         polarity = "dark";
         waybarCss = cfg.dark.waybarCss;
+        wallpaper = cfg.dark.wallpaper;
         qt5ctStyle = cfg.dark.qt5ctStyle;
       };
     };

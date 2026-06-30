@@ -124,7 +124,6 @@
   homeModules.stylix = {
     enable = true;
     auto-enable = true;
-    base16-scheme = "${pkgs.base16-schemes}/share/themes/gruvbox-light-soft.yaml";
   };
 
   homeModules.thunderbird.enable = false;
