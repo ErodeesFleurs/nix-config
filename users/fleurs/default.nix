@@ -65,13 +65,6 @@
     udiskie.enable = true;
   };
 
-  home-modules.ashell = {
-    enable = false;
-    systemd = false;
-    position = "Top";
-    app-launcher-cmd = "vicinae toggle";
-  };
-
   home-modules.desktop = {
     awww.enable = true;
     waybar.enable = true;

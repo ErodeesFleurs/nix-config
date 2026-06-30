@@ -16,6 +16,7 @@ let
   gitui = import ./gitui.nix { inherit config lib; };
   helix = import ./helix.nix { inherit config lib; };
   zed = import ./zed.nix { inherit config lib; };
+  fastfetch = import ./fastfetch.nix { inherit config lib; };
 
   apps = [
     waybar
@@ -28,6 +29,7 @@ let
     gitui
     helix
     zed
+    fastfetch
   ];
   enabledApps = builtins.filter (app: app.enable) apps;
 in
