@@ -73,7 +73,6 @@
     enable = true;
     profile-name = "fleurs";
     force-extensions = true;
-    enable-stylix = true;
   };
 
   home-modules.application = {

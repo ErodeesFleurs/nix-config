@@ -23,12 +23,6 @@ in
       description = "Force extensions to be installed";
     };
 
-    enable-stylix = lib.mkOption {
-      type = lib.types.bool;
-      default = false;
-      description = "Apply Stylix theme to Firefox";
-    };
-
     enable-monet = lib.mkOption {
       type = lib.types.bool;
       default = true;
@@ -84,15 +78,9 @@ in
       };
     };
 
-    stylix.targets.firefox =
-      if cfg.enable-stylix then
-        {
-          colorTheme.enable = true;
-          profileNames = [ cfg.profile-name ];
-        }
-      else
-        {
-          colorTheme.enable = lib.mkForce false;
-        };
+    stylix.targets.firefox = {
+      enable = lib.mkForce false;
+      colorTheme.enable = lib.mkForce false;
+    };
   };
 }
