@@ -7,6 +7,7 @@
 
 let
   cfg = config.homeModules.zed;
+  theme = config.homeModules.theme;
 in
 {
   options.homeModules.zed = {
@@ -59,6 +60,9 @@ in
         {
           auto_signature_help = false;
           auto_update = false;
+          theme = "Monet MD3";
+          ui_font_family = theme.fonts.sans-serif.name;
+          buffer_font_family = theme.fonts.monospace.name;
 
           diagnostics = {
             inline = {
@@ -178,5 +182,7 @@ in
         cfg.userSettings
       ];
     };
+
+    stylix.targets.zed.enable = lib.mkForce false;
   };
 }

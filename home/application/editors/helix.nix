@@ -152,6 +152,8 @@ in
       extraPackages = cfg.extra-packages;
 
       settings = {
+        theme = "monet";
+
         editor = {
           line-number = cfg.settings.editor.line-number;
           mouse = cfg.settings.editor.mouse;
@@ -289,5 +291,7 @@ in
         cfg.languages
       ];
     };
+
+    stylix.targets.helix.enable = lib.mkForce false;
   };
 }

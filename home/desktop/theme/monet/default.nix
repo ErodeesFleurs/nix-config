@@ -14,6 +14,8 @@ let
   hyprlock = import ./hyprlock.nix { inherit config lib; };
   yazi = import ./yazi.nix { inherit config lib; };
   gitui = import ./gitui.nix { inherit config lib; };
+  helix = import ./helix.nix { inherit config lib; };
+  zed = import ./zed.nix { inherit config lib; };
 
   apps = [
     waybar
@@ -24,6 +26,8 @@ let
     hyprlock
     yazi
     gitui
+    helix
+    zed
   ];
   enabledApps = builtins.filter (app: app.enable) apps;
 in
