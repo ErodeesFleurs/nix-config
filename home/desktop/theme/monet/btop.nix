@@ -1,11 +1,9 @@
-{ config, lib }:
+{ config, themeLib }:
 
 let
   enabled = config.homeModules.terminal.btop.enable;
-  homeDir = config.home.homeDirectory;
-  currentSymlink = "${homeDir}/.local/share/themes/current";
 in
-{
+themeLib.mkApp {
   enable = enabled;
   outputDirs = [ "$out/btop/themes" ];
 
@@ -62,14 +60,11 @@ in
       ' colors.json > "$out/btop/themes/monet.theme"
     '';
 
-  activation.linkBtopTheme = lib.hm.dag.entryAfter [ "initThemeLinks" "cleanupDarkmanLegacyHooks" ] ''
-    BTOP_THEME="${homeDir}/.config/btop/themes/monet.theme"
-    THEME_BTOP="${currentSymlink}/btop/themes/monet.theme"
-
-    if [ -f "$THEME_BTOP" ]; then
-      $DRY_RUN_CMD mkdir -p "$(dirname "$BTOP_THEME")"
-      $DRY_RUN_CMD rm -f "$BTOP_THEME"
-      $DRY_RUN_CMD ln -sfn "$THEME_BTOP" "$BTOP_THEME"
-    fi
-  '';
+  links = [
+    {
+      name = "Btop";
+      target = ".config/btop/themes/monet.theme";
+      source = "btop/themes/monet.theme";
+    }
+  ];
 }

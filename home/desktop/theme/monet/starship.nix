@@ -1,11 +1,9 @@
-{ config, lib }:
+{ config, themeLib }:
 
 let
   enabled = config.programs.starship.enable;
-  homeDir = config.home.homeDirectory;
-  currentSymlink = "${homeDir}/.local/share/themes/current";
 in
-{
+themeLib.mkApp {
   enable = enabled;
   outputDirs = [ "$out/starship" ];
 
@@ -244,16 +242,11 @@ in
       ' colors.json >> "$out/starship/starship.toml"
     '';
 
-  activation.linkStarshipTheme =
-    lib.hm.dag.entryAfter [ "initThemeLinks" "cleanupDarkmanLegacyHooks" ]
-      ''
-        STARSHIP_CONFIG="${homeDir}/.config/starship.toml"
-        THEME_STARSHIP="${currentSymlink}/starship/starship.toml"
-
-        if [ -f "$THEME_STARSHIP" ]; then
-          $DRY_RUN_CMD mkdir -p "$(dirname "$STARSHIP_CONFIG")"
-          $DRY_RUN_CMD rm -f "$STARSHIP_CONFIG"
-          $DRY_RUN_CMD ln -sfn "$THEME_STARSHIP" "$STARSHIP_CONFIG"
-        fi
-      '';
+  links = [
+    {
+      name = "Starship";
+      target = ".config/starship.toml";
+      source = "starship/starship.toml";
+    }
+  ];
 }

@@ -1,12 +1,10 @@
-{ config, lib }:
+{ config, themeLib }:
 
 let
   enabled = config.programs.hyprlock.enable;
-  homeDir = config.home.homeDirectory;
-  currentSymlink = "${homeDir}/.local/share/themes/current";
   font = config.homeModules.theme.fonts.monospace.name;
 in
-{
+themeLib.mkApp {
   enable = enabled;
   outputDirs = [ "$out/hypr" ];
 
@@ -76,21 +74,15 @@ in
       ' colors.json > "$out/hypr/hyprlock.conf"
     '';
 
-  xdgConfig."hypr/hyprlock.conf" = {
-    force = lib.mkForce true;
-    text = "# Managed by Monet theme activation\n";
-  };
+  xdgPlaceholders = [
+    { path = "hypr/hyprlock.conf"; }
+  ];
 
-  activation.linkHyprlockTheme =
-    lib.hm.dag.entryAfter [ "initThemeLinks" "cleanupDarkmanLegacyHooks" ]
-      ''
-        HYPRLOCK_CONFIG="${homeDir}/.config/hypr/hyprlock.conf"
-        THEME_HYPRLOCK="${currentSymlink}/hypr/hyprlock.conf"
-
-        if [ -f "$THEME_HYPRLOCK" ]; then
-          $DRY_RUN_CMD mkdir -p "$(dirname "$HYPRLOCK_CONFIG")"
-          $DRY_RUN_CMD rm -f "$HYPRLOCK_CONFIG"
-          $DRY_RUN_CMD ln -sfn "$THEME_HYPRLOCK" "$HYPRLOCK_CONFIG"
-        fi
-      '';
+  links = [
+    {
+      name = "Hyprlock";
+      target = ".config/hypr/hyprlock.conf";
+      source = "hypr/hyprlock.conf";
+    }
+  ];
 }

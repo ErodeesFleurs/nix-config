@@ -1,11 +1,9 @@
-{ config, lib }:
+{ config, themeLib }:
 
 let
   enabled = config.programs.helix.enable;
-  homeDir = config.home.homeDirectory;
-  currentSymlink = "${homeDir}/.local/share/themes/current";
 in
-{
+themeLib.mkApp {
   enable = enabled;
   outputDirs = [ "$out/helix/themes" ];
 
@@ -128,16 +126,11 @@ in
       ' colors.json > "$out/helix/themes/monet.toml"
     '';
 
-  activation.linkHelixTheme =
-    lib.hm.dag.entryAfter [ "initThemeLinks" "cleanupDarkmanLegacyHooks" ]
-      ''
-        HELIX_THEME="${homeDir}/.config/helix/themes/monet.toml"
-        THEME_HELIX="${currentSymlink}/helix/themes/monet.toml"
-
-        if [ -f "$THEME_HELIX" ]; then
-          $DRY_RUN_CMD mkdir -p "$(dirname "$HELIX_THEME")"
-          $DRY_RUN_CMD rm -f "$HELIX_THEME"
-          $DRY_RUN_CMD ln -sfn "$THEME_HELIX" "$HELIX_THEME"
-        fi
-      '';
+  links = [
+    {
+      name = "Helix";
+      target = ".config/helix/themes/monet.toml";
+      source = "helix/themes/monet.toml";
+    }
+  ];
 }

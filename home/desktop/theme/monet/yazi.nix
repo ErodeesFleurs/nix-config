@@ -1,11 +1,9 @@
-{ config, lib }:
+{ config, themeLib }:
 
 let
   enabled = config.programs.yazi.enable;
-  homeDir = config.home.homeDirectory;
-  currentSymlink = "${homeDir}/.local/share/themes/current";
 in
-{
+themeLib.mkApp {
   enable = enabled;
   outputDirs = [ "$out/yazi" ];
 
@@ -165,19 +163,15 @@ in
       ' colors.json > "$out/yazi/theme.toml"
     '';
 
-  xdgConfig."yazi/theme.toml" = {
-    force = lib.mkForce true;
-    text = "# Managed by Monet theme activation\n";
-  };
+  xdgPlaceholders = [
+    { path = "yazi/theme.toml"; }
+  ];
 
-  activation.linkYaziTheme = lib.hm.dag.entryAfter [ "initThemeLinks" "cleanupDarkmanLegacyHooks" ] ''
-    YAZI_THEME="${homeDir}/.config/yazi/theme.toml"
-    THEME_YAZI="${currentSymlink}/yazi/theme.toml"
-
-    if [ -f "$THEME_YAZI" ]; then
-      $DRY_RUN_CMD mkdir -p "$(dirname "$YAZI_THEME")"
-      $DRY_RUN_CMD rm -f "$YAZI_THEME"
-      $DRY_RUN_CMD ln -sfn "$THEME_YAZI" "$YAZI_THEME"
-    fi
-  '';
+  links = [
+    {
+      name = "Yazi";
+      target = ".config/yazi/theme.toml";
+      source = "yazi/theme.toml";
+    }
+  ];
 }

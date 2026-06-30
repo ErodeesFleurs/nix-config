@@ -2,12 +2,11 @@
   config,
   lib,
   pkgs,
+  themeLib,
 }:
 
 let
   enabled = config.homeModules.dunst.enable;
-  homeDir = config.home.homeDirectory;
-  currentSymlink = "${homeDir}/.local/share/themes/current";
 
   mkValueString =
     value:
@@ -120,7 +119,7 @@ let
     )
   );
 in
-{
+themeLib.mkApp {
   enable = enabled;
   outputDirs = [ "$out/dunst" ];
 
@@ -143,21 +142,18 @@ in
         --replace-fail __M3_ON_ERROR_CONTAINER__ "$(jq -r '.colors.on_error_container["${polarity}"].color' colors.json)"
     '';
 
-  xdgConfig."dunst/dunstrc" = {
-    force = lib.mkForce true;
-    text = "# Managed by Monet theme activation\n";
-  };
+  xdgPlaceholders = [
+    { path = "dunst/dunstrc"; }
+  ];
 
-  activation.linkDunstTheme =
-    lib.hm.dag.entryAfter [ "initThemeLinks" "cleanupDarkmanLegacyHooks" ]
-      ''
-        DUNST_CONFIG="${homeDir}/.config/dunst/dunstrc"
-        THEME_DUNST="${currentSymlink}/dunst/dunstrc"
-
-        if [ -d "$(dirname "$DUNST_CONFIG")" ] && [ -f "$THEME_DUNST" ]; then
-          $DRY_RUN_CMD rm -f "$DUNST_CONFIG"
-          $DRY_RUN_CMD ln -sfn "$THEME_DUNST" "$DUNST_CONFIG"
-          ${pkgs.dunst}/bin/dunstctl reload "$THEME_DUNST" 2>/dev/null || ${pkgs.procps}/bin/pkill -HUP dunst 2>/dev/null || true
-        fi
+  links = [
+    {
+      name = "Dunst";
+      target = ".config/dunst/dunstrc";
+      source = "dunst/dunstrc";
+      postLink = ''
+        ${pkgs.dunst}/bin/dunstctl reload "$SOURCE" 2>/dev/null || ${pkgs.procps}/bin/pkill -HUP dunst 2>/dev/null || true
       '';
+    }
+  ];
 }

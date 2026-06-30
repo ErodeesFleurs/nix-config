@@ -1,11 +1,10 @@
-{ config, lib }:
+{ config, themeLib }:
 
 let
   enabled = config.programs.fastfetch.enable;
-  homeDir = config.home.homeDirectory;
-  currentSymlink = "${homeDir}/.local/share/themes/current";
+  inherit (themeLib) homeDir;
 in
-{
+themeLib.mkApp {
   enable = enabled;
   outputDirs = [ "$out/fastfetch" ];
 
@@ -78,16 +77,11 @@ in
       ' colors.json > "$out/fastfetch/config.jsonc"
     '';
 
-  activation.linkFastfetchTheme =
-    lib.hm.dag.entryAfter [ "initThemeLinks" "cleanupDarkmanLegacyHooks" ]
-      ''
-        FASTFETCH_CONFIG="${homeDir}/.config/fastfetch/config.jsonc"
-        THEME_FASTFETCH="${currentSymlink}/fastfetch/config.jsonc"
-
-        if [ -f "$THEME_FASTFETCH" ]; then
-          $DRY_RUN_CMD mkdir -p "$(dirname "$FASTFETCH_CONFIG")"
-          $DRY_RUN_CMD rm -f "$FASTFETCH_CONFIG"
-          $DRY_RUN_CMD ln -sfn "$THEME_FASTFETCH" "$FASTFETCH_CONFIG"
-        fi
-      '';
+  links = [
+    {
+      name = "Fastfetch";
+      target = ".config/fastfetch/config.jsonc";
+      source = "fastfetch/config.jsonc";
+    }
+  ];
 }

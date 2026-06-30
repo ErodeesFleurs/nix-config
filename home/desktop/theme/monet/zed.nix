@@ -1,11 +1,9 @@
-{ config, lib }:
+{ config, themeLib }:
 
 let
   enabled = config.programs.zed-editor.enable;
-  homeDir = config.home.homeDirectory;
-  currentSymlink = "${homeDir}/.local/share/themes/current";
 in
-{
+themeLib.mkApp {
   enable = enabled;
   outputDirs = [ "$out/zed/themes" ];
 
@@ -157,14 +155,11 @@ in
       ' colors.json > "$out/zed/themes/monet-md3.json"
     '';
 
-  activation.linkZedTheme = lib.hm.dag.entryAfter [ "initThemeLinks" "cleanupDarkmanLegacyHooks" ] ''
-    ZED_THEME="${homeDir}/.config/zed/themes/monet-md3.json"
-    THEME_ZED="${currentSymlink}/zed/themes/monet-md3.json"
-
-    if [ -f "$THEME_ZED" ]; then
-      $DRY_RUN_CMD mkdir -p "$(dirname "$ZED_THEME")"
-      $DRY_RUN_CMD rm -f "$ZED_THEME"
-      $DRY_RUN_CMD ln -sfn "$THEME_ZED" "$ZED_THEME"
-    fi
-  '';
+  links = [
+    {
+      name = "Zed";
+      target = ".config/zed/themes/monet-md3.json";
+      source = "zed/themes/monet-md3.json";
+    }
+  ];
 }

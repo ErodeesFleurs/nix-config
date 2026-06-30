@@ -6,19 +6,20 @@
 }:
 
 let
-  waybar = import ./waybar.nix { inherit waybarBodyCssPath; };
-  dunst = import ./dunst.nix { inherit config lib pkgs; };
-  btop = import ./btop.nix { inherit config lib; };
-  ghostty = import ./ghostty.nix { inherit config lib; };
+  themeLib = import ./lib.nix { inherit config lib; };
+  waybar = import ./waybar.nix { inherit pkgs themeLib waybarBodyCssPath; };
+  dunst = import ./dunst.nix { inherit config lib pkgs themeLib; };
+  btop = import ./btop.nix { inherit config themeLib; };
+  ghostty = import ./ghostty.nix { inherit config themeLib; };
   firefox = import ./firefox.nix { inherit config lib pkgs; };
-  hyprlock = import ./hyprlock.nix { inherit config lib; };
-  yazi = import ./yazi.nix { inherit config lib; };
-  gitui = import ./gitui.nix { inherit config lib; };
-  helix = import ./helix.nix { inherit config lib; };
-  zed = import ./zed.nix { inherit config lib; };
-  fastfetch = import ./fastfetch.nix { inherit config lib; };
-  starship = import ./starship.nix { inherit config lib; };
-  mpv = import ./mpv.nix { inherit config lib; };
+  hyprlock = import ./hyprlock.nix { inherit config themeLib; };
+  yazi = import ./yazi.nix { inherit config themeLib; };
+  gitui = import ./gitui.nix { inherit config themeLib; };
+  helix = import ./helix.nix { inherit config themeLib; };
+  zed = import ./zed.nix { inherit config themeLib; };
+  fastfetch = import ./fastfetch.nix { inherit config themeLib; };
+  starship = import ./starship.nix { inherit config themeLib; };
+  mpv = import ./mpv.nix { inherit config themeLib; };
 
   apps = [
     waybar
@@ -35,15 +36,5 @@ let
     starship
     mpv
   ];
-  enabledApps = builtins.filter (app: app.enable) apps;
 in
-{
-  outputDirs = lib.concatStringsSep " " (lib.concatMap (app: app.outputDirs) enabledApps);
-
-  generate =
-    { polarity }:
-    lib.concatStringsSep "\n" (map (app: app.generate { inherit polarity; }) enabledApps);
-
-  activation = lib.foldl' (acc: app: acc // (app.activation or { })) { } enabledApps;
-  xdgConfig = lib.foldl' (acc: app: acc // (app.xdgConfig or { })) { } enabledApps;
-}
+themeLib.collect apps

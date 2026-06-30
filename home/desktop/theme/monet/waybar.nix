@@ -1,6 +1,10 @@
-{ waybarBodyCssPath }:
-
 {
+  pkgs,
+  themeLib,
+  waybarBodyCssPath,
+}:
+
+themeLib.mkApp {
   enable = true;
   outputDirs = [ "$out/waybar" ];
 
@@ -32,4 +36,22 @@
 
       cat ${waybarBodyCssPath} >> "$out/waybar/style.css"
     '';
+
+  xdgPlaceholders = [
+    {
+      path = "waybar/style.css";
+      text = "/* Managed by Monet theme activation */\n";
+    }
+  ];
+
+  links = [
+    {
+      name = "Waybar";
+      target = ".config/waybar/style.css";
+      source = "waybar/style.css";
+      postLink = ''
+        ${pkgs.procps}/bin/pkill -SIGUSR2 waybar 2>/dev/null || true
+      '';
+    }
+  ];
 }

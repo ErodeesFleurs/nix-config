@@ -1,11 +1,9 @@
-{ config, lib }:
+{ config, themeLib }:
 
 let
   enabled = config.programs.ghostty.enable;
-  homeDir = config.home.homeDirectory;
-  currentSymlink = "${homeDir}/.local/share/themes/current";
 in
-{
+themeLib.mkApp {
   enable = enabled;
   outputDirs = [ "$out/ghostty/themes" ];
 
@@ -48,16 +46,11 @@ in
       ' colors.json > "$out/ghostty/themes/monet"
     '';
 
-  activation.linkGhosttyTheme =
-    lib.hm.dag.entryAfter [ "initThemeLinks" "cleanupDarkmanLegacyHooks" ]
-      ''
-        GHOSTTY_THEME="${homeDir}/.config/ghostty/themes/monet"
-        THEME_GHOSTTY="${currentSymlink}/ghostty/themes/monet"
-
-        if [ -f "$THEME_GHOSTTY" ]; then
-          $DRY_RUN_CMD mkdir -p "$(dirname "$GHOSTTY_THEME")"
-          $DRY_RUN_CMD rm -f "$GHOSTTY_THEME"
-          $DRY_RUN_CMD ln -sfn "$THEME_GHOSTTY" "$GHOSTTY_THEME"
-        fi
-      '';
+  links = [
+    {
+      name = "Ghostty";
+      target = ".config/ghostty/themes/monet";
+      source = "ghostty/themes/monet";
+    }
+  ];
 }

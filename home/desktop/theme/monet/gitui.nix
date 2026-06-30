@@ -1,11 +1,9 @@
-{ config, lib }:
+{ config, themeLib }:
 
 let
   enabled = config.programs.gitui.enable;
-  homeDir = config.home.homeDirectory;
-  currentSymlink = "${homeDir}/.local/share/themes/current";
 in
-{
+themeLib.mkApp {
   enable = enabled;
   outputDirs = [ "$out/gitui" ];
 
@@ -44,21 +42,18 @@ in
       ' colors.json > "$out/gitui/theme.ron"
     '';
 
-  xdgConfig."gitui/theme.ron" = {
-    force = lib.mkForce true;
-    text = "// Managed by Monet theme activation\n";
-  };
+  xdgPlaceholders = [
+    {
+      path = "gitui/theme.ron";
+      text = "// Managed by Monet theme activation\n";
+    }
+  ];
 
-  activation.linkGituiTheme =
-    lib.hm.dag.entryAfter [ "initThemeLinks" "cleanupDarkmanLegacyHooks" ]
-      ''
-        GITUI_THEME="${homeDir}/.config/gitui/theme.ron"
-        THEME_GITUI="${currentSymlink}/gitui/theme.ron"
-
-        if [ -f "$THEME_GITUI" ]; then
-          $DRY_RUN_CMD mkdir -p "$(dirname "$GITUI_THEME")"
-          $DRY_RUN_CMD rm -f "$GITUI_THEME"
-          $DRY_RUN_CMD ln -sfn "$THEME_GITUI" "$GITUI_THEME"
-        fi
-      '';
+  links = [
+    {
+      name = "Gitui";
+      target = ".config/gitui/theme.ron";
+      source = "gitui/theme.ron";
+    }
+  ];
 }

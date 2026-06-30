@@ -36,7 +36,8 @@ let
         nativeBuildInputs = [ pkgs.jq ];
       }
       ''
-        mkdir -p ${monetTheme.outputDirs} $out/qt5ct $out/qt6ct
+        ${monetTheme.createOutputDirs}
+        mkdir -p "$out/qt5ct" "$out/qt6ct"
 
         # Waybar CSS
         ${
@@ -330,9 +331,6 @@ in
     };
 
     xdg.configFile = lib.optionalAttrs cfg.monet.enable monetTheme.xdgConfig // {
-      # programs.waybar.style 会先生成静态文件；后续 activation 会替换为 current symlink。
-      "waybar/style.css".force = lib.mkForce true;
-
       # ── Darkman 配置文件 ─────────────────────────────
       "darkman/config.yaml".text =
         let
@@ -375,20 +373,6 @@ in
         $DRY_RUN_CMD rm -rf ${homeDir}/.local/share/darkman/light-mode.d
       '';
 
-      # ── Waybar CSS symlink ───────────────────────────
-      #    home-manager 的 programs.waybar.style 会生成 style.css,
-      #    我们在 activation 中覆盖为指向 theme/current 的软链接
-      linkWaybarTheme = lib.hm.dag.entryAfter [ "initThemeLinks" "cleanupDarkmanLegacyHooks" ] ''
-        WAYBAR_STYLE="${homeDir}/.config/waybar/style.css"
-        THEME_STYLE="${currentSymlink}/waybar/style.css"
-
-        if [ -d "$(dirname "$WAYBAR_STYLE")" ] && [ -f "$THEME_STYLE" ]; then
-          $DRY_RUN_CMD rm -f "$WAYBAR_STYLE"
-          $DRY_RUN_CMD ln -sfn "$THEME_STYLE" "$WAYBAR_STYLE"
-          # 如果 waybar 已在运行，触发重载
-          ${pkgs.procps}/bin/pkill -SIGUSR2 waybar 2>/dev/null || true
-        fi
-      '';
     };
 
     # ── Darkman systemd 用户服务 ─────────────────────

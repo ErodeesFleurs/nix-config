@@ -1,11 +1,9 @@
-{ config, lib }:
+{ config, themeLib }:
 
 let
   enabled = config.programs.mpv.enable;
-  homeDir = config.home.homeDirectory;
-  currentSymlink = "${homeDir}/.local/share/themes/current";
 in
-{
+themeLib.mkApp {
   enable = enabled;
   outputDirs = [ "$out/mpv" ];
 
@@ -39,14 +37,11 @@ in
       ' colors.json > "$out/mpv/monet.conf"
     '';
 
-  activation.linkMpvTheme = lib.hm.dag.entryAfter [ "initThemeLinks" "cleanupDarkmanLegacyHooks" ] ''
-    MPV_THEME="${homeDir}/.config/mpv/monet.conf"
-    THEME_MPV="${currentSymlink}/mpv/monet.conf"
-
-    if [ -f "$THEME_MPV" ]; then
-      $DRY_RUN_CMD mkdir -p "$(dirname "$MPV_THEME")"
-      $DRY_RUN_CMD rm -f "$MPV_THEME"
-      $DRY_RUN_CMD ln -sfn "$THEME_MPV" "$MPV_THEME"
-    fi
-  '';
+  links = [
+    {
+      name = "Mpv";
+      target = ".config/mpv/monet.conf";
+      source = "mpv/monet.conf";
+    }
+  ];
 }
