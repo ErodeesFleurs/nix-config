@@ -122,7 +122,6 @@
   # 主题配置
   homeModules.stylix = {
     enable = true;
-    auto-enable = true;
   };
 
   homeModules.thunderbird.enable = false;

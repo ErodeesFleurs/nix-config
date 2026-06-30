@@ -76,7 +76,10 @@ in
       ' colors.json > "$out/hypr/hyprlock.conf"
     '';
 
-  xdgConfig."hypr/hyprlock.conf".force = lib.mkForce true;
+  xdgConfig."hypr/hyprlock.conf" = {
+    force = lib.mkForce true;
+    text = "# Managed by Monet theme activation\n";
+  };
 
   activation.linkHyprlockTheme =
     lib.hm.dag.entryAfter [ "initThemeLinks" "cleanupDarkmanLegacyHooks" ]

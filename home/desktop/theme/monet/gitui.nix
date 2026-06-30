@@ -44,7 +44,10 @@ in
       ' colors.json > "$out/gitui/theme.ron"
     '';
 
-  xdgConfig."gitui/theme.ron".force = lib.mkForce true;
+  xdgConfig."gitui/theme.ron" = {
+    force = lib.mkForce true;
+    text = "// Managed by Monet theme activation\n";
+  };
 
   activation.linkGituiTheme =
     lib.hm.dag.entryAfter [ "initThemeLinks" "cleanupDarkmanLegacyHooks" ]

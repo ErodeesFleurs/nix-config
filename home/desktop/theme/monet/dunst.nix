@@ -143,7 +143,10 @@ in
         --replace-fail __M3_ON_ERROR_CONTAINER__ "$(jq -r '.colors.on_error_container["${polarity}"].color' colors.json)"
     '';
 
-  xdgConfig."dunst/dunstrc".force = lib.mkForce true;
+  xdgConfig."dunst/dunstrc" = {
+    force = lib.mkForce true;
+    text = "# Managed by Monet theme activation\n";
+  };
 
   activation.linkDunstTheme =
     lib.hm.dag.entryAfter [ "initThemeLinks" "cleanupDarkmanLegacyHooks" ]

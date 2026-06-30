@@ -200,9 +200,7 @@ in
 
       packages = lib.mkOption {
         type = lib.types.listOf lib.types.package;
-        default = with pkgs; [
-          base16-schemes
-        ];
+        default = [ ];
         description = "Theming packages";
       };
     };

@@ -165,7 +165,10 @@ in
       ' colors.json > "$out/yazi/theme.toml"
     '';
 
-  xdgConfig."yazi/theme.toml".force = lib.mkForce true;
+  xdgConfig."yazi/theme.toml" = {
+    force = lib.mkForce true;
+    text = "# Managed by Monet theme activation\n";
+  };
 
   activation.linkYaziTheme = lib.hm.dag.entryAfter [ "initThemeLinks" "cleanupDarkmanLegacyHooks" ] ''
     YAZI_THEME="${homeDir}/.config/yazi/theme.toml"
