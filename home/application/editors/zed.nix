@@ -55,6 +55,7 @@ in
         "toml"
         "zig"
         "ron"
+        "hyprlang"
       ];
 
       userSettings = lib.mkMerge [
