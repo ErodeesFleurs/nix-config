@@ -293,13 +293,15 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+    stylix.targets.btop.enable = lib.mkForce false;
+
     programs.btop = {
       enable = true;
 
       settings = lib.mkMerge [
         {
           # Theme
-          color_theme = lib.mkIf (cfg.theme != null) cfg.theme;
+          color_theme = if cfg.theme != null then cfg.theme else "monet";
           theme_background = cfg.misc-settings.theme-background;
 
           # Update interval

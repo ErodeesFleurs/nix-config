@@ -18,6 +18,126 @@ let
   m3LightWaybarCss = builtins.readFile ../../../assets/waybar/m3-expressive-light.css;
   m3DarkWaybarCss = builtins.readFile ../../../assets/waybar/m3-expressive-dark.css;
   m3WaybarBodyCssPath = ../../../assets/waybar/m3-expressive-body.css;
+  dunstEnabled = config.homeModules.dunst.enable;
+  btopEnabled = config.homeModules.terminal.btop.enable;
+  ghosttyEnabled = config.programs.ghostty.enable;
+  mkDunstValueString =
+    value:
+    if builtins.isBool value then
+      lib.boolToString value
+    else if builtins.isInt value || builtins.isFloat value then
+      toString value
+    else if builtins.isString value then
+      value
+    else if builtins.isPath value then
+      toString value
+    else if builtins.isList value then
+      lib.concatMapStringsSep "," mkDunstValueString value
+    else
+      throw "Unsupported dunst setting value: ${builtins.toJSON value}";
+  dunstRenderSection = name: values: ''
+    [${name}]
+    ${lib.concatStringsSep "\n" (
+      lib.mapAttrsToList (key: value: "${key} = ${mkDunstValueString value}") values
+    )}
+  '';
+  dunstModuleSettings = config.homeModules.dunst.settings;
+  dunstBaseSections = {
+    global = {
+      follow = dunstModuleSettings.global.follow;
+      width = dunstModuleSettings.global.width;
+      height = dunstModuleSettings.global.height;
+      origin = dunstModuleSettings.global.origin;
+      alignment = "left";
+      vertical_alignment = "center";
+      ellipsize = "middle";
+      offset = dunstModuleSettings.global.offset;
+      padding = dunstModuleSettings.global.padding;
+      horizontal_padding = dunstModuleSettings.global.horizontal-padding;
+      text_icon_padding = 15;
+      icon_position = dunstModuleSettings.global.icon-position;
+      min_icon_size = dunstModuleSettings.global.min-icon-size;
+      max_icon_size = dunstModuleSettings.global.max-icon-size;
+      progress_bar_height = dunstModuleSettings.global.progress-bar.height;
+      progress_bar_frame_width = dunstModuleSettings.global.progress-bar.frame-width;
+      progress_bar_min_width = dunstModuleSettings.global.progress-bar.min-width;
+      progress_bar_max_width = dunstModuleSettings.global.progress-bar.max-width;
+      separator_height = 2;
+      frame_width = dunstModuleSettings.global.frame-width;
+      frame_color = dunstModuleSettings.global.frame-color;
+      corner_radius = dunstModuleSettings.global.corner-radius;
+      transparency = 0;
+      gap_size = dunstModuleSettings.global.gap-size;
+      line_height = 0;
+      notification_limit = 0;
+      idle_threshold = dunstModuleSettings.global.idle-threshold;
+      history_length = dunstModuleSettings.global.history-length;
+      show_age_threshold = 60;
+      markup = "full";
+      format = dunstModuleSettings.global.format;
+      word_wrap = "yes";
+      sort = "yes";
+      shrink = "no";
+      indicate_hidden = "yes";
+      sticky_history = "yes";
+      ignore_newline = "no";
+      show_indicators = "no";
+      stack_duplicates = true;
+      always_run_script = true;
+      hide_duplicate_count = false;
+      ignore_dbusclose = false;
+      force_xwayland = false;
+      force_xinerama = false;
+      mouse_left_click = dunstModuleSettings.global.mouse-left-click;
+      mouse_middle_click = dunstModuleSettings.global.mouse-middle-click;
+      mouse_right_click = dunstModuleSettings.global.mouse-right-click;
+    };
+
+    experimental = {
+      per_monitor_dpi = false;
+    };
+
+    urgency_low = {
+      timeout = dunstModuleSettings.urgency.low.timeout;
+    };
+
+    urgency_normal = {
+      timeout = dunstModuleSettings.urgency.normal.timeout;
+    };
+
+    urgency_critical = {
+      timeout = dunstModuleSettings.urgency.critical.timeout;
+    };
+  };
+  dunstMonetTemplate = lib.concatStringsSep "\n" (
+    lib.mapAttrsToList dunstRenderSection (
+      lib.recursiveUpdate dunstBaseSections {
+        global = {
+          frame_color = "__M3_OUTLINE__";
+          highlight = "__M3_PRIMARY__";
+          separator_color = "frame";
+        };
+
+        urgency_low = {
+          background = "__M3_SURFACE_CONTAINER__";
+          foreground = "__M3_ON_SURFACE_VARIANT__";
+          frame_color = "__M3_OUTLINE__";
+        };
+
+        urgency_normal = {
+          background = "__M3_SURFACE__";
+          foreground = "__M3_ON_SURFACE__";
+          frame_color = "__M3_PRIMARY__";
+        };
+
+        urgency_critical = {
+          background = "__M3_ERROR_CONTAINER__";
+          foreground = "__M3_ON_ERROR_CONTAINER__";
+          frame_color = "__M3_ERROR__";
+        };
+      }
+    )
+  );
 
   # ── 构建一个 polarity 变体的所有主题文件 ────────
   mkThemeDerivation =
@@ -32,7 +152,7 @@ let
         nativeBuildInputs = [ pkgs.jq ];
       }
       ''
-        mkdir -p $out/waybar $out/qt5ct $out/qt6ct
+        mkdir -p $out/waybar $out/dunst $out/btop/themes $out/ghostty/themes $out/qt5ct $out/qt6ct
 
         # Waybar CSS
         ${
@@ -70,6 +190,104 @@ let
               ' colors.json > "$out/waybar/style.css"
 
               cat ${m3WaybarBodyCssPath} >> "$out/waybar/style.css"
+
+              ${lib.optionalString dunstEnabled ''
+                cat > "$out/dunst/dunstrc" << 'DUNSTEOF'
+                ${dunstMonetTemplate}
+                DUNSTEOF
+
+                substituteInPlace "$out/dunst/dunstrc" \
+                  --replace-fail __M3_SURFACE__ "$(jq -r '.colors.surface["${polarity}"].color' colors.json)" \
+                  --replace-fail __M3_SURFACE_CONTAINER__ "$(jq -r '.colors.surface_container["${polarity}"].color' colors.json)" \
+                  --replace-fail __M3_ON_SURFACE__ "$(jq -r '.colors.on_surface["${polarity}"].color' colors.json)" \
+                  --replace-fail __M3_ON_SURFACE_VARIANT__ "$(jq -r '.colors.on_surface_variant["${polarity}"].color' colors.json)" \
+                  --replace-fail __M3_OUTLINE__ "$(jq -r '.colors.outline["${polarity}"].color' colors.json)" \
+                  --replace-fail __M3_PRIMARY__ "$(jq -r '.colors.primary["${polarity}"].color' colors.json)" \
+                  --replace-fail __M3_ERROR__ "$(jq -r '.colors.error["${polarity}"].color' colors.json)" \
+                  --replace-fail __M3_ERROR_CONTAINER__ "$(jq -r '.colors.error_container["${polarity}"].color' colors.json)" \
+                  --replace-fail __M3_ON_ERROR_CONTAINER__ "$(jq -r '.colors.on_error_container["${polarity}"].color' colors.json)"
+              ''}
+
+              ${lib.optionalString btopEnabled ''
+                jq -r '
+                  def c($name): .colors[$name]["${polarity}"].color;
+                  [
+                    "# Generated by matugen",
+                    "theme[main_bg]=\"" + c("surface") + "\"",
+                    "theme[main_fg]=\"" + c("on_surface") + "\"",
+                    "theme[title]=\"" + c("primary") + "\"",
+                    "theme[hi_fg]=\"" + c("primary") + "\"",
+                    "theme[selected_bg]=\"" + c("primary_container") + "\"",
+                    "theme[selected_fg]=\"" + c("on_primary_container") + "\"",
+                    "theme[inactive_fg]=\"" + c("on_surface_variant") + "\"",
+                    "theme[graph_text]=\"" + c("on_surface") + "\"",
+                    "theme[meter_bg]=\"" + c("surface_container_high") + "\"",
+                    "theme[proc_misc]=\"" + c("secondary") + "\"",
+                    "theme[cpu_box]=\"" + c("outline") + "\"",
+                    "theme[mem_box]=\"" + c("outline") + "\"",
+                    "theme[net_box]=\"" + c("outline") + "\"",
+                    "theme[proc_box]=\"" + c("outline") + "\"",
+                    "theme[div_line]=\"" + c("outline_variant") + "\"",
+                    "theme[temp_start]=\"" + c("primary") + "\"",
+                    "theme[temp_mid]=\"" + c("secondary") + "\"",
+                    "theme[temp_end]=\"" + c("error") + "\"",
+                    "theme[cpu_start]=\"" + c("primary") + "\"",
+                    "theme[cpu_mid]=\"" + c("secondary") + "\"",
+                    "theme[cpu_end]=\"" + c("error") + "\"",
+                    "theme[free_start]=\"" + c("tertiary") + "\"",
+                    "theme[free_mid]=\"" + c("secondary") + "\"",
+                    "theme[free_end]=\"" + c("primary") + "\"",
+                    "theme[cached_start]=\"" + c("secondary") + "\"",
+                    "theme[cached_mid]=\"" + c("primary") + "\"",
+                    "theme[cached_end]=\"" + c("tertiary") + "\"",
+                    "theme[available_start]=\"" + c("tertiary") + "\"",
+                    "theme[available_mid]=\"" + c("primary") + "\"",
+                    "theme[available_end]=\"" + c("secondary") + "\"",
+                    "theme[used_start]=\"" + c("primary") + "\"",
+                    "theme[used_mid]=\"" + c("secondary") + "\"",
+                    "theme[used_end]=\"" + c("error") + "\"",
+                    "theme[download_start]=\"" + c("tertiary") + "\"",
+                    "theme[download_mid]=\"" + c("secondary") + "\"",
+                    "theme[download_end]=\"" + c("primary") + "\"",
+                    "theme[upload_start]=\"" + c("primary") + "\"",
+                    "theme[upload_mid]=\"" + c("secondary") + "\"",
+                    "theme[upload_end]=\"" + c("tertiary") + "\"",
+                    "theme[process_start]=\"" + c("primary") + "\"",
+                    "theme[process_mid]=\"" + c("secondary") + "\"",
+                    "theme[process_end]=\"" + c("tertiary") + "\""
+                  ] | .[]
+                ' colors.json > "$out/btop/themes/monet.theme"
+              ''}
+
+              ${lib.optionalString ghosttyEnabled ''
+                jq -r '
+                  def c($name): .colors[$name]["${polarity}"].color;
+                  [
+                    "background = " + c("surface"),
+                    "foreground = " + c("on_surface"),
+                    "cursor-color = " + c("primary"),
+                    "cursor-text = " + c("on_primary"),
+                    "selection-background = " + c("primary_container"),
+                    "selection-foreground = " + c("on_primary_container"),
+                    "palette = 0=" + c("surface_container"),
+                    "palette = 1=" + c("error"),
+                    "palette = 2=" + c("tertiary"),
+                    "palette = 3=" + c("primary"),
+                    "palette = 4=" + c("secondary"),
+                    "palette = 5=" + c("primary"),
+                    "palette = 6=" + c("tertiary"),
+                    "palette = 7=" + c("on_surface"),
+                    "palette = 8=" + c("outline"),
+                    "palette = 9=" + c("error"),
+                    "palette = 10=" + c("tertiary"),
+                    "palette = 11=" + c("primary"),
+                    "palette = 12=" + c("secondary"),
+                    "palette = 13=" + c("primary"),
+                    "palette = 14=" + c("tertiary"),
+                    "palette = 15=" + c("inverse_surface")
+                  ] | .[]
+                ' colors.json > "$out/ghostty/themes/monet"
+              ''}
             ''
           else
             ''
@@ -151,6 +369,15 @@ let
 
     # ── Waybar — 发送 USR2 信号触发重载 ──
     ${pkgs.procps}/bin/pkill -SIGUSR2 waybar || true
+
+    # ── Dunst — 重新读取 current symlink 指向的 dunstrc ──
+    if command -v dunstctl &>/dev/null; then
+      ${pkgs.dunst}/bin/dunstctl reload || true
+    else
+      ${pkgs.procps}/bin/pkill -HUP dunst || true
+    fi
+
+    # ── Btop — 下次打开时读取 current symlink 指向的 Monet theme ──
 
     # ── Wallpaper — 切换壁纸 ──
     if [ -n "$WALLPAPER" ] && command -v awww &>/dev/null; then
@@ -343,6 +570,7 @@ in
 
     # programs.waybar.style 会先生成静态文件；后续 activation 会替换为 current symlink。
     xdg.configFile."waybar/style.css".force = lib.mkForce true;
+    xdg.configFile."dunst/dunstrc".force = lib.mkIf dunstEnabled (lib.mkForce true);
 
     # ── 初始化 current 软链接 (默认为 light) ────────
     home.activation.initDarkmanTheme = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
@@ -382,6 +610,48 @@ in
             $DRY_RUN_CMD ln -sfn "$THEME_STYLE" "$WAYBAR_STYLE"
             # 如果 waybar 已在运行，触发重载
             ${pkgs.procps}/bin/pkill -SIGUSR2 waybar 2>/dev/null || true
+          fi
+        '';
+
+    # ── Dunst config symlink ─────────────────────────
+    home.activation.linkDunstTheme =
+      lib.hm.dag.entryAfter [ "initDarkmanTheme" "cleanupDarkmanLegacyHooks" ]
+        ''
+          DUNST_CONFIG="${homeDir}/.config/dunst/dunstrc"
+          THEME_DUNST="${currentSymlink}/dunst/dunstrc"
+
+          if [ -d "$(dirname "$DUNST_CONFIG")" ] && [ -f "$THEME_DUNST" ]; then
+            $DRY_RUN_CMD rm -f "$DUNST_CONFIG"
+            $DRY_RUN_CMD ln -sfn "$THEME_DUNST" "$DUNST_CONFIG"
+            ${pkgs.dunst}/bin/dunstctl reload 2>/dev/null || ${pkgs.procps}/bin/pkill -HUP dunst 2>/dev/null || true
+          fi
+        '';
+
+    # ── Btop theme symlink ───────────────────────────
+    home.activation.linkBtopTheme =
+      lib.hm.dag.entryAfter [ "initDarkmanTheme" "cleanupDarkmanLegacyHooks" ]
+        ''
+          BTOP_THEME="${homeDir}/.config/btop/themes/monet.theme"
+          THEME_BTOP="${currentSymlink}/btop/themes/monet.theme"
+
+          if [ -f "$THEME_BTOP" ]; then
+            $DRY_RUN_CMD mkdir -p "$(dirname "$BTOP_THEME")"
+            $DRY_RUN_CMD rm -f "$BTOP_THEME"
+            $DRY_RUN_CMD ln -sfn "$THEME_BTOP" "$BTOP_THEME"
+          fi
+        '';
+
+    # ── Ghostty theme symlink ────────────────────────
+    home.activation.linkGhosttyTheme =
+      lib.hm.dag.entryAfter [ "initDarkmanTheme" "cleanupDarkmanLegacyHooks" ]
+        ''
+          GHOSTTY_THEME="${homeDir}/.config/ghostty/themes/monet"
+          THEME_GHOSTTY="${currentSymlink}/ghostty/themes/monet"
+
+          if [ -f "$THEME_GHOSTTY" ]; then
+            $DRY_RUN_CMD mkdir -p "$(dirname "$GHOSTTY_THEME")"
+            $DRY_RUN_CMD rm -f "$GHOSTTY_THEME"
+            $DRY_RUN_CMD ln -sfn "$THEME_GHOSTTY" "$GHOSTTY_THEME"
           fi
         '';
 
