@@ -1,6 +1,7 @@
 { config, lib, ... }:
 let
   cfg = config.homeModules.desktop.hyprland.lock;
+  theme = config.homeModules.theme;
 in
 {
   options.homeModules.desktop.hyprland.lock = {
@@ -30,7 +31,7 @@ in
 
           fade_on_empty = false;
           rounding = -1;
-          placeholder_text = "<span foreground=\"##cdd6f4\">Password</span>";
+          placeholder_text = "Password";
           hide_input = false;
           position = "0, -200";
           halign = "center";
@@ -45,9 +46,9 @@ in
           {
             monitor = "";
             text = "cmd[update:1000] date +\"%A, %B %d\"";
-            color = "rgb(205, 214, 244)";
+            color = "rgba(ffffffff)";
             font_size = "22";
-            font_family = "Caskaydia Mono";
+            font_family = theme.fonts.monospace.name;
             position = "0, 300";
             halign = "center";
             valign = "center";
@@ -56,9 +57,9 @@ in
           {
             monitor = "";
             text = "cmd[update:1000]  date +\"%-I:%M\"";
-            color = "rgb(205, 214, 244)";
+            color = "rgba(ffffffff)";
             font_size = 95;
-            font_family = "Caskaydia Mono";
+            font_family = theme.fonts.monospace.name;
             position = "0, 200";
             halign = "center";
             valign = "center";

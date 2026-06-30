@@ -25,8 +25,14 @@ in
 
     enable-stylix = lib.mkOption {
       type = lib.types.bool;
-      default = true;
+      default = false;
       description = "Apply Stylix theme to Firefox";
+    };
+
+    enable-monet = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = "Apply generated Monet / Material Design 3 chrome styles to Firefox";
     };
 
     extra-settings = lib.mkOption {
@@ -68,14 +74,25 @@ in
           force = cfg.search.force;
         };
 
-        settings = cfg.extra-settings;
+        settings =
+          lib.optionalAttrs cfg.enable-monet {
+            "toolkit.legacyUserProfileCustomizations.stylesheets" = true;
+            "browser.theme.content-theme" = 0;
+            "browser.theme.toolbar-theme" = 0;
+          }
+          // cfg.extra-settings;
       };
     };
 
-    # Stylix integration
-    stylix.targets.firefox = lib.mkIf cfg.enable-stylix {
-      colorTheme.enable = true;
-      profileNames = [ cfg.profile-name ];
-    };
+    stylix.targets.firefox =
+      if cfg.enable-stylix then
+        {
+          colorTheme.enable = true;
+          profileNames = [ cfg.profile-name ];
+        }
+      else
+        {
+          colorTheme.enable = lib.mkForce false;
+        };
   };
 }

@@ -7,6 +7,7 @@
 
 let
   cfg = config.homeModules.stylix;
+  theme = config.homeModules.theme;
 in
 {
   options.homeModules.stylix = {
@@ -152,41 +153,41 @@ in
       enable = cfg.enable;
       autoEnable = cfg.auto-enable;
 
-      image = cfg.image;
+      image = theme.wallpaper;
       polarity = cfg.polarity;
 
       base16Scheme = lib.mkIf (cfg.base16-scheme != null) cfg.base16-scheme;
 
       cursor = {
-        package = cfg.cursor.package;
-        name = cfg.cursor.name;
-        size = cfg.cursor.size;
+        package = theme.cursor.package;
+        name = theme.cursor.name;
+        size = theme.cursor.size;
       };
 
       fonts = {
         emoji = {
-          package = cfg.fonts.emoji.package;
-          name = cfg.fonts.emoji.name;
+          package = theme.fonts.emoji.package;
+          name = theme.fonts.emoji.name;
         };
 
         monospace = {
-          package = cfg.fonts.monospace.package;
-          name = cfg.fonts.monospace.name;
+          package = theme.fonts.monospace.package;
+          name = theme.fonts.monospace.name;
         };
 
         sansSerif = {
-          package = cfg.fonts.sans-serif.package;
-          name = cfg.fonts.sans-serif.name;
+          package = theme.fonts.sans-serif.package;
+          name = theme.fonts.sans-serif.name;
         };
 
         serif = {
-          package = cfg.fonts.serif.package;
-          name = cfg.fonts.serif.name;
+          package = theme.fonts.serif.package;
+          name = theme.fonts.serif.name;
         };
       };
 
       opacity = {
-        terminal = cfg.opacity.terminal;
+        terminal = theme.opacity.terminal;
       };
 
       # Configure per-application targets

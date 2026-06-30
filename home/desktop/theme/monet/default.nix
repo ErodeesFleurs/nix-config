@@ -10,12 +10,18 @@ let
   dunst = import ./dunst.nix { inherit config lib pkgs; };
   btop = import ./btop.nix { inherit config lib; };
   ghostty = import ./ghostty.nix { inherit config lib; };
+  firefox = import ./firefox.nix { inherit config lib pkgs; };
+  hyprlock = import ./hyprlock.nix { inherit config lib; };
+  yazi = import ./yazi.nix { inherit config lib; };
 
   apps = [
     waybar
     dunst
     btop
     ghostty
+    firefox
+    hyprlock
+    yazi
   ];
   enabledApps = builtins.filter (app: app.enable) apps;
 in

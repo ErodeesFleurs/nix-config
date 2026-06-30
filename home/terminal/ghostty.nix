@@ -1,5 +1,8 @@
 { config, lib, ... }:
 
+let
+  theme = config.homeModules.theme;
+in
 {
   stylix.targets.ghostty.enable = lib.mkForce false;
 
@@ -7,10 +10,10 @@
     enable = true;
     enableBashIntegration = true;
     settings = {
-      background-opacity = config.homeModules.stylix.opacity.terminal;
+      background-opacity = theme.opacity.terminal;
       font-family = [
-        config.homeModules.stylix.fonts.monospace.name
-        config.homeModules.stylix.fonts.emoji.name
+        theme.fonts.monospace.name
+        theme.fonts.emoji.name
       ];
       font-feature = "+liga,+calt,+dlig";
       font-size = 12;
