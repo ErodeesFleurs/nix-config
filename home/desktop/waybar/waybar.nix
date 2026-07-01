@@ -27,6 +27,7 @@ in
           position = "top";
           layer = "top";
           exclusive = true;
+          gtk-layer-shell = false;
           start_hidden = false;
           reload_style_on_change = true;
           height = 38;

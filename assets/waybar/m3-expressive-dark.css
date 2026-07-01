@@ -29,20 +29,209 @@ window#waybar {
     color: @m3_on_surface;
 }
 
+window.background,
+window.background.popup,
+window.background.csd,
+window.popup,
+window.csd.popup {
+    background: transparent;
+    background-clip: padding-box;
+    background-color: transparent;
+    background-image: none;
+    border: none;
+    box-shadow: none;
+    margin: 0;
+    outline: none;
+    padding: 0;
+    -gtk-outline-radius: 16px;
+}
+
+decoration,
+window decoration,
+window.background decoration,
+window.background.popup decoration,
+window.background.csd decoration,
+window.popup decoration,
+window.csd.popup decoration {
+    background: transparent;
+    background-clip: padding-box;
+    background-color: transparent;
+    background-image: none;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    margin: 0;
+    outline: none;
+    padding: 0;
+    -gtk-outline-radius: 0;
+}
+
+popover,
+popover.background,
+popover > contents,
+popover contents,
+popover arrow {
+    background: transparent;
+    background-color: transparent;
+    background-image: none;
+    border: none;
+    box-shadow: none;
+    outline: none;
+}
+
 tooltip,
-tooltip.background {
-    background-color: @m3_surface;
-    border: 1px solid @m3_outline;
-    border-radius: 18px;
+tooltip.background,
+tooltip window,
+tooltip box,
+tooltip > box {
+    background: transparent;
+    background-color: transparent;
+    background-image: none;
+    border: none;
+    box-shadow: none;
+    outline: none;
+    padding: 0;
+}
+
+tooltip > box {
     color: @m3_on_surface;
 }
 
 tooltip * {
-    border-radius: 18px;
+    background: transparent;
+    background-color: transparent;
+    background-image: none;
+    color: @m3_on_surface;
+}
+
+tooltip decoration,
+tooltip window decoration {
+    background: transparent;
+    background-color: transparent;
+    background-image: none;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    outline: none;
 }
 
 tooltip label {
-    margin: 6px 8px;
+    background: @m3_surface_container_high;
+    background-color: @m3_surface_container_high;
+    background-image: none;
+    border: 1px solid @m3_outline;
+    border-radius: 16px;
+    color: @m3_on_surface;
+    font-size: 13px;
+    font-weight: 600;
+    margin: 0;
+    padding: 8px 12px;
+    text-shadow: none;
+}
+
+menu,
+menu.background,
+menu window,
+menu > box {
+    background: transparent;
+    background-clip: padding-box;
+    background-color: transparent;
+    background-image: none;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    color: @m3_on_surface;
+    margin: 0;
+    outline: none;
+    padding: 0;
+    -gtk-outline-radius: 16px;
+}
+
+menu * {
+    background-image: none;
+    color: @m3_on_surface;
+    text-shadow: none;
+}
+
+menu decoration,
+menu window decoration {
+    background: transparent;
+    background-clip: padding-box;
+    background-color: transparent;
+    background-image: none;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    outline: none;
+    -gtk-outline-radius: 16px;
+}
+
+menuitem {
+    background: @m3_surface_container;
+    background-clip: padding-box;
+    background-color: @m3_surface_container;
+    border-left: 1px solid @m3_outline;
+    border-radius: 0;
+    border-right: 1px solid @m3_outline;
+    color: @m3_on_surface;
+    font-size: 13px;
+    font-weight: 600;
+    margin: 0;
+    min-height: 28px;
+    padding: 6px 12px;
+    -gtk-outline-radius: 0;
+}
+
+menuitem:first-child {
+    border-top: 1px solid @m3_outline;
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
+    padding-top: 10px;
+    -gtk-outline-top-left-radius: 16px;
+    -gtk-outline-top-right-radius: 16px;
+}
+
+menuitem:last-child {
+    border-bottom: 1px solid @m3_outline;
+    border-bottom-left-radius: 16px;
+    border-bottom-right-radius: 16px;
+    padding-bottom: 10px;
+    -gtk-outline-bottom-left-radius: 16px;
+    -gtk-outline-bottom-right-radius: 16px;
+}
+
+menuitem:only-child {
+    border: 1px solid @m3_outline;
+    border-radius: 16px;
+    padding: 10px 16px;
+    -gtk-outline-radius: 16px;
+}
+
+menuitem:hover,
+menuitem:focus {
+    background: @m3_primary_container;
+    background-color: @m3_primary_container;
+    color: @m3_on_primary_container;
+}
+
+menuitem:hover label,
+menuitem:focus label {
+    color: @m3_on_primary_container;
+}
+
+menuitem:disabled,
+menuitem:disabled label {
+    color: @m3_on_surface_variant;
+}
+
+menu separator {
+    background: @m3_surface_container;
+    background-color: @m3_surface_container;
+    border-left: 1px solid @m3_outline;
+    border-right: 1px solid @m3_outline;
+    border-top: 1px solid @m3_outline;
+    margin: 0;
+    min-height: 9px;
 }
 
 #clock,

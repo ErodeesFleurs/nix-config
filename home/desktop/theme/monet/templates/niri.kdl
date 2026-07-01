@@ -98,17 +98,38 @@ window-rule {
     }
 }
 
+window-rule {
+    match app-id="^waybar$"
+
+    shadow {
+        off
+    }
+
+    opacity 1.0
+
+    popups {
+        geometry-corner-radius 16
+        opacity 1.0
+
+        background-effect {
+            blur false
+        }
+    }
+}
+
 layer-rule {
     match namespace="^waybar$"
 
+    shadow {
+        off
+    }
+
     popups {
-        geometry-corner-radius 12
-        opacity 0.9
+        geometry-corner-radius 16
+        opacity 1.0
 
         background-effect {
-            blur true
-            noise 0.02
-            saturation 1.25
+            blur false
         }
     }
 }
