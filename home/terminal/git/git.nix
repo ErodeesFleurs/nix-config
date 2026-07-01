@@ -6,6 +6,7 @@
 
 let
   cfg = config.homeModules.terminal.git;
+  monetDeltaConfig = "${config.home.homeDirectory}/.config/git/monet-delta.gitconfig";
 in
 {
   options.homeModules.terminal.git = {
@@ -97,6 +98,10 @@ in
   config = lib.mkIf cfg.enable {
     programs.git = {
       enable = true;
+
+      includes = lib.mkIf cfg.delta.enable [
+        { path = monetDeltaConfig; }
+      ];
 
       # Use the new settings API
       settings = lib.mkMerge [

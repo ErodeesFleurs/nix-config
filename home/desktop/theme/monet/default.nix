@@ -37,6 +37,7 @@ let
   niri = import ./niri.nix { inherit config themeLib; };
   gtk = import ./gtk.nix { inherit themeLib; };
   qt = import ./qt.nix { inherit config themeLib; };
+  delta = import ./delta.nix { inherit config themeLib; };
   fcitx5 = import ./fcitx5.nix {
     inherit
       config
@@ -63,6 +64,7 @@ let
     niri
     gtk
     qt
+    delta
     fcitx5
   ];
 in
