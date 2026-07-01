@@ -137,7 +137,7 @@ in
 
         format = lib.mkOption {
           type = lib.types.str;
-          default = "<b>%s</b>\\n%b";
+          default = "<b>%s</b>\n%b";
           description = "Format string for notifications";
         };
 
