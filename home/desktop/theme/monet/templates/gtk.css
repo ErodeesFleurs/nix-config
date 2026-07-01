@@ -112,3 +112,79 @@ scrollbar slider {
   min-width: 6px;
   min-height: 6px;
 }
+
+NemoWindow,
+.nemo-window {
+  background-color: @surface@;
+  color: @on_surface@;
+}
+
+NemoWindow .sidebar,
+NemoWindow placessidebar,
+.nemo-window .sidebar,
+.nemo-window placessidebar {
+  background-color: @surface_container_low@;
+  color: @on_surface_variant@;
+}
+
+NemoWindow toolbar,
+NemoWindow headerbar,
+.nemo-window toolbar,
+.nemo-window headerbar {
+  background-color: @surface_container@;
+  color: @on_surface@;
+  border-color: @outline_variant@;
+}
+
+NemoWindow pathbar button,
+.nemo-window pathbar button {
+  background-color: transparent;
+  color: @on_surface_variant@;
+  border-radius: 999px;
+  padding: 6px 10px;
+}
+
+NemoWindow pathbar button:hover,
+.nemo-window pathbar button:hover {
+  background-color: alpha(@primary@, 0.12);
+  color: @on_surface@;
+}
+
+NemoWindow iconview,
+NemoWindow iconview.view,
+NemoWindow treeview.view,
+.nemo-window iconview,
+.nemo-window iconview.view,
+.nemo-window treeview.view {
+  background-color: @surface_container_lowest@;
+  color: @on_surface@;
+  border-radius: 18px;
+}
+
+NemoWindow iconview.view:selected,
+NemoWindow treeview.view:selected,
+.nemo-window iconview.view:selected,
+.nemo-window treeview.view:selected {
+  background-color: @primary_container@;
+  color: @on_primary_container@;
+  border-radius: 16px;
+}
+
+NemoWindow .view:hover,
+.nemo-window .view:hover {
+  background-color: @surface_container_highest@;
+}
+
+NemoWindow infobar,
+.nemo-window infobar {
+  background-color: @tertiary_container@;
+  color: @on_surface@;
+  border-radius: 18px;
+}
+
+NemoWindow scrolledwindow,
+.nemo-window scrolledwindow {
+  background-color: @surface_container_lowest@;
+  border: 1px solid @outline_variant@;
+  border-radius: 18px;
+}

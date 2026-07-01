@@ -1,0 +1,117 @@
+/**
+ * @name Monet MD3
+ * @description Generated Material Design 3 theme from the current Monet palette.
+ * @author matugen
+ */
+
+:root,
+.theme-light,
+.theme-dark,
+.visual-refresh {
+  --md3-surface: @surface@;
+  --md3-surface-container-low: @surface_container_low@;
+  --md3-surface-container: @surface_container@;
+  --md3-surface-container-high: @surface_container_high@;
+  --md3-surface-container-highest: @surface_container_highest@;
+  --md3-on-surface: @on_surface@;
+  --md3-on-surface-variant: @on_surface_variant@;
+  --md3-outline: @outline@;
+  --md3-outline-variant: @outline_variant@;
+  --md3-primary: @primary@;
+  --md3-on-primary: @on_primary@;
+  --md3-primary-container: @primary_container@;
+  --md3-on-primary-container: @on_primary_container@;
+  --md3-secondary: @secondary@;
+  --md3-secondary-container: @secondary_container@;
+  --md3-on-secondary-container: @on_secondary_container@;
+  --md3-tertiary: @tertiary@;
+  --md3-tertiary-container: @tertiary_container@;
+  --md3-on-tertiary-container: @on_tertiary_container@;
+  --md3-error: @error@;
+  --md3-error-container: @error_container@;
+  --md3-on-error-container: @on_error_container@;
+
+  --background-primary: var(--md3-surface);
+  --background-secondary: var(--md3-surface-container-low);
+  --background-secondary-alt: var(--md3-surface-container);
+  --background-tertiary: var(--md3-surface-container-high);
+  --background-floating: var(--md3-surface-container-high);
+  --background-modifier-hover: color-mix(in srgb, var(--md3-primary) 10%, transparent);
+  --background-modifier-active: color-mix(in srgb, var(--md3-primary) 16%, transparent);
+  --background-modifier-selected: var(--md3-primary-container);
+  --background-modifier-accent: var(--md3-outline-variant);
+  --bg-base-primary: var(--md3-surface);
+  --bg-base-secondary: var(--md3-surface-container-low);
+  --bg-base-tertiary: var(--md3-surface-container);
+  --bg-surface-overlay: var(--md3-surface-container-high);
+  --bg-surface-raised: var(--md3-surface-container-high);
+  --bg-mod-faint: color-mix(in srgb, var(--md3-primary) 8%, transparent);
+  --bg-mod-subtle: color-mix(in srgb, var(--md3-primary) 12%, transparent);
+  --bg-mod-strong: var(--md3-primary-container);
+  --text-normal: var(--md3-on-surface);
+  --text-muted: var(--md3-on-surface-variant);
+  --text-link: var(--md3-primary);
+  --interactive-normal: var(--md3-on-surface-variant);
+  --interactive-hover: var(--md3-on-surface);
+  --interactive-active: var(--md3-on-surface);
+  --interactive-muted: color-mix(in srgb, var(--md3-on-surface-variant) 50%, transparent);
+  --channels-default: var(--md3-on-surface-variant);
+  --channel-icon: var(--md3-on-surface-variant);
+  --header-primary: var(--md3-on-surface);
+  --header-secondary: var(--md3-on-surface-variant);
+  --brand-experiment: var(--md3-primary);
+  --brand-experiment-560: var(--md3-primary);
+  --button-secondary-background: var(--md3-secondary-container);
+  --button-secondary-background-hover: color-mix(in srgb, var(--md3-secondary-container) 86%, var(--md3-on-secondary-container));
+  --button-secondary-text: var(--md3-on-secondary-container);
+  --status-danger: var(--md3-error);
+  --info-danger-background: var(--md3-error-container);
+  --info-danger-foreground: var(--md3-on-error-container);
+  --focus-primary: var(--md3-primary);
+}
+
+[class*="sidebar_"],
+[class*="privateChannels_"],
+[class*="container_"][aria-label*="Servers"],
+[class*="panels_"] {
+  background: var(--md3-surface-container-low) !important;
+}
+
+[class*="chat_"],
+[class*="content_"],
+[class*="members_"],
+[class*="member_"],
+[class*="messagesWrapper_"] {
+  background: var(--md3-surface) !important;
+}
+
+[class*="panels_"],
+[class*="container_"][class*="floating_"],
+[class*="menu_"],
+[class*="layer_"] [role="dialog"],
+[class*="root_"][role="dialog"] {
+  border: 1px solid var(--md3-outline-variant) !important;
+  border-radius: 22px !important;
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--md3-outline) 24%, transparent) !important;
+}
+
+[class*="item_"][aria-selected="true"],
+[class*="modeSelected_"],
+[class*="selected_"] {
+  background: var(--md3-primary-container) !important;
+  color: var(--md3-on-primary-container) !important;
+  border-radius: 18px !important;
+}
+
+[class*="button_"],
+button {
+  border-radius: 999px;
+}
+
+[class*="input_"],
+[class*="textArea_"],
+[class*="scrollableContainer_"] {
+  background: var(--md3-surface-container) !important;
+  border-radius: 20px !important;
+  color: var(--md3-on-surface) !important;
+}

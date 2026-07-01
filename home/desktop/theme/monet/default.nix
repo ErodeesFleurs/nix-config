@@ -39,6 +39,7 @@ let
   gtk = import ./gtk.nix { inherit themeLib; };
   qt = import ./qt.nix { inherit config themeLib; };
   delta = import ./delta.nix { inherit config themeLib; };
+  discord = import ./discord.nix { inherit config themeLib; };
   vicinae = import ./vicinae.nix {
     inherit
       config
@@ -74,6 +75,7 @@ let
     gtk
     qt
     delta
+    discord
     vicinae
     fcitx5
   ];

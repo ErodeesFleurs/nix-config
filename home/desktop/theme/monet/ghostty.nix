@@ -21,24 +21,15 @@ themeLib.mkApp {
           source = ./templates/ghostty.theme;
           target = "$out/ghostty/themes/monet-${themePolarity}";
           polarity = themePolarity;
-          colors = [
-            "surface_container_low"
-            "surface_container_high"
-            "on_surface"
-            "on_surface_variant"
-            "primary"
-            "on_primary"
-            "primary_container"
-            "on_primary_container"
-            "secondary"
-            "on_secondary_container"
-            "tertiary"
-            "tertiary_container"
-            "on_tertiary_container"
-            "error"
-            "on_error_container"
-            "outline"
-            "outline_variant"
+          colors = themeLib.mergeColorTokens [
+            themeLib.terminalColorTokens
+            [
+              "surface_container_high"
+              "on_primary"
+              "primary_container"
+              "tertiary_container"
+              "outline_variant"
+            ]
           ];
         };
     in

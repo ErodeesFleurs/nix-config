@@ -331,9 +331,9 @@ window#waybar.empty #window {
 #network.disconnected,
 #network.disabled,
 #battery.critical:not(.charging) {
-    background-color: @m3_tertiary_container;
+    background-color: @m3_error_container;
     border-color: transparent;
-    color: @m3_on_tertiary_container;
+    color: @m3_on_error_container;
 }
 
 #battery.warning:not(.charging) {

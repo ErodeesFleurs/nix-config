@@ -46,6 +46,23 @@ let
 
   mergeAttrs = lib.foldl' (acc: value: acc // value) { };
 
+  mergeColorTokens = lists: lib.unique (lib.concatLists lists);
+
+  terminalColorTokens = [
+    "surface_container_low"
+    "on_surface"
+    "on_surface_variant"
+    "primary"
+    "on_primary_container"
+    "secondary"
+    "on_secondary_container"
+    "tertiary"
+    "on_tertiary_container"
+    "error"
+    "on_error_container"
+    "outline"
+  ];
+
   normalizeReplacement =
     replacement:
     if builtins.isString replacement then
@@ -93,8 +110,10 @@ in
   inherit
     homeDir
     currentSymlink
+    mergeColorTokens
     mkThemeLink
     mkXdgPlaceholder
+    terminalColorTokens
     ;
 
   renderTemplate =

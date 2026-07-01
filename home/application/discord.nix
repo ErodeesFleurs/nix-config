@@ -117,6 +117,10 @@ in
         autoUpdate = cfg.config.auto-update;
         notifyAboutUpdates = cfg.config.notify-about-updates;
         autoUpdateNotification = cfg.config.auto-update-notification;
+        themes.monet-md3 = ''
+          @import url("file://${config.home.homeDirectory}/.local/share/themes/current/discord/monet.css");
+        '';
+        enabledThemes = lib.mkAfter [ "monet-md3.css" ];
         plugins = cfg.config.plugins;
       };
     };

@@ -16,28 +16,31 @@ themeLib.mkApp {
           source = ./templates/zed-md3.json;
           target = "$out/zed/themes/monet-md3-${themePolarity}.json";
           polarity = themePolarity;
-          colors = [
-            "outline_variant"
-            "primary"
-            "surface_container_high"
-            "surface_container"
-            "surface"
-            "surface_container_highest"
-            "primary_container"
-            "on_primary_container"
-            "on_surface"
-            "on_surface_variant"
-            "surface_container_low"
-            "tertiary"
-            "on_tertiary_container"
-            "outline"
-            "error"
-            "on_error_container"
-            "secondary"
-            "on_secondary_container"
-            "secondary_container"
-            "error_container"
-            "tertiary_container"
+          colors = themeLib.mergeColorTokens [
+            themeLib.terminalColorTokens
+            [
+              "outline_variant"
+              "primary"
+              "surface_container_high"
+              "surface_container"
+              "surface"
+              "surface_container_highest"
+              "primary_container"
+              "on_primary_container"
+              "on_surface"
+              "on_surface_variant"
+              "surface_container_low"
+              "tertiary"
+              "on_tertiary_container"
+              "outline"
+              "error"
+              "on_error_container"
+              "secondary"
+              "on_secondary_container"
+              "secondary_container"
+              "error_container"
+              "tertiary_container"
+            ]
           ];
           literalReplacements = [
             {
