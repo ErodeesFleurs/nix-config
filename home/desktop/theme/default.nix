@@ -77,7 +77,7 @@ in
     opacity = {
       terminal = lib.mkOption {
         type = lib.types.float;
-        default = 0.7;
+        default = 0.92;
         description = "Terminal background opacity from 0.0 to 1.0";
       };
     };
