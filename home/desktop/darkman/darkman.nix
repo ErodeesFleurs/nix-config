@@ -90,6 +90,7 @@ let
       waybarCss,
       wallpaper,
       qt5ctStyle,
+      iconTheme,
     }:
     pkgs.runCommand "darkman-theme-${polarity}"
       (
@@ -128,12 +129,14 @@ let
               cat > "$out/qt5ct/qt5ct.conf" << 'QT5EOF'
               [Appearance]
               style=${qt5ctStyle}
+              icon_theme=${iconTheme}
               custom_palette=false
               QT5EOF
 
               cat > "$out/qt6ct/qt6ct.conf" << 'QT6EOF'
               [Appearance]
               style=${qt5ctStyle}
+              icon_theme=${iconTheme}
               custom_palette=false
               QT6EOF
             ''
@@ -143,7 +146,8 @@ let
         cat > "$out/theme.json" << JSONEOF
         {
           "polarity": "${polarity}",
-          "qt5ct_style": "${qt5ctStyle}"
+          "qt5ct_style": "${qt5ctStyle}",
+          "icon_theme": "${iconTheme}"
         }
         JSONEOF
       '';
@@ -157,6 +161,7 @@ let
     case "$target" in
       dark)
         GTK_THEME=${shellArg cfg.dark.gtkTheme}
+        ICON_THEME=${shellArg cfg.dark.iconTheme}
         COLOR_SCHEME="prefer-dark"
         CURSOR_THEME=${shellArg cfg.dark.cursorTheme}
         CURSOR_SIZE=${toString cfg.dark.cursorSize}
@@ -165,6 +170,7 @@ let
         ;;
       light)
         GTK_THEME=${shellArg cfg.light.gtkTheme}
+        ICON_THEME=${shellArg cfg.light.iconTheme}
         COLOR_SCHEME="prefer-light"
         CURSOR_THEME=${shellArg cfg.light.cursorTheme}
         CURSOR_SIZE=${toString cfg.light.cursorSize}
@@ -190,6 +196,7 @@ let
     # ── GTK 主题 (gsettings 即时生效) ──
     if command -v gsettings &>/dev/null; then
       gsettings set org.gnome.desktop.interface gtk-theme "$GTK_THEME" || true
+      gsettings set org.gnome.desktop.interface icon-theme "$ICON_THEME" || true
       gsettings set org.gnome.desktop.interface color-scheme "$COLOR_SCHEME" || true
       gsettings set org.gnome.desktop.interface cursor-theme "$CURSOR_THEME" || true
       gsettings set org.gnome.desktop.interface cursor-size "$CURSOR_SIZE" || true
@@ -247,6 +254,12 @@ in
         description = "GTK theme name for light mode";
       };
 
+      iconTheme = lib.mkOption {
+        type = lib.types.str;
+        default = config.homeModules.theme.icons.lightName;
+        description = "Icon theme name for light mode";
+      };
+
       wallpaper = lib.mkOption {
         type = lib.types.nullOr lib.types.path;
         default = null;
@@ -284,6 +297,12 @@ in
         type = lib.types.str;
         default = "Adwaita-dark";
         description = "GTK theme name for dark mode";
+      };
+
+      iconTheme = lib.mkOption {
+        type = lib.types.str;
+        default = config.homeModules.theme.icons.darkName;
+        description = "Icon theme name for dark mode";
       };
 
       wallpaper = lib.mkOption {
@@ -347,6 +366,7 @@ in
         waybarCss = cfg.light.waybarCss;
         wallpaper = cfg.light.wallpaper;
         qt5ctStyle = cfg.light.qt5ctStyle;
+        iconTheme = cfg.light.iconTheme;
       };
 
       # 夜间主题文件
@@ -355,6 +375,7 @@ in
         waybarCss = cfg.dark.waybarCss;
         wallpaper = cfg.dark.wallpaper;
         qt5ctStyle = cfg.dark.qt5ctStyle;
+        iconTheme = cfg.dark.iconTheme;
       };
     };
 

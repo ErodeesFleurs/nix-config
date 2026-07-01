@@ -36,8 +36,9 @@ let
   nushell = import ./nushell.nix { inherit config themeLib; };
   mpv = import ./mpv.nix { inherit config themeLib; };
   niri = import ./niri.nix { inherit config themeLib; };
-  gtk = import ./gtk.nix { inherit themeLib; };
+  gtk = import ./gtk.nix { inherit config themeLib; };
   qt = import ./qt.nix { inherit config themeLib; };
+  icons = import ./icons.nix { inherit lib themeLib; };
   delta = import ./delta.nix { inherit config themeLib; };
   discord = import ./discord.nix { inherit config themeLib; };
   vicinae = import ./vicinae.nix {
@@ -74,6 +75,7 @@ let
     niri
     gtk
     qt
+    icons
     delta
     discord
     vicinae

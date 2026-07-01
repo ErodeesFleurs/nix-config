@@ -2,7 +2,7 @@
     border: none;
     border-radius: 0;
     min-height: 0;
-    font-family: "Noto Sans", "Symbols Nerd Font", sans-serif;
+    font-family: "Noto Sans", "Material Symbols Rounded", "Symbols Nerd Font", sans-serif;
     font-size: 13px;
     font-weight: 600;
 }
@@ -233,6 +233,12 @@ menu separator {
     margin: 4px 3px;
     padding: 0 12px;
     transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+
+#custom-darkman {
+    font-family: "Material Symbols Rounded";
+    font-size: 18px;
+    font-weight: 400;
 }
 
 #clock {

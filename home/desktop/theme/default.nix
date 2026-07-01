@@ -82,6 +82,26 @@ in
       };
     };
 
+    icons = {
+      package = lib.mkOption {
+        type = lib.types.package;
+        default = pkgs.papirus-icon-theme;
+        description = "Icon theme package";
+      };
+
+      lightName = lib.mkOption {
+        type = lib.types.str;
+        default = "Monet-Papirus-Light";
+        description = "Icon theme name for light mode";
+      };
+
+      darkName = lib.mkOption {
+        type = lib.types.str;
+        default = "Monet-Papirus-Dark";
+        description = "Icon theme name for dark mode";
+      };
+    };
+
     cursor = {
       package = lib.mkOption {
         type = lib.types.package;
@@ -110,6 +130,8 @@ in
       cfg.fonts.sans-serif.package
       cfg.fonts.serif.package
       cfg.cursor.package
+      cfg.icons.package
+      pkgs.material-symbols
     ];
 
     fonts.fontconfig.enable = true;

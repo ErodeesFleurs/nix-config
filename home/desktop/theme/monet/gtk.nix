@@ -1,4 +1,4 @@
-{ themeLib }:
+{ config, themeLib }:
 
 themeLib.mkApp {
   enable = true;
@@ -10,6 +10,19 @@ themeLib.mkApp {
   generate =
     { polarity }:
     let
+      darkmanConfig = config.home-modules.desktop.darkman.${polarity};
+
+      renderGtkSettings = target: ''
+        cp ${builtins.toFile "gtk-settings.ini" ''
+          [Settings]
+          gtk-theme-name=${darkmanConfig.gtkTheme}
+          gtk-icon-theme-name=${darkmanConfig.iconTheme}
+          gtk-cursor-theme-name=${darkmanConfig.cursorTheme}
+          gtk-cursor-theme-size=${toString darkmanConfig.cursorSize}
+          gtk-application-prefer-dark-theme=${if polarity == "dark" then "true" else "false"}
+        ''} "${target}"
+      '';
+
       renderGtkCss = target: ''
         ${themeLib.renderTemplate {
           source = ./templates/gtk.css;
@@ -41,6 +54,8 @@ themeLib.mkApp {
     ''
       ${renderGtkCss "$out/gtk-3.0/gtk.css"}
       ${renderGtkCss "$out/gtk-4.0/gtk.css"}
+      ${renderGtkSettings "$out/gtk-3.0/settings.ini"}
+      ${renderGtkSettings "$out/gtk-4.0/settings.ini"}
     '';
 
   xdgPlaceholders = [
@@ -51,6 +66,14 @@ themeLib.mkApp {
     {
       path = "gtk-4.0/gtk.css";
       text = "/* Managed by Monet theme activation */\n";
+    }
+    {
+      path = "gtk-3.0/settings.ini";
+      text = "# Managed by Monet theme activation\n";
+    }
+    {
+      path = "gtk-4.0/settings.ini";
+      text = "# Managed by Monet theme activation\n";
     }
   ];
 
@@ -64,6 +87,16 @@ themeLib.mkApp {
       name = "Gtk4";
       target = ".config/gtk-4.0/gtk.css";
       source = "gtk-4.0/gtk.css";
+    }
+    {
+      name = "Gtk3Settings";
+      target = ".config/gtk-3.0/settings.ini";
+      source = "gtk-3.0/settings.ini";
+    }
+    {
+      name = "Gtk4Settings";
+      target = ".config/gtk-4.0/settings.ini";
+      source = "gtk-4.0/settings.ini";
     }
   ];
 }

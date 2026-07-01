@@ -1,0 +1,12 @@
+[Icon Theme]
+Name=@theme_name@
+Comment=Monet folder overlay for @base_theme@
+Inherits=@base_theme@
+Directories=scalable/places
+
+[scalable/places]
+Context=Places
+Size=64
+MinSize=16
+MaxSize=256
+Type=Scalable

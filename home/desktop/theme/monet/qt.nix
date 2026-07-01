@@ -79,12 +79,14 @@ let
   mkQtctConf =
     {
       style,
+      iconTheme,
       colorSchemePath,
     }:
     builtins.toFile "qtct.conf" ''
       [Appearance]
       color_scheme_path=${colorSchemePath}
       custom_palette=true
+      icon_theme=${iconTheme}
       style=${style}
     '';
 in
@@ -99,6 +101,7 @@ themeLib.mkApp {
     { polarity }:
     let
       style = config.home-modules.desktop.darkman.${polarity}.qt5ctStyle;
+      iconTheme = config.home-modules.desktop.darkman.${polarity}.iconTheme;
     in
     ''
       ${themeLib.renderTemplate {
@@ -110,13 +113,13 @@ themeLib.mkApp {
       cp "$out/qt5ct/colors/monet.conf" "$out/qt6ct/colors/monet.conf"
       cp ${
         mkQtctConf {
-          inherit style;
+          inherit iconTheme style;
           colorSchemePath = "${currentSymlink}/qt5ct/colors/monet.conf";
         }
       } "$out/qt5ct/qt5ct.conf"
       cp ${
         mkQtctConf {
-          inherit style;
+          inherit iconTheme style;
           colorSchemePath = "${currentSymlink}/qt6ct/colors/monet.conf";
         }
       } "$out/qt6ct/qt6ct.conf"
