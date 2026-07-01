@@ -33,6 +33,7 @@ let
   zed = import ./zed.nix { inherit config themeLib; };
   fastfetch = import ./fastfetch.nix { inherit config themeLib; };
   starship = import ./starship.nix { inherit config themeLib; };
+  nushell = import ./nushell.nix { inherit config themeLib; };
   mpv = import ./mpv.nix { inherit config themeLib; };
   niri = import ./niri.nix { inherit config themeLib; };
   gtk = import ./gtk.nix { inherit themeLib; };
@@ -67,6 +68,7 @@ let
     zed
     fastfetch
     starship
+    nushell
     mpv
     niri
     gtk

@@ -6,6 +6,17 @@
 }:
 let
   cfg = config.modules.display-manager.tuigreet;
+  theme = config.modules.desktop.theme.monet;
+
+  tuigreetCommand =
+    if theme.enable then
+      pkgs.writeShellScript "tuigreet-monet" ''
+        set -euo pipefail
+
+        exec ${pkgs.tuigreet}/bin/tuigreet --theme "$(${pkgs.coreutils}/bin/cat ${theme.tuigreet.themeSpec})" "$@"
+      ''
+    else
+      "${pkgs.tuigreet}/bin/tuigreet";
 in
 {
   options.modules.display-manager.tuigreet = {
@@ -21,7 +32,7 @@ in
       settings = {
         default_session = {
           command = lib.concatStringsSep " " [
-            "${pkgs.tuigreet}/bin/tuigreet"
+            "${tuigreetCommand}"
             "--time"
             "--time-format '%Y-%m-%d %H:%M'"
             "--asterisks"

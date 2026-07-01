@@ -85,13 +85,13 @@ in
     cursor = {
       package = lib.mkOption {
         type = lib.types.package;
-        default = pkgs.catppuccin-cursors.mochaDark;
+        default = pkgs.adwaita-icon-theme;
         description = "Cursor theme package";
       };
 
       name = lib.mkOption {
         type = lib.types.str;
-        default = "catppuccin-mocha-dark-cursors";
+        default = "Adwaita";
         description = "Cursor theme name";
       };
 

@@ -6,6 +6,8 @@
 
 let
   cfg = config.homeModules.terminal.shell.nushell;
+  theme = config.home-modules.desktop.darkman;
+  enableMonetTheme = theme.enable && theme.monet.enable;
 in
 {
   options.homeModules.terminal.shell.nushell = {
@@ -100,6 +102,10 @@ in
 
         # SSH agent socket
         $env.SSH_AUTH_SOCK = ${cfg.ssh-auth-sock}
+
+        ${lib.optionalString enableMonetTheme ''
+          source ${config.home.homeDirectory}/.config/nushell/monet.nu
+        ''}
 
         ${cfg.extra-config}
       '';

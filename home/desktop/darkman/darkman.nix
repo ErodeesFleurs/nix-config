@@ -212,7 +212,7 @@ in
 
       cursorTheme = lib.mkOption {
         type = lib.types.str;
-        default = "catppuccin-mocha-light-cursors";
+        default = "Adwaita";
         description = "Cursor theme name for light mode";
       };
 
@@ -251,7 +251,7 @@ in
 
       cursorTheme = lib.mkOption {
         type = lib.types.str;
-        default = "catppuccin-mocha-dark-cursors";
+        default = "Adwaita";
         description = "Cursor theme name for dark mode";
       };
 
