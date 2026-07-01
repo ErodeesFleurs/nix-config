@@ -24,13 +24,16 @@ themeLib.mkApp {
         target = "$out/fcitx5/themes/Monet/theme.conf";
         inherit polarity;
         colors = [
-          "surface_container"
+          "surface_container_high"
+          "surface_container_highest"
           "on_surface"
           "on_surface_variant"
+          "outline"
           "outline_variant"
-          "primary"
-          "on_primary"
           "primary_container"
+          "on_primary_container"
+          "secondary_container"
+          "on_secondary_container"
         ];
         literalReplacements = [
           {
