@@ -161,10 +161,15 @@ let
 
     # ── Btop — 下次打开时读取 current symlink 指向的 Monet theme ──
 
-    # ── Fcitx5 — 重新读取 current symlink 指向的候选框主题 ──
-    if command -v fcitx5-remote &>/dev/null; then
-      fcitx5-remote -r >/dev/null 2>&1 || true
-    fi
+    # ── Fcitx5 — 重新读取 classicui addon，候选框主题属于该 addon ──
+    ${pkgs.glib}/bin/gdbus call \
+      --session \
+      --dest org.fcitx.Fcitx5 \
+      --object-path /controller \
+      --method org.fcitx.Fcitx.Controller1.ReloadAddonConfig \
+      classicui >/dev/null 2>&1 \
+      || ${pkgs.fcitx5}/bin/fcitx5-remote -r >/dev/null 2>&1 \
+      || true
 
     # ── Wallpaper — 切换壁纸 ──
     if [ -n "$WALLPAPER" ] && command -v awww &>/dev/null; then

@@ -7,37 +7,85 @@
 
 let
   font = config.homeModules.theme.fonts.sans-serif.name;
+  inherit (themeLib) currentSymlink homeDir;
   iconSource = "${pkgs.fcitx5-material-color}/share/fcitx5-material-color";
+  fcitx5Remote = "${pkgs.fcitx5}/bin/fcitx5-remote";
+  reloadClassicUi = ''
+    ${pkgs.glib}/bin/gdbus call \
+      --session \
+      --dest org.fcitx.Fcitx5 \
+      --object-path /controller \
+      --method org.fcitx.Fcitx.Controller1.ReloadAddonConfig \
+      classicui >/dev/null 2>&1 \
+      || ${fcitx5Remote} -r >/dev/null 2>&1 \
+      || true
+  '';
 in
 themeLib.mkApp {
   enable = true;
   outputDirs = [
     "$out/fcitx5/conf"
-    "$out/fcitx5/themes/Monet"
+    "$out/fcitx5/themes/MonetLight"
+    "$out/fcitx5/themes/MonetDark"
   ];
 
   generate =
     { polarity }:
+    let
+      activeTheme = if polarity == "dark" then "MonetDark" else "MonetLight";
+      renderFcitxTheme = themePolarity: themeName: ''
+        ${themeLib.renderTemplate {
+          source = ./templates/fcitx5-theme.conf;
+          target = "$out/fcitx5/themes/${themeName}/theme.conf";
+          polarity = themePolarity;
+          colors = [
+            "surface_container_high"
+            "on_surface"
+            "primary_container"
+            "on_primary_container"
+            "outline"
+            "outline_variant"
+          ];
+          literalReplacements = [
+            {
+              token = "font";
+              value = font;
+            }
+          ];
+        }}
+        ${themeLib.renderTemplate {
+          source = ./templates/fcitx5-panel.svg;
+          target = "$out/fcitx5/themes/${themeName}/panel.svg";
+          polarity = themePolarity;
+          replacements = [
+            "surface_container_high"
+            "outline_variant"
+            {
+              token = "shadow";
+              color = "shadow";
+            }
+          ];
+        }}
+        ${themeLib.renderTemplate {
+          source = ./templates/fcitx5-panel-highlight.svg;
+          target = "$out/fcitx5/themes/${themeName}/panel-highlight.svg";
+          polarity = themePolarity;
+          colors = [ "primary_container" ];
+        }}
+        ${themeLib.renderTemplate {
+          source = ./templates/fcitx5-menu-highlight.svg;
+          target = "$out/fcitx5/themes/${themeName}/menu-highlight.svg";
+          polarity = themePolarity;
+          colors = [ "primary_container" ];
+        }}
+        ${pkgs.librsvg}/bin/rsvg-convert --format png --output "$out/fcitx5/themes/${themeName}/panel.png" "$out/fcitx5/themes/${themeName}/panel.svg"
+        ${pkgs.librsvg}/bin/rsvg-convert --format png --output "$out/fcitx5/themes/${themeName}/panel-highlight.png" "$out/fcitx5/themes/${themeName}/panel-highlight.svg"
+        ${pkgs.librsvg}/bin/rsvg-convert --format png --output "$out/fcitx5/themes/${themeName}/menu-highlight.png" "$out/fcitx5/themes/${themeName}/menu-highlight.svg"
+        cp ${iconSource}/arrow.png "$out/fcitx5/themes/${themeName}/arrow.png"
+        cp ${iconSource}/radio.png "$out/fcitx5/themes/${themeName}/radio.png"
+      '';
+    in
     ''
-      ${themeLib.renderTemplate {
-        source = ./templates/fcitx5-theme.conf;
-        target = "$out/fcitx5/themes/Monet/theme.conf";
-        inherit polarity;
-        colors = [
-          "surface_container_high"
-          "on_surface"
-          "primary_container"
-          "on_primary_container"
-          "outline"
-          "outline_variant"
-        ];
-        literalReplacements = [
-          {
-            token = "font";
-            value = font;
-          }
-        ];
-      }}
       ${themeLib.renderTemplate {
         source = ./templates/fcitx5-classicui.conf;
         target = "$out/fcitx5/conf/classicui.conf";
@@ -47,38 +95,14 @@ themeLib.mkApp {
             token = "font";
             value = font;
           }
-        ];
-      }}
-      ${themeLib.renderTemplate {
-        source = ./templates/fcitx5-panel.svg;
-        target = "$out/fcitx5/themes/Monet/panel.svg";
-        inherit polarity;
-        replacements = [
-          "surface_container_high"
-          "outline_variant"
           {
-            token = "shadow";
-            color = "shadow";
+            token = "theme";
+            value = activeTheme;
           }
         ];
       }}
-      ${themeLib.renderTemplate {
-        source = ./templates/fcitx5-panel-highlight.svg;
-        target = "$out/fcitx5/themes/Monet/panel-highlight.svg";
-        inherit polarity;
-        colors = [ "primary_container" ];
-      }}
-      ${themeLib.renderTemplate {
-        source = ./templates/fcitx5-menu-highlight.svg;
-        target = "$out/fcitx5/themes/Monet/menu-highlight.svg";
-        inherit polarity;
-        colors = [ "primary_container" ];
-      }}
-      ${pkgs.librsvg}/bin/rsvg-convert --format png --output "$out/fcitx5/themes/Monet/panel.png" "$out/fcitx5/themes/Monet/panel.svg"
-      ${pkgs.librsvg}/bin/rsvg-convert --format png --output "$out/fcitx5/themes/Monet/panel-highlight.png" "$out/fcitx5/themes/Monet/panel-highlight.svg"
-      ${pkgs.librsvg}/bin/rsvg-convert --format png --output "$out/fcitx5/themes/Monet/menu-highlight.png" "$out/fcitx5/themes/Monet/menu-highlight.svg"
-      cp ${iconSource}/arrow.png "$out/fcitx5/themes/Monet/arrow.png"
-      cp ${iconSource}/radio.png "$out/fcitx5/themes/Monet/radio.png"
+      ${renderFcitxTheme "light" "MonetLight"}
+      ${renderFcitxTheme "dark" "MonetDark"}
     '';
 
   xdgPlaceholders = [
@@ -90,42 +114,6 @@ themeLib.mkApp {
 
   links = [
     {
-      name = "Fcitx5Theme";
-      activationName = "linkFcitx5Theme";
-      target = ".local/share/fcitx5/themes/Monet/theme.conf";
-      source = "fcitx5/themes/Monet/theme.conf";
-    }
-    {
-      name = "Fcitx5Arrow";
-      activationName = "linkFcitx5Arrow";
-      target = ".local/share/fcitx5/themes/Monet/arrow.png";
-      source = "fcitx5/themes/Monet/arrow.png";
-    }
-    {
-      name = "Fcitx5PanelImage";
-      activationName = "linkFcitx5PanelImage";
-      target = ".local/share/fcitx5/themes/Monet/panel.png";
-      source = "fcitx5/themes/Monet/panel.png";
-    }
-    {
-      name = "Fcitx5PanelHighlightImage";
-      activationName = "linkFcitx5PanelHighlightImage";
-      target = ".local/share/fcitx5/themes/Monet/panel-highlight.png";
-      source = "fcitx5/themes/Monet/panel-highlight.png";
-    }
-    {
-      name = "Fcitx5MenuHighlightImage";
-      activationName = "linkFcitx5MenuHighlightImage";
-      target = ".local/share/fcitx5/themes/Monet/menu-highlight.png";
-      source = "fcitx5/themes/Monet/menu-highlight.png";
-    }
-    {
-      name = "Fcitx5Radio";
-      activationName = "linkFcitx5Radio";
-      target = ".local/share/fcitx5/themes/Monet/radio.png";
-      source = "fcitx5/themes/Monet/radio.png";
-    }
-    {
       name = "Fcitx5ClassicUi";
       activationName = "linkFcitx5ClassicUi";
       target = ".config/fcitx5/conf/classicui.conf";
@@ -133,20 +121,27 @@ themeLib.mkApp {
     }
   ];
 
-  activation.reloadFcitx5Theme =
-    lib.hm.dag.entryAfter
-      [
-        "linkFcitx5Theme"
-        "linkFcitx5Arrow"
-        "linkFcitx5PanelImage"
-        "linkFcitx5PanelHighlightImage"
-        "linkFcitx5MenuHighlightImage"
-        "linkFcitx5Radio"
-        "linkFcitx5ClassicUi"
-      ]
-      ''
-        if command -v fcitx5-remote >/dev/null 2>&1; then
-          fcitx5-remote -r >/dev/null 2>&1 || true
+  activation = {
+    linkFcitx5Themes = lib.hm.dag.entryAfter [ "initThemeLinks" "cleanupDarkmanLegacyHooks" ] ''
+      for MODE in Light Dark; do
+        TARGET="${homeDir}/.local/share/fcitx5/themes/Monet$MODE"
+        SOURCE="${currentSymlink}/fcitx5/themes/Monet$MODE"
+
+        if [ -d "$SOURCE" ]; then
+          $DRY_RUN_CMD mkdir -p "$(dirname "$TARGET")"
+          $DRY_RUN_CMD ln -sfn "$SOURCE" "$TARGET"
         fi
-      '';
+      done
+    '';
+
+    reloadFcitx5Theme =
+      lib.hm.dag.entryAfter
+        [
+          "linkFcitx5Themes"
+          "linkFcitx5ClassicUi"
+        ]
+        ''
+          ${reloadClassicUi}
+        '';
+  };
 }
