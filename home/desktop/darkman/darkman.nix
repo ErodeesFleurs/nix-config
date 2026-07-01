@@ -139,6 +139,16 @@ let
     # ── Waybar — 发送 USR2 信号触发重载 ──
     ${pkgs.procps}/bin/pkill -SIGUSR2 waybar || true
 
+    # ── Ghostty — 显式切换当前主题文件 ──
+    GHOSTTY_THEME="${homeDir}/.config/ghostty/themes/monet-current"
+    GHOSTTY_THEME_SOURCE="${currentSymlink}/ghostty/themes/monet-$target"
+    if [ -f "$GHOSTTY_THEME_SOURCE" ]; then
+      ln -sfn "$GHOSTTY_THEME_SOURCE" "$GHOSTTY_THEME"
+    fi
+
+    # ── Ghostty — 发送 USR2 信号触发配置和 light/dark 主题重载 ──
+    ${pkgs.procps}/bin/pkill -SIGUSR2 ghostty || true
+
     # ── Dunst — 重新读取 current symlink 指向的 dunstrc ──
     DUNST_CONFIG="${currentSymlink}/dunst/dunstrc"
     if command -v dunstctl &>/dev/null; then
@@ -150,6 +160,11 @@ let
     fi
 
     # ── Btop — 下次打开时读取 current symlink 指向的 Monet theme ──
+
+    # ── Fcitx5 — 重新读取 current symlink 指向的候选框主题 ──
+    if command -v fcitx5-remote &>/dev/null; then
+      fcitx5-remote -r >/dev/null 2>&1 || true
+    fi
 
     # ── Wallpaper — 切换壁纸 ──
     if [ -n "$WALLPAPER" ] && command -v awww &>/dev/null; then

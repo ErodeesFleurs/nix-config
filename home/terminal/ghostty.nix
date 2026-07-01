@@ -16,7 +16,7 @@ in
       font-feature = "+liga,+calt,+dlig";
       font-size = 12;
       shell-integration-features = "ssh-terminfo,ssh-env";
-      theme = "monet";
+      theme = "monet-current";
       window-padding-x = 12;
       window-padding-y = 12;
       window-padding-balance = true;

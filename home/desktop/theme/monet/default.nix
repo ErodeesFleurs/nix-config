@@ -17,7 +17,7 @@ let
       ;
   };
   btop = import ./btop.nix { inherit config themeLib; };
-  ghostty = import ./ghostty.nix { inherit config themeLib; };
+  ghostty = import ./ghostty.nix { inherit config lib themeLib; };
   firefox = import ./firefox.nix {
     inherit
       config
