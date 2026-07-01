@@ -35,6 +35,16 @@ let
   starship = import ./starship.nix { inherit config themeLib; };
   mpv = import ./mpv.nix { inherit config themeLib; };
   niri = import ./niri.nix { inherit config themeLib; };
+  gtk = import ./gtk.nix { inherit themeLib; };
+  qt = import ./qt.nix { inherit config themeLib; };
+  fcitx5 = import ./fcitx5.nix {
+    inherit
+      config
+      lib
+      pkgs
+      themeLib
+      ;
+  };
 
   apps = [
     waybar
@@ -51,6 +61,9 @@ let
     starship
     mpv
     niri
+    gtk
+    qt
+    fcitx5
   ];
 in
 themeLib.collect apps

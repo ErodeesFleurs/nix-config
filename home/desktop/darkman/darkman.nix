@@ -37,9 +37,7 @@ let
       }
       ''
         ${monetTheme.createOutputDirs}
-        mkdir -p "$out/qt5ct" "$out/qt6ct"
 
-        # Waybar CSS
         ${
           if cfg.monet.enable && wallpaper != null then
             ''
@@ -58,22 +56,22 @@ let
               cat > "$out/waybar/style.css" << 'WAYBAREOF'
               ${waybarCss}
               WAYBAREOF
+
+              mkdir -p "$out/qt5ct" "$out/qt6ct"
+
+              cat > "$out/qt5ct/qt5ct.conf" << 'QT5EOF'
+              [Appearance]
+              style=${qt5ctStyle}
+              custom_palette=false
+              QT5EOF
+
+              cat > "$out/qt6ct/qt6ct.conf" << 'QT6EOF'
+              [Appearance]
+              style=${qt5ctStyle}
+              custom_palette=false
+              QT6EOF
             ''
         }
-
-        # Qt5ct 配置文件
-        cat > "$out/qt5ct/qt5ct.conf" << 'QT5EOF'
-        [Appearance]
-        style=${qt5ctStyle}
-        custom_palette=false
-        QT5EOF
-
-        # Qt6ct 配置文件
-        cat > "$out/qt6ct/qt6ct.conf" << 'QT6EOF'
-        [Appearance]
-        style=${qt5ctStyle}
-        custom_palette=false
-        QT6EOF
 
         # 主题元数据 JSON — 供外部脚本查询当前状态
         cat > "$out/theme.json" << JSONEOF

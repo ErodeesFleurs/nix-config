@@ -1,0 +1,108 @@
+@define-color accent_color @primary@;
+@define-color accent_bg_color @primary@;
+@define-color accent_fg_color @on_primary@;
+@define-color destructive_color @error@;
+@define-color destructive_bg_color @error_container@;
+@define-color destructive_fg_color @on_error_container@;
+@define-color window_bg_color @surface@;
+@define-color window_fg_color @on_surface@;
+@define-color view_bg_color @surface_container_lowest@;
+@define-color view_fg_color @on_surface@;
+@define-color headerbar_bg_color @surface_container@;
+@define-color headerbar_fg_color @on_surface@;
+@define-color card_bg_color @surface_container@;
+@define-color card_fg_color @on_surface@;
+@define-color popover_bg_color @surface_container@;
+@define-color popover_fg_color @on_surface@;
+@define-color dialog_bg_color @surface_container_high@;
+@define-color dialog_fg_color @on_surface@;
+@define-color sidebar_bg_color @surface@;
+@define-color sidebar_fg_color @on_surface_variant@;
+@define-color secondary_sidebar_bg_color @surface_container_low@;
+@define-color secondary_sidebar_fg_color @on_surface_variant@;
+@define-color shade_color alpha(@on_surface@, 0.18);
+@define-color scrollbar_outline_color alpha(@on_surface@, 0.18);
+@define-color borders @outline_variant@;
+@define-color warning_color @tertiary@;
+@define-color success_color @primary@;
+@define-color error_color @error@;
+
+window,
+dialog,
+messagedialog,
+popover,
+popover.background,
+menu,
+.menu,
+.context-menu,
+.csd.popup {
+  background-color: @popover_bg_color;
+  color: @popover_fg_color;
+}
+
+popover,
+popover.background,
+menu,
+.menu,
+.context-menu {
+  border: 1px solid @borders;
+  border-radius: 18px;
+  padding: 6px;
+  box-shadow: 0 8px 24px alpha(@on_surface@, 0.18);
+}
+
+tooltip,
+tooltip.background {
+  background-color: @surface_container_high@;
+  color: @on_surface@;
+  border: 1px solid @outline_variant@;
+  border-radius: 16px;
+  padding: 6px 10px;
+}
+
+button {
+  border-radius: 999px;
+  border-color: transparent;
+  background-color: @surface_container_high@;
+  color: @on_surface@;
+}
+
+button:hover,
+modelbutton:hover,
+menuitem:hover {
+  background-color: alpha(@primary@, 0.12);
+  color: @on_surface@;
+}
+
+button:checked,
+button.suggested-action,
+button.default {
+  background-color: @primary@;
+  color: @on_primary@;
+}
+
+entry,
+spinbutton,
+combobox,
+textview,
+treeview,
+list,
+viewport {
+  background-color: @surface_container_low@;
+  color: @on_surface@;
+  border-color: @outline_variant@;
+  border-radius: 12px;
+}
+
+selection,
+*:selected {
+  background-color: @primary_container@;
+  color: @on_primary_container@;
+}
+
+scrollbar slider {
+  background-color: @outline@;
+  border-radius: 999px;
+  min-width: 6px;
+  min-height: 6px;
+}
