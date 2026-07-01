@@ -1,0 +1,11 @@
+:root {
+  --m3-surface: @surface@;
+  --m3-surface-container: @surface_container@;
+  --m3-surface-container-high: @surface_container_high@;
+  --m3-on-surface: @on_surface@;
+  --m3-on-surface-variant: @on_surface_variant@;
+  --m3-outline-variant: @outline_variant@;
+  --m3-primary: @primary@;
+  --m3-primary-container: @primary_container@;
+  --m3-on-primary-container: @on_primary_container@;
+}

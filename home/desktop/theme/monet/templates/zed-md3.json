@@ -4,7 +4,7 @@
   "author": "matugen",
   "themes": [
     {
-      "name": "Monet MD3",
+      "name": "@theme_name@",
       "appearance": "@appearance@",
       "style": {
         "border": "@outline_variant@ff",

@@ -1,11 +1,3 @@
-:root {
-  --m3-surface: @surface@;
-  --m3-surface-container: @surface_container@;
-  --m3-on-surface: @on_surface@;
-  --m3-on-surface-variant: @on_surface_variant@;
-  --m3-primary: @primary@;
-}
-
 @-moz-document url("about:home"), url("about:newtab"), url("about:privatebrowsing") {
   body,
   .activity-stream {

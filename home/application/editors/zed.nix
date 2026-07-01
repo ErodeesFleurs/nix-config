@@ -62,7 +62,11 @@ in
         {
           auto_signature_help = false;
           auto_update = false;
-          theme = "Monet MD3";
+          theme = {
+            mode = "system";
+            light = "Monet MD3 Light";
+            dark = "Monet MD3 Dark";
+          };
           ui_font_family = theme.fonts.sans-serif.name;
           buffer_font_family = theme.fonts.monospace.name;
 

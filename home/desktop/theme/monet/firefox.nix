@@ -17,36 +17,60 @@ in
 
   generate =
     { polarity }:
-    ''
-      ${themeLib.renderTemplate {
-        source = ./templates/firefox-userChrome.css;
-        target = "$out/firefox/userChrome.css";
-        inherit polarity;
-        colors = [
-          "surface"
-          "surface_container"
-          "surface_container_high"
-          "on_surface"
-          "on_surface_variant"
-          "outline_variant"
-          "primary"
-          "primary_container"
-          "on_primary_container"
-        ];
-      }}
+    let
+      renderChromeVars =
+        themePolarity:
+        themeLib.renderTemplate {
+          source = ./templates/firefox-userChrome-vars.css;
+          target = "$out/firefox/userChrome-vars-${themePolarity}.css";
+          polarity = themePolarity;
+          colors = [
+            "surface"
+            "surface_container"
+            "surface_container_high"
+            "on_surface"
+            "on_surface_variant"
+            "outline_variant"
+            "primary"
+            "primary_container"
+            "on_primary_container"
+          ];
+        };
 
-      ${themeLib.renderTemplate {
-        source = ./templates/firefox-userContent.css;
-        target = "$out/firefox/userContent.css";
-        inherit polarity;
-        colors = [
-          "surface"
-          "surface_container"
-          "on_surface"
-          "on_surface_variant"
-          "primary"
-        ];
-      }}
+      renderContentVars =
+        themePolarity:
+        themeLib.renderTemplate {
+          source = ./templates/firefox-userContent-vars.css;
+          target = "$out/firefox/userContent-vars-${themePolarity}.css";
+          polarity = themePolarity;
+          colors = [
+            "surface"
+            "surface_container"
+            "on_surface"
+            "on_surface_variant"
+            "primary"
+          ];
+        };
+    in
+    ''
+      ${renderChromeVars "light"}
+      ${renderChromeVars "dark"}
+      ${renderContentVars "light"}
+      ${renderContentVars "dark"}
+
+      cat "$out/firefox/userChrome-vars-light.css" > "$out/firefox/userChrome.css"
+      printf '\n@media (prefers-color-scheme: dark) {\n' >> "$out/firefox/userChrome.css"
+      sed 's/^/  /' "$out/firefox/userChrome-vars-dark.css" >> "$out/firefox/userChrome.css"
+      printf '}\n\n' >> "$out/firefox/userChrome.css"
+      cat ${./templates/firefox-userChrome.css} >> "$out/firefox/userChrome.css"
+
+      cat "$out/firefox/userContent-vars-light.css" > "$out/firefox/userContent.css"
+      printf '\n@media (prefers-color-scheme: dark) {\n' >> "$out/firefox/userContent.css"
+      sed 's/^/  /' "$out/firefox/userContent-vars-dark.css" >> "$out/firefox/userContent.css"
+      printf '}\n\n' >> "$out/firefox/userContent.css"
+      cat ${./templates/firefox-userContent.css} >> "$out/firefox/userContent.css"
+
+      rm "$out/firefox"/userChrome-vars-*.css "$out/firefox"/userContent-vars-*.css
     '';
 
   activation.linkFirefoxTheme =
