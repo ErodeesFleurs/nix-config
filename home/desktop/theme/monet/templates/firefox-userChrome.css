@@ -54,4 +54,22 @@ panel {
   --panel-background: var(--m3-surface-container) !important;
   --panel-color: var(--m3-on-surface) !important;
   --panel-border-color: var(--m3-outline-variant) !important;
+  --panel-border-radius: 18px !important;
+  --panel-padding: 6px !important;
+}
+
+menupopup > menu,
+menupopup > menuitem,
+panelview .subviewbutton {
+  border-radius: 12px !important;
+  color: var(--m3-on-surface) !important;
+  margin: 2px 4px !important;
+  padding: 8px 10px !important;
+}
+
+menupopup > menu[_moz-menuactive="true"],
+menupopup > menuitem[_moz-menuactive="true"],
+panelview .subviewbutton:hover {
+  background-color: color-mix(in srgb, var(--m3-primary) 12%, transparent) !important;
+  color: var(--m3-on-surface) !important;
 }

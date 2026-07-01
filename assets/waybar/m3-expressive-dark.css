@@ -10,8 +10,10 @@
 @define-color m3_on_primary_container #d6e3ff;
 @define-color m3_secondary_container #0a4f48;
 @define-color m3_on_secondary_container #9cf2e4;
-@define-color m3_tertiary_container #64211d;
-@define-color m3_on_tertiary_container #ffdad6;
+@define-color m3_tertiary_container #633b48;
+@define-color m3_on_tertiary_container #ffd8e4;
+@define-color m3_error_container #64211d;
+@define-color m3_on_error_container #ffdad6;
 @define-color m3_warning_container #594400;
 @define-color m3_on_warning_container #ffdf88;
 

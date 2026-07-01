@@ -27,6 +27,8 @@ themeLib.mkApp {
         "on_primary_container"
         "secondary_container"
         "on_secondary_container"
+        "tertiary_container"
+        "on_tertiary_container"
         "error_container"
         "on_error_container"
       ];

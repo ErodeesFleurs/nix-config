@@ -10,8 +10,9 @@
 @define-color m3_on_primary_container @on_primary_container@;
 @define-color m3_secondary_container @secondary_container@;
 @define-color m3_on_secondary_container @on_secondary_container@;
-@define-color m3_tertiary_container @error_container@;
-@define-color m3_on_tertiary_container @on_error_container@;
+@define-color m3_tertiary_container @tertiary_container@;
+@define-color m3_on_tertiary_container @on_tertiary_container@;
+@define-color m3_error_container @error_container@;
+@define-color m3_on_error_container @on_error_container@;
 @define-color m3_warning_container @primary_container@;
 @define-color m3_on_warning_container @on_primary_container@;
-

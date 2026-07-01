@@ -21,6 +21,13 @@ in
 rec {
   inherit schemes modes;
 
+  defaults = {
+    mode = "dark";
+    scheme = "scheme-tonal-spot";
+    sourceColorIndex = 0;
+    fallbackColor = "#7b7562";
+  };
+
   mkEnableOption =
     description:
     lib.mkOption {

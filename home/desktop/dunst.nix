@@ -69,7 +69,7 @@ in
 
         frame-color = lib.mkOption {
           type = lib.types.str;
-          default = "#313244";
+          default = "#79747e";
           description = "Color of notification frame";
         };
 

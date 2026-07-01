@@ -24,6 +24,65 @@ let
     waybarBodyCssPath = m3WaybarBodyCssPath;
   };
 
+  mkHookBlock = title: body: ''
+    # ── ${title} ──
+    ${body}
+  '';
+
+  switchActions = lib.concatStringsSep "\n" [
+    (mkHookBlock "Waybar — 发送 USR2 信号触发重载" ''
+      ${pkgs.procps}/bin/pkill -SIGUSR2 waybar || true
+    '')
+
+    (mkHookBlock "Ghostty — 显式切换当前主题文件" ''
+      GHOSTTY_THEME="${homeDir}/.config/ghostty/themes/monet-current"
+      GHOSTTY_THEME_SOURCE="${currentSymlink}/ghostty/themes/monet-$target"
+      if [ -f "$GHOSTTY_THEME_SOURCE" ]; then
+        ln -sfn "$GHOSTTY_THEME_SOURCE" "$GHOSTTY_THEME"
+      fi
+    '')
+
+    (mkHookBlock "Ghostty — 发送 USR2 信号触发配置和 light/dark 主题重载" ''
+      ${pkgs.procps}/bin/pkill -SIGUSR2 ghostty || true
+    '')
+
+    (mkHookBlock "Dunst — 重新读取 current symlink 指向的 dunstrc" ''
+      DUNST_CONFIG="${currentSymlink}/dunst/dunstrc"
+      if command -v dunstctl &>/dev/null; then
+        ${pkgs.dunst}/bin/dunstctl reload "$DUNST_CONFIG" 2>/dev/null \
+          || ${pkgs.procps}/bin/pkill -HUP dunst 2>/dev/null \
+          || true
+      else
+        ${pkgs.procps}/bin/pkill -HUP dunst 2>/dev/null || true
+      fi
+    '')
+
+    (mkHookBlock "Btop — 下次打开时读取 current symlink 指向的 Monet theme" "")
+
+    (mkHookBlock "Fcitx5 — 重新读取 classicui addon，候选框主题属于该 addon" ''
+      ${pkgs.glib}/bin/gdbus call \
+        --session \
+        --dest org.fcitx.Fcitx5 \
+        --object-path /controller \
+        --method org.fcitx.Fcitx.Controller1.ReloadAddonConfig \
+        classicui >/dev/null 2>&1 \
+        || ${pkgs.fcitx5}/bin/fcitx5-remote -r >/dev/null 2>&1 \
+        || true
+    '')
+
+    (mkHookBlock "Wallpaper — 切换壁纸" ''
+      if [ -n "$WALLPAPER" ] && command -v awww &>/dev/null; then
+        ${pkgs.awww}/bin/awww img "$WALLPAPER" || true
+      fi
+    '')
+
+    (mkHookBlock "通知" ''
+      if command -v notify-send &>/dev/null; then
+        ${pkgs.libnotify}/bin/notify-send "$NOTIFY_MSG" || true
+      fi
+    '')
+  ];
+
   # ── 构建一个 polarity 变体的所有主题文件 ────────
   mkThemeDerivation =
     {
@@ -136,50 +195,7 @@ let
       gsettings set org.gnome.desktop.interface cursor-size "$CURSOR_SIZE" || true
     fi
 
-    # ── Waybar — 发送 USR2 信号触发重载 ──
-    ${pkgs.procps}/bin/pkill -SIGUSR2 waybar || true
-
-    # ── Ghostty — 显式切换当前主题文件 ──
-    GHOSTTY_THEME="${homeDir}/.config/ghostty/themes/monet-current"
-    GHOSTTY_THEME_SOURCE="${currentSymlink}/ghostty/themes/monet-$target"
-    if [ -f "$GHOSTTY_THEME_SOURCE" ]; then
-      ln -sfn "$GHOSTTY_THEME_SOURCE" "$GHOSTTY_THEME"
-    fi
-
-    # ── Ghostty — 发送 USR2 信号触发配置和 light/dark 主题重载 ──
-    ${pkgs.procps}/bin/pkill -SIGUSR2 ghostty || true
-
-    # ── Dunst — 重新读取 current symlink 指向的 dunstrc ──
-    DUNST_CONFIG="${currentSymlink}/dunst/dunstrc"
-    if command -v dunstctl &>/dev/null; then
-      ${pkgs.dunst}/bin/dunstctl reload "$DUNST_CONFIG" 2>/dev/null \
-        || ${pkgs.procps}/bin/pkill -HUP dunst 2>/dev/null \
-        || true
-    else
-      ${pkgs.procps}/bin/pkill -HUP dunst 2>/dev/null || true
-    fi
-
-    # ── Btop — 下次打开时读取 current symlink 指向的 Monet theme ──
-
-    # ── Fcitx5 — 重新读取 classicui addon，候选框主题属于该 addon ──
-    ${pkgs.glib}/bin/gdbus call \
-      --session \
-      --dest org.fcitx.Fcitx5 \
-      --object-path /controller \
-      --method org.fcitx.Fcitx.Controller1.ReloadAddonConfig \
-      classicui >/dev/null 2>&1 \
-      || ${pkgs.fcitx5}/bin/fcitx5-remote -r >/dev/null 2>&1 \
-      || true
-
-    # ── Wallpaper — 切换壁纸 ──
-    if [ -n "$WALLPAPER" ] && command -v awww &>/dev/null; then
-      ${pkgs.awww}/bin/awww img "$WALLPAPER" || true
-    fi
-
-    # ── 通知 ──
-    if command -v notify-send &>/dev/null; then
-      ${pkgs.libnotify}/bin/notify-send "$NOTIFY_MSG" || true
-    fi
+    ${switchActions}
 
     echo "[darkman] switched to $target mode"
   '';
@@ -297,17 +313,17 @@ in
       };
 
       scheme = monetLib.mkSchemeOption {
-        default = "scheme-tonal-spot";
+        default = monetLib.defaults.scheme;
         description = "Matugen dynamic color scheme variant. scheme-tonal-spot matches Android Monet defaults most closely.";
       };
 
       sourceColorIndex = monetLib.mkSourceColorIndexOption {
-        default = 0;
+        default = monetLib.defaults.sourceColorIndex;
         description = "Matugen source color index selected from the wallpaper palette";
       };
 
       fallbackColor = monetLib.mkFallbackColorOption {
-        default = "#7b7562";
+        default = monetLib.defaults.fallbackColor;
         description = "Fallback source color used by matugen when wallpaper extraction cannot produce a color";
       };
     };

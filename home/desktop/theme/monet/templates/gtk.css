@@ -51,6 +51,12 @@ menu,
   box-shadow: 0 8px 24px alpha(@on_surface@, 0.18);
 }
 
+modelbutton,
+menuitem {
+  border-radius: 12px;
+  padding: 8px 10px;
+}
+
 tooltip,
 tooltip.background {
   background-color: @surface_container_high@;

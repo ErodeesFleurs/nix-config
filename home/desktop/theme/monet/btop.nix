@@ -14,7 +14,7 @@ themeLib.mkApp {
       target = "$out/btop/themes/monet.theme";
       inherit polarity;
       colors = [
-        "surface_container_lowest"
+        "surface_container_low"
         "on_surface"
         "primary"
         "primary_container"

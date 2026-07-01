@@ -62,22 +62,22 @@ in
     };
 
     mode = monetLib.mkModeOption {
-      default = "dark";
+      default = monetLib.defaults.mode;
       description = "Matugen polarity used for static system-level theme resources.";
     };
 
     scheme = monetLib.mkSchemeOption {
-      default = "scheme-expressive";
+      default = monetLib.defaults.scheme;
       description = "Matugen dynamic color scheme variant for system-level theme resources.";
     };
 
     sourceColorIndex = monetLib.mkSourceColorIndexOption {
-      default = 0;
+      default = monetLib.defaults.sourceColorIndex;
       description = "Matugen source color index selected from the wallpaper palette.";
     };
 
     fallbackColor = monetLib.mkFallbackColorOption {
-      default = "#6750A4";
+      default = monetLib.defaults.fallbackColor;
       description = "Fallback source color used when wallpaper extraction cannot produce a color.";
     };
 
