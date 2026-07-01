@@ -38,6 +38,13 @@ let
   gtk = import ./gtk.nix { inherit themeLib; };
   qt = import ./qt.nix { inherit config themeLib; };
   delta = import ./delta.nix { inherit config themeLib; };
+  vicinae = import ./vicinae.nix {
+    inherit
+      config
+      lib
+      themeLib
+      ;
+  };
   fcitx5 = import ./fcitx5.nix {
     inherit
       config
@@ -65,6 +72,7 @@ let
     gtk
     qt
     delta
+    vicinae
     fcitx5
   ];
 in

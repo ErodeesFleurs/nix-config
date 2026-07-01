@@ -45,7 +45,9 @@ in
           USE_LAYER_SHELL = 1;
         };
       };
-      settings = cfg.settings;
+      settings = lib.recursiveUpdate {
+        theme.name = "monet";
+      } cfg.settings;
 
       package = pkgs.vicinae;
     };

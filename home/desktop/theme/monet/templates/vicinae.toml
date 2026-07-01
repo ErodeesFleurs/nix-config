@@ -1,0 +1,79 @@
+[meta]
+name = "Monet MD3"
+description = "Material Design 3 dynamic color theme"
+variant = "@variant@"
+inherits = "vicinae-@variant@"
+
+[colors.core]
+accent = "@primary@"
+accent_foreground = "@on_primary@"
+background = "@surface@"
+foreground = "@on_surface@"
+secondary_background = "@surface_container@"
+border = "@outline_variant@"
+
+[colors.main_window]
+border = "@outline_variant@"
+footer = { background = "@surface_container@" }
+
+[colors.settings_window]
+border = "@outline_variant@"
+
+[colors.accents]
+blue = "@primary@"
+green = "@tertiary@"
+magenta = "@secondary@"
+orange = "@tertiary_container@"
+purple = "@secondary_container@"
+red = "@error@"
+yellow = "@primary_container@"
+cyan = "@tertiary@"
+
+[colors.shortcut]
+border = "@outline_variant@"
+
+[colors.text]
+default = "@on_surface@"
+muted = "@on_surface_variant@"
+danger = "@error@"
+success = "@tertiary@"
+placeholder = "@outline@"
+selection = { background = "@primary_container@", foreground = "@on_primary_container@" }
+
+[colors.text.links]
+default = "@primary@"
+visited = "@secondary@"
+
+[colors.input]
+border = "@outline_variant@"
+border_focus = "@primary@"
+border_error = "@error@"
+
+[colors.button.primary]
+background = "@primary@"
+foreground = "@on_primary@"
+hover = { background = "@primary_container@", foreground = "@on_primary_container@" }
+focus = { outline = "@primary@" }
+
+[colors.list.item.hover]
+background = "@surface_container_high@"
+foreground = "@on_surface@"
+secondary_foreground = "@on_surface_variant@"
+
+[colors.list.item.selection]
+background = "@primary_container@"
+foreground = "@on_primary_container@"
+secondary_background = "@secondary_container@"
+secondary_foreground = "@on_secondary_container@"
+
+[colors.grid.item]
+background = "@surface_container@"
+hover = { outline = "@primary@" }
+selection = { outline = "@primary@" }
+
+[colors.scrollbars]
+background = "@outline_variant@"
+
+[colors.loading]
+bar = "@primary@"
+spinner = "@on_surface@"
