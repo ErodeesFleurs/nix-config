@@ -131,7 +131,6 @@ in
       cfg.fonts.serif.package
       cfg.cursor.package
       cfg.icons.package
-      pkgs.material-symbols
     ];
 
     fonts.fontconfig.enable = true;
