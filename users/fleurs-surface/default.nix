@@ -52,12 +52,6 @@
     enable-nushell-integration = true;
   };
 
-  # 桌面环境
-  homeModules.hyprland = {
-    enable = true;
-    monitors = [ "eDP-1,2736x1824,0x0,2.0" ];
-  };
-
   home-modules.desktop = {
     awww.enable = true;
     waybar.enable = true;
@@ -111,8 +105,6 @@
     browser = "firefox";
     terminal = "ghostty";
   };
-
-  homeModules.thunderbird.enable = false;
 
   # XDG 配置
   xdg = {

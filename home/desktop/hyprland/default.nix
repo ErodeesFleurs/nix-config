@@ -1,5 +1,0 @@
-{ fleursLib, ... }:
-
-{
-  imports = fleursLib.importDir ./.;
-}

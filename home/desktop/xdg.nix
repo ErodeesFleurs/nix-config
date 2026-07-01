@@ -44,14 +44,6 @@
           "gnome"
           "gtk"
         ];
-        hyprland = {
-          default = [
-            "hyprland"
-            "gtk"
-          ];
-          "org.freedesktop.portal.FileChooser" = "gtk";
-          "org.freedesktop.portal.OpenURI" = "gtk";
-        };
         niri = {
           default = [
             "gnome"

@@ -10,6 +10,7 @@ let
   homeDir = config.home.homeDirectory;
   shellArg = value: lib.escapeShellArg (toString value);
   wallpaperArg = wallpaper: if wallpaper == null then "''" else shellArg wallpaper;
+  monetLib = import ../../../lib/monet.nix { inherit lib pkgs; };
 
   # ── 主题文件基础路径 ────────────────────────────
   themeBase = "${homeDir}/.local/share/themes";
@@ -32,22 +33,28 @@ let
       qt5ctStyle,
     }:
     pkgs.runCommand "darkman-theme-${polarity}"
-      {
-        nativeBuildInputs = [ pkgs.jq ];
-      }
+      (
+        {
+          nativeBuildInputs = [ pkgs.jq ];
+        }
+        // lib.optionalAttrs (cfg.monet.enable && wallpaper != null) {
+          wallpaperPath = wallpaper;
+        }
+      )
       ''
         ${monetTheme.createOutputDirs}
 
         ${
           if cfg.monet.enable && wallpaper != null then
             ''
-              ${pkgs.matugen}/bin/matugen image \
-                --json hex \
-                --mode ${polarity} \
-                --type ${cfg.monet.scheme} \
-                --source-color-index ${toString cfg.monet.sourceColorIndex} \
-                --fallback-color ${lib.escapeShellArg cfg.monet.fallbackColor} \
-                '${wallpaper}' > colors.json
+              ${monetLib.mkMatugenImageCommand {
+                mode = polarity;
+                inherit (cfg.monet)
+                  scheme
+                  sourceColorIndex
+                  fallbackColor
+                  ;
+              }}
 
               ${monetTheme.generate { inherit polarity; }}
             ''
@@ -269,30 +276,17 @@ in
         description = "Generate Material You / Monet colors from the configured wallpaper";
       };
 
-      scheme = lib.mkOption {
-        type = lib.types.enum [
-          "scheme-content"
-          "scheme-expressive"
-          "scheme-fidelity"
-          "scheme-fruit-salad"
-          "scheme-monochrome"
-          "scheme-neutral"
-          "scheme-rainbow"
-          "scheme-tonal-spot"
-          "scheme-vibrant"
-        ];
+      scheme = monetLib.mkSchemeOption {
         default = "scheme-tonal-spot";
         description = "Matugen dynamic color scheme variant. scheme-tonal-spot matches Android Monet defaults most closely.";
       };
 
-      sourceColorIndex = lib.mkOption {
-        type = lib.types.int;
+      sourceColorIndex = monetLib.mkSourceColorIndexOption {
         default = 0;
         description = "Matugen source color index selected from the wallpaper palette";
       };
 
-      fallbackColor = lib.mkOption {
-        type = lib.types.str;
+      fallbackColor = monetLib.mkFallbackColorOption {
         default = "#7b7562";
         description = "Fallback source color used by matugen when wallpaper extraction cannot produce a color";
       };

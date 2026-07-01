@@ -14,9 +14,6 @@ let
 
   # 第三方工具 overlays
   toolOverlays = [
-    # Hyprland
-    # inputs.hyprland.overlays.default
-
     # Nixcord
     # (final: prev: {
     #   nixcord = inputs.nixcord.packages.${prev.system}.default or prev.emptyDirectory;

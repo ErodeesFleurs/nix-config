@@ -19,22 +19,11 @@ in
 
       config = {
         common.default = [ "gtk" ];
-        hyprland = {
-          default = [
-            "hyprland"
-            "gtk"
-          ];
-          "org.freedesktop.portal.FileChooser" = "gtk";
-          "org.freedesktop.portal.OpenURI" = "gtk";
-        };
       };
 
       configPackages = [ ];
 
-      extraPortals = with pkgs; [
-        # xdg-desktop-portal-hyprland
-        xdg-desktop-portal-gtk
-      ];
+      extraPortals = with pkgs; [ xdg-desktop-portal-gtk ];
 
       xdgOpenUsePortal = true;
     };

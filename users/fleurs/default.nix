@@ -52,15 +52,6 @@
     enable-nushell-integration = true;
   };
 
-  # 桌面环境
-  homeModules.hyprland = {
-    enable = false;
-    hyprlauncher = false;
-  };
-  homeModules.hyprpaper = {
-    enable = false;
-  };
-
   home-modules.application = {
     udiskie.enable = true;
   };
@@ -118,8 +109,6 @@
     browser = "firefox";
     terminal = "ghostty";
   };
-
-  homeModules.thunderbird.enable = false;
 
   homeModules.others.aseprite.enable = true;
 
