@@ -25,15 +25,11 @@ themeLib.mkApp {
         inherit polarity;
         colors = [
           "surface_container_high"
-          "surface_container_highest"
           "on_surface"
-          "on_surface_variant"
-          "outline"
-          "outline_variant"
           "primary_container"
           "on_primary_container"
-          "secondary_container"
-          "on_secondary_container"
+          "outline"
+          "outline_variant"
         ];
         literalReplacements = [
           {
@@ -53,6 +49,34 @@ themeLib.mkApp {
           }
         ];
       }}
+      ${themeLib.renderTemplate {
+        source = ./templates/fcitx5-panel.svg;
+        target = "$out/fcitx5/themes/Monet/panel.svg";
+        inherit polarity;
+        replacements = [
+          "surface_container_high"
+          "outline_variant"
+          {
+            token = "shadow";
+            color = "shadow";
+          }
+        ];
+      }}
+      ${themeLib.renderTemplate {
+        source = ./templates/fcitx5-panel-highlight.svg;
+        target = "$out/fcitx5/themes/Monet/panel-highlight.svg";
+        inherit polarity;
+        colors = [ "primary_container" ];
+      }}
+      ${themeLib.renderTemplate {
+        source = ./templates/fcitx5-menu-highlight.svg;
+        target = "$out/fcitx5/themes/Monet/menu-highlight.svg";
+        inherit polarity;
+        colors = [ "primary_container" ];
+      }}
+      ${pkgs.librsvg}/bin/rsvg-convert --format png --output "$out/fcitx5/themes/Monet/panel.png" "$out/fcitx5/themes/Monet/panel.svg"
+      ${pkgs.librsvg}/bin/rsvg-convert --format png --output "$out/fcitx5/themes/Monet/panel-highlight.png" "$out/fcitx5/themes/Monet/panel-highlight.svg"
+      ${pkgs.librsvg}/bin/rsvg-convert --format png --output "$out/fcitx5/themes/Monet/menu-highlight.png" "$out/fcitx5/themes/Monet/menu-highlight.svg"
       cp ${iconSource}/arrow.png "$out/fcitx5/themes/Monet/arrow.png"
       cp ${iconSource}/radio.png "$out/fcitx5/themes/Monet/radio.png"
     '';
@@ -78,6 +102,24 @@ themeLib.mkApp {
       source = "fcitx5/themes/Monet/arrow.png";
     }
     {
+      name = "Fcitx5PanelImage";
+      activationName = "linkFcitx5PanelImage";
+      target = ".local/share/fcitx5/themes/Monet/panel.png";
+      source = "fcitx5/themes/Monet/panel.png";
+    }
+    {
+      name = "Fcitx5PanelHighlightImage";
+      activationName = "linkFcitx5PanelHighlightImage";
+      target = ".local/share/fcitx5/themes/Monet/panel-highlight.png";
+      source = "fcitx5/themes/Monet/panel-highlight.png";
+    }
+    {
+      name = "Fcitx5MenuHighlightImage";
+      activationName = "linkFcitx5MenuHighlightImage";
+      target = ".local/share/fcitx5/themes/Monet/menu-highlight.png";
+      source = "fcitx5/themes/Monet/menu-highlight.png";
+    }
+    {
       name = "Fcitx5Radio";
       activationName = "linkFcitx5Radio";
       target = ".local/share/fcitx5/themes/Monet/radio.png";
@@ -96,6 +138,9 @@ themeLib.mkApp {
       [
         "linkFcitx5Theme"
         "linkFcitx5Arrow"
+        "linkFcitx5PanelImage"
+        "linkFcitx5PanelHighlightImage"
+        "linkFcitx5MenuHighlightImage"
         "linkFcitx5Radio"
         "linkFcitx5ClassicUi"
       ]
