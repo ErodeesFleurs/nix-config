@@ -60,14 +60,22 @@ let
     (mkHookBlock "Btop — 下次打开时读取 current symlink 指向的 Monet theme" "")
 
     (mkHookBlock "Fcitx5 — 重新读取 classicui addon，候选框主题属于该 addon" ''
-      ${pkgs.glib}/bin/gdbus call \
+      if ${pkgs.glib}/bin/gdbus call \
         --session \
-        --dest org.fcitx.Fcitx5 \
-        --object-path /controller \
-        --method org.fcitx.Fcitx.Controller1.ReloadAddonConfig \
-        classicui >/dev/null 2>&1 \
-        || ${pkgs.fcitx5}/bin/fcitx5-remote -r >/dev/null 2>&1 \
-        || true
+        --dest org.freedesktop.DBus \
+        --object-path /org/freedesktop/DBus \
+        --method org.freedesktop.DBus.NameHasOwner \
+        org.fcitx.Fcitx5 \
+        | ${pkgs.gnugrep}/bin/grep -q '(true,)'; then
+        ${pkgs.glib}/bin/gdbus call \
+          --session \
+          --dest org.fcitx.Fcitx5 \
+          --object-path /controller \
+          --method org.fcitx.Fcitx.Controller1.ReloadAddonConfig \
+          classicui >/dev/null 2>&1 \
+          || ${pkgs.fcitx5}/bin/fcitx5-remote -r >/dev/null 2>&1 \
+          || true
+      fi
     '')
 
     (mkHookBlock "Wallpaper — 切换壁纸" ''

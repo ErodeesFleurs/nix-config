@@ -11,14 +11,22 @@ let
   iconSource = "${pkgs.fcitx5-material-color}/share/fcitx5-material-color";
   fcitx5Remote = "${pkgs.fcitx5}/bin/fcitx5-remote";
   reloadClassicUi = ''
-    ${pkgs.glib}/bin/gdbus call \
+    if ${pkgs.glib}/bin/gdbus call \
       --session \
-      --dest org.fcitx.Fcitx5 \
-      --object-path /controller \
-      --method org.fcitx.Fcitx.Controller1.ReloadAddonConfig \
-      classicui >/dev/null 2>&1 \
-      || ${fcitx5Remote} -r >/dev/null 2>&1 \
-      || true
+      --dest org.freedesktop.DBus \
+      --object-path /org/freedesktop/DBus \
+      --method org.freedesktop.DBus.NameHasOwner \
+      org.fcitx.Fcitx5 \
+      | ${pkgs.gnugrep}/bin/grep -q '(true,)'; then
+      ${pkgs.glib}/bin/gdbus call \
+        --session \
+        --dest org.fcitx.Fcitx5 \
+        --object-path /controller \
+        --method org.fcitx.Fcitx.Controller1.ReloadAddonConfig \
+        classicui >/dev/null 2>&1 \
+        || ${fcitx5Remote} -r >/dev/null 2>&1 \
+        || true
+    fi
   '';
 in
 themeLib.mkApp {
