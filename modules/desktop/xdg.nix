@@ -27,5 +27,10 @@ in
 
       xdgOpenUsePortal = true;
     };
+
+    systemd.user.services.xdg-desktop-portal = {
+      after = [ "graphical-session.target" ];
+      enableDefaultPath = false;
+    };
   };
 }
