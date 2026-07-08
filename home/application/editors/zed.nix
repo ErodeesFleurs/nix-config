@@ -36,8 +36,6 @@ in
         ty
         basedpyright
         ruff
-
-        rust-analyzer
       ];
       extensions = [
         "dockerfile"
@@ -99,10 +97,6 @@ in
                   command = "clippy";
                 };
               };
-
-              binary = {
-                path = lib.getExe rust-analyzer;
-              };
             };
             nil = {
               binary = {
@@ -116,7 +110,6 @@ in
             };
             json-language-server = {
               binary = {
-                path = lib.getExe vscode-json-languageserver;
                 arguments = [ "--stdio" ];
               };
             };
