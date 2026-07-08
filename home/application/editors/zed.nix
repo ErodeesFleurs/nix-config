@@ -38,7 +38,6 @@ in
         ruff
 
         rust-analyzer
-        zls
       ];
       extensions = [
         "dockerfile"
@@ -149,9 +148,6 @@ in
               };
             };
             zls = {
-              binary = {
-                path = lib.getExe zls;
-              };
               settings = {
                 zig_exe_path = lib.getExe zig;
                 global_cache_path = "${config.xdg.cacheHome}/zls";
