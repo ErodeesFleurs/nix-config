@@ -136,6 +136,7 @@ in
     fonts.fontconfig.enable = true;
 
     home.pointerCursor = {
+      enable = true;
       package = cfg.cursor.package;
       name = cfg.cursor.name;
       size = cfg.cursor.size;

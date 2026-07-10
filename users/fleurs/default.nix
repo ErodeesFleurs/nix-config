@@ -110,7 +110,7 @@
     terminal = "ghostty";
   };
 
-  homeModules.others.aseprite.enable = true;
+  homeModules.others.aseprite.enable = false;
 
   # XDG 配置
   xdg = {
