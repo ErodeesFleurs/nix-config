@@ -156,8 +156,8 @@
       };
 
       packages.${system} = {
-        spectre = self.nixosConfigurations."spectre";
-        spectre-surface = self.nixosConfigurations."spectre-surface";
+        spectre = self.nixosConfigurations."spectre".config.system.build.toplevel;
+        spectre-surface = self.nixosConfigurations."spectre-surface".config.system.build.toplevel;
         fleurs = self.homeConfigurations."fleurs@spectre".activationPackage;
         fleurs-surface = self.homeConfigurations."fleurs@spectre-surface".activationPackage;
       };
