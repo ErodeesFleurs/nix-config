@@ -240,6 +240,7 @@ menu separator {
 #custom-darkman,
 #tray,
 #network,
+#wireplumber,
 #cpu,
 #memory,
 #battery,
@@ -292,6 +293,7 @@ menu separator {
 #clock:hover,
 #custom-darkman:hover,
 #network:hover,
+#wireplumber:hover,
 #cpu:hover,
 #memory:hover,
 #battery:hover,
@@ -330,6 +332,7 @@ window#waybar.empty #window {
 
 #network.disconnected,
 #network.disabled,
+#wireplumber.muted,
 #battery.critical:not(.charging) {
     background-color: @m3_error_container;
     border-color: transparent;

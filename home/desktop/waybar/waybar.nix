@@ -43,6 +43,7 @@ in
             "custom/darkman"
             "tray"
             "network"
+            "wireplumber"
             "cpu"
             "memory"
             "battery"
@@ -79,6 +80,21 @@ in
           "tray" = {
             icon-size = 16;
             spacing = 12;
+          };
+
+          wireplumber = {
+            format = "{icon} {volume}%";
+            format-muted = "󰝟 muted";
+            format-icons = [
+              "󰕿"
+              "󰖀"
+              "󰕾"
+            ];
+            scroll-step = 5;
+            tooltip-format = "{node_name}\nVolume: {volume}%";
+            tooltip-format-muted = "{node_name}\nMuted";
+            on-click = "${pkgs.wireplumber}/bin/wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle";
+            on-click-right = "${pkgs.pavucontrol}/bin/pavucontrol";
           };
 
           network = {
