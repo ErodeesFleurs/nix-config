@@ -27,9 +27,6 @@ in
         package-version-server
         vscode-json-languageserver
 
-        lua-language-server
-        emmylua-ls
-
         nil
         nixd
 
@@ -111,16 +108,6 @@ in
             json-language-server = {
               binary = {
                 arguments = [ "--stdio" ];
-              };
-            };
-            lua-language-server = {
-              binary = {
-                path = lib.getExe lua-language-server;
-              };
-            };
-            emmylua = {
-              binary = {
-                path = lib.getExe emmylua-ls;
               };
             };
             ruff = {
