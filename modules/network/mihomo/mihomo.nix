@@ -16,6 +16,7 @@ let
       url = "https://github.com/MetaCubeX/metacubexd/releases/download/v1.273.0/compressed-dist.tgz";
       hash = "sha256-B24F0uPcZkGg7CgapLl6GBk/vMN50Tl2LDLZCtsieTw=";
     };
+    dontUnpack = true;
     dontConfigure = true;
     dontBuild = true;
     installPhase = ''
