@@ -1,0 +1,5 @@
+{ fleursLib, ... }:
+
+{
+  imports = fleursLib.importDir ./.;
+}

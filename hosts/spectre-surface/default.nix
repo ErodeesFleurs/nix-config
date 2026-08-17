@@ -36,8 +36,8 @@
       ];
 
       secrets = {
-        "config.dae" = {
-          file = ../../secrets/config.dae.age;
+        "config.mihomo.yaml" = {
+          file = ../../secrets/config.mihomo.yaml.age;
         };
       };
     };
@@ -273,6 +273,12 @@
     dae = {
       enable = true;
       enable-daed = false;
+    };
+
+    mihomo = {
+      enable = true;
+      socks-port = 7891;
+      webui = true;
     };
   };
 

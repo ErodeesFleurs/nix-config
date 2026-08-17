@@ -32,7 +32,7 @@ in
         v2ray-domain-list-community
       ];
 
-      configFile = config.age.secrets."config.dae".path;
+      configFile = "/etc/dae/config.dae";
     };
 
     services.daed = {
@@ -54,10 +54,14 @@ in
       "d /persist/etc/daed 0750 root root -"
     ];
 
-    environment = lib.mkIf enable_persistent {
-      etc = {
-        "daed/.keep".text = "";
+    environment.etc = {
+      "dae/config.dae" = {
+        source = ./config.dae;
+        mode = "0600";
       };
+    }
+    // lib.optionalAttrs enable_persistent {
+      "daed/.keep".text = "";
     };
 
     fileSystems = lib.mkIf enable_persistent {

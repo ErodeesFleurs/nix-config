@@ -6,4 +6,8 @@ in
   "config.dae.age".publicKeys = [
     dae
   ];
+
+  "config.mihomo.yaml.age".publicKeys = [
+    dae
+  ];
 }
