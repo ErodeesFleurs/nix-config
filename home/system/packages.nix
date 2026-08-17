@@ -233,7 +233,7 @@ in
           ];
         })
       ]
-      ++ lib.optionals (cfg.communication.enable && cfg.communication.wechat.enable) [ pkgs.wechat ]
+      ++ lib.optionals (cfg.communication.enable && cfg.communication.wechat.enable) [ pkgs.wechat-uos ]
       ++ lib.optionals (cfg.communication.enable && cfg.communication.feishu.enable) [ pkgs.feishu ]
       ++ lib.optionals (cfg.communication.enable && cfg.communication.telegram.enable) [
         pkgs.telegram-desktop
