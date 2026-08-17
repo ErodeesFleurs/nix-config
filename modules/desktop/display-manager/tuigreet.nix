@@ -37,6 +37,8 @@ in
             "--time-format '%Y-%m-%d %H:%M'"
             "--asterisks"
             "--remember"
+            "--cmd"
+            "${pkgs.niri}/bin/niri-session"
           ];
           user = "greeter";
         };
