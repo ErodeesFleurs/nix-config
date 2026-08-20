@@ -21,7 +21,7 @@ in
       enable-graphical = lib.mkOption {
         type = lib.types.bool;
         default = true;
-        description = "启用图形化的 Logitech 无线管理工具（hardware.logitech.wireless.enableGraphical）";
+        description = "启用图形化的 Logitech 无线管理工具（programs.solaar.enable）";
       };
     };
   };
@@ -30,8 +30,9 @@ in
     hardware.logitech = {
       wireless = {
         enable = cfg.wireless.enable;
-        enableGraphical = cfg.wireless.enable-graphical;
       };
     };
+
+    programs.solaar.enable = cfg.wireless.enable-graphical;
   };
 }
