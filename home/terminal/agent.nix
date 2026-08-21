@@ -1,5 +1,9 @@
 { pkgs, inputs, ... }:
 {
+  home.packages = [
+    inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system}.omp
+  ];
+
   programs.opencode = {
     enable = true;
     package = inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system}.opencode2;
