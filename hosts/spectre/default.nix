@@ -281,15 +281,6 @@
       enable-resolvconf = false;
     };
 
-    v2ray = {
-      enable = true;
-      port = 1080;
-      listen-address = "127.0.0.1";
-      protocol = "socks";
-      enable-udp = true;
-      enable-v2raya = true;
-    };
-
     dae = {
       enable = true;
       enable-daed = false;

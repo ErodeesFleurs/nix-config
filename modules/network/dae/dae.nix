@@ -28,8 +28,7 @@ in
         port = 12345;
       };
       assets = with pkgs; [
-        v2ray-geoip
-        v2ray-domain-list-community
+        v2ray-rules-dat
       ];
 
       configFile = "/etc/dae/config.dae";
