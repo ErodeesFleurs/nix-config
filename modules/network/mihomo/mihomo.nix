@@ -8,22 +8,6 @@
 let
   cfg = config.modules.network.mihomo;
   configPath = config.age.secrets."config.mihomo.yaml".path;
-
-  metacubexd = pkgs.stdenvNoCC.mkDerivation {
-    pname = "metacubexd";
-    version = "1.273.0";
-    src = pkgs.fetchurl {
-      url = "https://github.com/MetaCubeX/metacubexd/releases/download/v1.273.0/compressed-dist.tgz";
-      hash = "sha256-B24F0uPcZkGg7CgapLl6GBk/vMN50Tl2LDLZCtsieTw=";
-    };
-    dontUnpack = true;
-    dontConfigure = true;
-    dontBuild = true;
-    installPhase = ''
-      mkdir -p $out
-      tar -xzf $src -C $out
-    '';
-  };
 in
 {
   options.modules.network.mihomo = {
@@ -61,7 +45,7 @@ in
       package = pkgs.mihomo;
       configFile = cfg.config-file;
       tunMode = false;
-      webui = if cfg.webui then metacubexd else null;
+      webui = if cfg.webui then pkgs.metacubexd else null;
     };
 
     systemd.services.dae = {

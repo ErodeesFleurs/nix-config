@@ -4,6 +4,7 @@
   imports = [
     ./hardware-configuration.nix
     ./users.nix
+    ../common/network.nix
   ];
 
   # ==========================================
@@ -210,69 +211,8 @@
     pulse = true;
   };
 
-  # 网络配置
-  modules.network = {
-    wlan = {
-      enable = true;
-      host-name = "spectre-surface";
-      enable-nm-applet = true;
-      show-indicator = true;
-      enable-firewall = true;
-    };
-    bluetooth = {
-      enable = true;
-      enable-blueman = true;
-      power-on-boot = true;
-    };
-
-    ssh = {
-      enable = true;
-      enable-server = false;
-      enable-agent = false;
-      known-hosts = {
-        "github.com".publicKey =
-          "github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl";
-      };
-    };
-
-    dns = {
-      enable = true;
-      enable-service = true;
-      listen-addrs = [ "127.0.0.1" ];
-      bootstrap = [
-        "127.2.0.17"
-        "8.8.8.8"
-        "119.29.29.29"
-        "114.114.114.114"
-        "223.6.6.6"
-      ];
-      upstream = [
-        "tls://1.1.1.1"
-        "quic://dns.alidns.com"
-        "h3://dns.alidns.com/dns-query"
-        "tls://dot.pub"
-        "https://doh.pub/dns-query"
-      ];
-    };
-
-    resolver = {
-      enable = true;
-      enable-resolved = true;
-      enable-resolvconf = false;
-    };
-
-    dae = {
-      enable = true;
-      enable-daed = false;
-    };
-
-    mihomo = {
-      enable = true;
-      socks-port = 7891;
-      webui = true;
-    };
-  };
-
+  # 网络配置（共享配置在 ./common/network.nix，此处仅覆盖主机特定项）
+  modules.network.wlan.host-name = "spectre-surface";
   networking.networkmanager.wifi.powersave = false;
 
   # 游戏配置

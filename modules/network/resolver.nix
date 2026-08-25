@@ -1,6 +1,30 @@
 { config, lib, ... }:
 let
   cfg = config.modules.network.resolver;
+  dnsCfg = config.modules.network.dns;
+  useDnsproxy = dnsCfg.enable or false;
+
+  # Evaluate final booleans:
+  # - if preferResolved == true -> resolved = true, resolvconf = false
+  # - if preferResolved == false -> resolved = false, resolvconf = true
+  # - if preferResolved == null -> use explicit enableResolved / enableResolvconf options
+  finalResolved =
+    if cfg.prefer-resolved == true then
+      true
+    else if cfg.prefer-resolved == false then
+      false
+    else
+      cfg.enable-resolved;
+  finalResolvconf =
+    if cfg.prefer-resolved == false then
+      true
+    else if cfg.prefer-resolved == true then
+      false
+    else
+      cfg.enable-resolvconf;
+
+  dnsproxyLoopback =
+    useDnsproxy && lib.elem "127.0.0.1" (config.services.dnsproxy.settings.listen-addrs or [ ]);
 in
 {
   options.modules.network.resolver = {
@@ -34,36 +58,43 @@ in
   };
 
   # Implementation: apply only when this resolver submodule is enabled.
-  config = lib.mkIf cfg.enable (
-    let
-      # Evaluate final booleans:
-      # - if preferResolved == true -> resolved = true, resolvconf = false
-      # - if preferResolved == false -> resolved = false, resolvconf = true
-      # - if preferResolved == null -> use explicit enableResolved / enableResolvconf options
-      finalResolved =
-        if cfg.prefer-resolved == true then
-          true
-        else if cfg.prefer-resolved == false then
-          false
-        else
-          cfg.enable-resolved;
-      finalResolvconf =
-        if cfg.prefer-resolved == false then
-          true
-        else if cfg.prefer-resolved == true then
-          false
-        else
-          cfg.enable-resolvconf;
-    in
-    {
-      services.resolved.enable = finalResolved;
-      networking.resolvconf.enable = finalResolvconf;
+  config = lib.mkIf cfg.enable {
+    services.resolved = {
+      enable = finalResolved;
+      settings.Resolve = lib.mkIf (finalResolved && useDnsproxy) {
+        DNS = [ "127.0.0.1" ];
+        FallbackDNS = [
+          "1.1.1.1"
+          "8.8.8.8"
+          "119.29.29.29"
+        ];
+        DNSStubListener = true;
+      };
+    };
+    networking.resolvconf.enable = finalResolvconf;
 
-      # Warn user if they enabled both resolvers which is usually a misconfiguration.
-      # The NixOS `warnings` option expects a list of strings; produce a list when the condition holds.
-      warnings = lib.optional (finalResolved && finalResolvconf) [
-        "systemd-resolved 与 networking.resolvconf 同时启用可能会引发冲突（例如 /etc/resolv.conf 的归属问题）。"
-      ];
-    }
-  );
+    # When dnsproxy is the system resolver, make sure resolved starts after it
+    # and pulls it in so DNS is available as soon as resolved is up.
+    systemd.services.systemd-resolved = lib.mkIf (finalResolved && useDnsproxy) {
+      after = [ "dnsproxy.service" ];
+      requires = [ "dnsproxy.service" ];
+    };
+
+    # Warn user if they enabled both resolvers which is usually a misconfiguration.
+    # The NixOS `warnings` option expects a list of strings; produce a list when the condition holds.
+    warnings = lib.optional (finalResolved && finalResolvconf) [
+      "systemd-resolved 与 networking.resolvconf 同时启用可能会引发冲突（例如 /etc/resolv.conf 的归属问题）。"
+    ];
+
+    assertions = lib.optionals (finalResolved && useDnsproxy) [
+      {
+        assertion = dnsproxyLoopback;
+        message = ''
+          modules.network.dns 启用且 systemd-resolved 作为前端时，dnsproxy 必须监听 127.0.0.1，
+          这样 systemd-resolved 才能将其作为上游转发器。
+          请在 modules.network.dns.listen-addrs 中加入 "127.0.0.1"。
+        '';
+      }
+    ];
+  };
 }
