@@ -1,36 +1,19 @@
 { config, themeLib }:
 
-let
-  enabled = config.programs.fastfetch.enable;
-  inherit (themeLib) homeDir;
-in
-themeLib.mkApp {
-  enable = enabled;
-  outputDirs = [ "$out/fastfetch" ];
-
-  generate =
-    { polarity }:
-    themeLib.renderTemplate {
-      source = ./templates/fastfetch.jsonc;
-      target = "$out/fastfetch/config.jsonc";
-      inherit polarity;
-      colors = [
-        "primary"
-        "tertiary"
-      ];
-      literalReplacements = [
-        {
-          token = "home_dir";
-          value = homeDir;
-        }
-      ];
-    };
-
-  links = [
+themeLib.mkColorApp {
+  name = "Fastfetch";
+  enable = config.programs.fastfetch.enable;
+  template = ./templates/fastfetch.jsonc;
+  themePath = "fastfetch/config.jsonc";
+  configPath = ".config/fastfetch/config.jsonc";
+  colors = [
+    "primary"
+    "tertiary"
+  ];
+  literalReplacements = [
     {
-      name = "Fastfetch";
-      target = ".config/fastfetch/config.jsonc";
-      source = "fastfetch/config.jsonc";
+      token = "home_dir";
+      value = themeLib.homeDir;
     }
   ];
 }

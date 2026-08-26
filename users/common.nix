@@ -15,13 +15,6 @@
         show-banner = false;
         enable-carapace-integration = true;
       };
-      git = {
-        enable = true;
-        user-name = "ErodeesFleurs";
-        user-email = "862959461@qq.com";
-        delta.enable = true;
-        lfs.enable = true;
-      };
       yazi = {
         enable = true;
         enableNushellIntegration = true;
@@ -77,12 +70,6 @@
     keyring.gnome.enable = true;
     vicinae.enable = true;
     packages.enable = true;
-
-    variables = {
-      enable = true;
-      browser = "firefox";
-      terminal = "ghostty";
-    };
   };
 
   xdg = {

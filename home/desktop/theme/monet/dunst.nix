@@ -63,41 +63,25 @@ let
     )
   );
 in
-themeLib.mkApp {
+themeLib.mkColorApp {
+  name = "Dunst";
   enable = enabled;
-  outputDirs = [ "$out/dunst" ];
-
-  generate =
-    { polarity }:
-    themeLib.renderTemplate {
-      source = builtins.toFile "dunstrc.monet.in" template;
-      target = "$out/dunst/dunstrc";
-      inherit polarity;
-      colors = [
-        "surface_container_low"
-        "surface_container_high"
-        "on_surface"
-        "on_surface_variant"
-        "outline_variant"
-        "primary"
-        "error"
-        "error_container"
-        "on_error_container"
-      ];
-    };
-
-  xdgPlaceholders = [
-    { path = "dunst/dunstrc"; }
+  template = builtins.toFile "dunstrc.monet.in" template;
+  themePath = "dunst/dunstrc";
+  configPath = ".config/dunst/dunstrc";
+  placeholder = true;
+  colors = [
+    "surface_container_low"
+    "surface_container_high"
+    "on_surface"
+    "on_surface_variant"
+    "outline_variant"
+    "primary"
+    "error"
+    "error_container"
+    "on_error_container"
   ];
-
-  links = [
-    {
-      name = "Dunst";
-      target = ".config/dunst/dunstrc";
-      source = "dunst/dunstrc";
-      postLink = ''
-        ${pkgs.dunst}/bin/dunstctl reload "$SOURCE" 2>/dev/null || ${pkgs.procps}/bin/pkill -HUP dunst 2>/dev/null || true
-      '';
-    }
-  ];
+  postLink = ''
+    ${pkgs.dunst}/bin/dunstctl reload "$SOURCE" 2>/dev/null || ${pkgs.procps}/bin/pkill -HUP dunst 2>/dev/null || true
+  '';
 }

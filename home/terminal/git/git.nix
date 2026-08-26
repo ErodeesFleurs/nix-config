@@ -1,52 +1,30 @@
+{ config, ... }:
+
 {
-  config,
-  lib,
-  ...
-}:
+  programs.git = {
+    enable = true;
 
-let
-  cfg = config.homeModules.terminal.git;
-  monetDeltaConfig = "${config.home.homeDirectory}/.config/git/monet-delta.gitconfig";
-in
-{
-  options.homeModules.terminal.git = {
-    enable = lib.mkEnableOption "Git version control system";
+    # delta 主题由 monet 主题系统生成
+    includes = [
+      { path = "${config.home.homeDirectory}/.config/git/monet-delta.gitconfig"; }
+    ];
 
-    user-name = lib.mkOption {
-      type = lib.types.str;
-      default = "ErodeesFleurs";
-      description = "Git user name";
-    };
-
-    user-email = lib.mkOption {
-      type = lib.types.str;
-      default = "862959461@qq.com";
-      description = "Git user email";
-    };
-
-    signing = {
-      enable = lib.mkOption {
-        type = lib.types.bool;
-        default = false;
-        description = "Enable commit signing";
+    settings = {
+      user = {
+        name = "ErodeesFleurs";
+        email = "862959461@qq.com";
       };
 
-      key = lib.mkOption {
-        type = lib.types.nullOr lib.types.str;
-        default = null;
-        description = "GPG key ID for signing";
+      core = {
+        editor = "hx";
+        autocrlf = "input";
       };
 
-      sign-by-default = lib.mkOption {
-        type = lib.types.bool;
-        default = true;
-        description = "Sign commits by default";
-      };
-    };
+      init.defaultBranch = "main";
+      pull.rebase = false;
+      push.default = "simple";
 
-    aliases = lib.mkOption {
-      type = lib.types.attrsOf lib.types.str;
-      default = {
+      alias = {
         st = "status";
         co = "checkout";
         br = "branch";
@@ -55,102 +33,17 @@ in
         last = "log -1 HEAD";
         lg = "log --graph --oneline --decorate --all";
       };
-      description = "Git command aliases";
     };
 
-    extra-config = lib.mkOption {
-      type = lib.types.attrs;
-      default = { };
-      description = "Additional git configuration";
-      example = {
-        init.defaultBranch = "main";
-        pull.rebase = true;
-      };
-    };
-
-    delta = {
-      enable = lib.mkOption {
-        type = lib.types.bool;
-        default = true;
-        description = "Enable delta syntax highlighter";
-      };
-
-      options = lib.mkOption {
-        type = lib.types.attrs;
-        default = {
-          navigate = true;
-          light = false;
-          side-by-side = true;
-        };
-        description = "Delta configuration options";
-      };
-    };
-
-    lfs = {
-      enable = lib.mkOption {
-        type = lib.types.bool;
-        default = false;
-        description = "Enable Git LFS support";
-      };
-    };
+    lfs.enable = true;
   };
 
-  config = lib.mkIf cfg.enable {
-    programs.git = {
-      enable = true;
-
-      includes = lib.mkIf cfg.delta.enable [
-        { path = monetDeltaConfig; }
-      ];
-
-      # Use the new settings API
-      settings = lib.mkMerge [
-        {
-          # User settings
-          user = {
-            name = cfg.user-name;
-            email = cfg.user-email;
-          };
-
-          # Core settings
-          core = {
-            editor = "hx";
-            autocrlf = "input";
-          };
-
-          # Default branch
-          init = {
-            defaultBranch = "main";
-          };
-
-          # Pull strategy
-          pull = {
-            rebase = false;
-          };
-
-          # Push settings
-          push = {
-            default = "simple";
-          };
-
-          # Aliases
-          alias = cfg.aliases;
-        }
-        (lib.mkIf cfg.signing.enable {
-          user.signingkey = cfg.signing.key;
-          commit.gpgsign = cfg.signing.sign-by-default;
-        })
-        cfg.extra-config
-      ];
-
-      lfs = lib.mkIf cfg.lfs.enable {
-        enable = true;
-      };
-    };
-
-    programs.delta = lib.mkIf cfg.delta.enable {
-      enable = true;
-      options = cfg.delta.options;
+  programs.delta = {
+    enable = true;
+    options = {
+      navigate = true;
+      light = false;
+      side-by-side = true;
     };
   };
 }

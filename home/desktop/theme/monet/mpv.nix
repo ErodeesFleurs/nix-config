@@ -1,67 +1,26 @@
 { config, themeLib }:
 
 let
-  enabled = config.programs.mpv.enable;
+  rgb = color: {
+    token = "${color}_rgb";
+    inherit color;
+    transform = "noHash";
+  };
 in
-themeLib.mkApp {
-  enable = enabled;
-  outputDirs = [ "$out/mpv" ];
-
-  generate =
-    { polarity }:
-    themeLib.renderTemplate {
-      source = ./templates/mpv.conf;
-      target = "$out/mpv/monet.conf";
-      inherit polarity;
-      replacements = [
-        {
-          token = "surface_rgb";
-          color = "surface";
-          transform = "noHash";
-        }
-        {
-          token = "on_surface_rgb";
-          color = "on_surface";
-          transform = "noHash";
-        }
-        {
-          token = "surface_container_high_rgb";
-          color = "surface_container_high";
-          transform = "noHash";
-        }
-        {
-          token = "outline_variant_rgb";
-          color = "outline_variant";
-          transform = "noHash";
-        }
-        {
-          token = "primary_rgb";
-          color = "primary";
-          transform = "noHash";
-        }
-        {
-          token = "primary_container_rgb";
-          color = "primary_container";
-          transform = "noHash";
-        }
-        {
-          token = "inverse_on_surface_rgb";
-          color = "inverse_on_surface";
-          transform = "noHash";
-        }
-        {
-          token = "inverse_surface_rgb";
-          color = "inverse_surface";
-          transform = "noHash";
-        }
-      ];
-    };
-
-  links = [
-    {
-      name = "Mpv";
-      target = ".config/mpv/monet.conf";
-      source = "mpv/monet.conf";
-    }
+themeLib.mkColorApp {
+  name = "Mpv";
+  enable = config.programs.mpv.enable;
+  template = ./templates/mpv.conf;
+  themePath = "mpv/monet.conf";
+  configPath = ".config/mpv/monet.conf";
+  replacements = map rgb [
+    "surface"
+    "on_surface"
+    "surface_container_high"
+    "outline_variant"
+    "primary"
+    "primary_container"
+    "inverse_on_surface"
+    "inverse_surface"
   ];
 }

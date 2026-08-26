@@ -150,7 +150,7 @@ let
     '';
   };
 in
-{
+rec {
   inherit
     homeDir
     currentSymlink
@@ -202,6 +202,53 @@ in
       inherit enable outputDirs generate;
       activation = activation // mergeAttrs (map mkThemeLink links);
       xdgConfig = xdgConfig // mergeAttrs (map mkXdgPlaceholder xdgPlaceholders);
+    };
+
+  # 单模板应用的构造器：从 themePath/configPath 推导 outputDirs、activation
+  # 链接与 xdg 占位符，消除每个 app 的重复样板。
+  # configPath 为 null 时表示不创建链接（如 discord，经 current 软链消费）。
+  mkColorApp =
+    {
+      name,
+      enable,
+      template,
+      themePath,
+      configPath ? null,
+      colors ? [ ],
+      replacements ? [ ],
+      literalReplacements ? [ ],
+      # 依赖 polarity 的字面替换（如 variant = polarity）
+      literalReplacementsFor ? (_: [ ]),
+      append ? [ ],
+      placeholder ? false,
+      placeholderText ? "# Managed by Monet theme activation\n",
+      postLink ? "",
+    }:
+    mkApp {
+      inherit enable;
+      outputDirs = [ "$out/${builtins.dirOf themePath}" ];
+      generate =
+        { polarity }:
+        renderTemplate {
+          source = template;
+          target = "$out/${themePath}";
+          inherit
+            polarity
+            colors
+            replacements
+            append
+            ;
+          literalReplacements = literalReplacements ++ literalReplacementsFor polarity;
+        };
+      xdgPlaceholders = lib.optional placeholder {
+        path = lib.removePrefix ".config/" configPath;
+        text = placeholderText;
+      };
+      links = lib.optional (configPath != null) {
+        inherit name postLink;
+        target = configPath;
+        source = themePath;
+      };
     };
 
   collect =
