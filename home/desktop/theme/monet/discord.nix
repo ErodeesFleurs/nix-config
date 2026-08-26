@@ -1,7 +1,7 @@
 { config, themeLib }:
 
 let
-  enabled = config.homeModules.discord.enable or false;
+  enabled = config.homeModules.discord.enable;
 in
 themeLib.mkApp {
   enable = enabled;

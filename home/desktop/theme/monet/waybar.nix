@@ -1,5 +1,4 @@
 {
-  pkgs,
   themeLib,
   waybarBodyCssPath,
 }:
@@ -47,9 +46,7 @@ themeLib.mkApp {
       name = "Waybar";
       target = ".config/waybar/style.css";
       source = "waybar/style.css";
-      postLink = ''
-        ${pkgs.procps}/bin/pkill -SIGUSR2 waybar 2>/dev/null || true
-      '';
+      postLink = themeLib.reloadScripts.waybar;
     }
   ];
 }

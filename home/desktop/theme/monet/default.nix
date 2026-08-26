@@ -6,8 +6,8 @@
 }:
 
 let
-  themeLib = import ./lib.nix { inherit config lib; };
-  waybar = import ./waybar.nix { inherit pkgs themeLib waybarBodyCssPath; };
+  themeLib = import ./lib.nix { inherit config lib pkgs; };
+  waybar = import ./waybar.nix { inherit themeLib waybarBodyCssPath; };
   dunst = import ./dunst.nix {
     inherit
       config

@@ -23,6 +23,7 @@ let
     inherit config lib pkgs;
     waybarBodyCssPath = m3WaybarBodyCssPath;
   };
+  themeLib = import ../theme/monet/lib.nix { inherit config lib pkgs; };
 
   mkHookBlock = title: body: ''
     # ── ${title} ──
@@ -30,9 +31,7 @@ let
   '';
 
   switchActions = lib.concatStringsSep "\n" [
-    (mkHookBlock "Waybar — 发送 USR2 信号触发重载" ''
-      ${pkgs.procps}/bin/pkill -SIGUSR2 waybar || true
-    '')
+    (mkHookBlock "Waybar — 发送 USR2 信号触发重载" themeLib.reloadScripts.waybar)
 
     (mkHookBlock "Ghostty — 显式切换当前主题文件" ''
       GHOSTTY_THEME="${homeDir}/.config/ghostty/themes/monet-current"
@@ -59,24 +58,7 @@ let
 
     (mkHookBlock "Btop — 下次打开时读取 current symlink 指向的 Monet theme" "")
 
-    (mkHookBlock "Fcitx5 — 重新读取 classicui addon，候选框主题属于该 addon" ''
-      if ${pkgs.glib}/bin/gdbus call \
-        --session \
-        --dest org.freedesktop.DBus \
-        --object-path /org/freedesktop/DBus \
-        --method org.freedesktop.DBus.NameHasOwner \
-        org.fcitx.Fcitx5 \
-        | ${pkgs.gnugrep}/bin/grep -q '(true,)'; then
-        ${pkgs.glib}/bin/gdbus call \
-          --session \
-          --dest org.fcitx.Fcitx5 \
-          --object-path /controller \
-          --method org.fcitx.Fcitx.Controller1.ReloadAddonConfig \
-          classicui >/dev/null 2>&1 \
-          || ${pkgs.fcitx5}/bin/fcitx5-remote -r >/dev/null 2>&1 \
-          || true
-      fi
-    '')
+    (mkHookBlock "Fcitx5 — 重新读取 classicui addon，候选框主题属于该 addon" themeLib.reloadScripts.fcitx5)
 
     (mkHookBlock "Wallpaper — 切换壁纸" ''
       if [ -n "$WALLPAPER" ] && command -v awww &>/dev/null; then
@@ -276,13 +258,14 @@ in
 
       cursorTheme = lib.mkOption {
         type = lib.types.str;
-        default = "Adwaita";
+        # 与 homeModules.theme.cursor 保持单一来源
+        default = config.homeModules.theme.cursor.name;
         description = "Cursor theme name for light mode";
       };
 
       cursorSize = lib.mkOption {
         type = lib.types.int;
-        default = 24;
+        default = config.homeModules.theme.cursor.size;
         description = "Cursor size for light mode";
       };
     };
@@ -321,13 +304,14 @@ in
 
       cursorTheme = lib.mkOption {
         type = lib.types.str;
-        default = "Adwaita";
+        # 与 homeModules.theme.cursor 保持单一来源
+        default = config.homeModules.theme.cursor.name;
         description = "Cursor theme name for dark mode";
       };
 
       cursorSize = lib.mkOption {
         type = lib.types.int;
-        default = 24;
+        default = config.homeModules.theme.cursor.size;
         description = "Cursor size for dark mode";
       };
     };

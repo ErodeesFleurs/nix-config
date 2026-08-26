@@ -1,4 +1,4 @@
-{ pkgs, inputs, ... }:
+{ pkgs, lib, inputs, ... }:
 {
   home.packages = [
     inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system}.omp
@@ -26,35 +26,22 @@
           options = {
             baseURL = "https://api.sudocode.chat/v1";
           };
-          models = {
-            "gpt-5.6-sol" = {
-              name = "gpt-5.6-sol";
-              variants = {
-                low = { };
-                medium = { };
-                high = { };
-                xhigh = { };
-              };
-            };
-            "gpt-5.6-terra" = {
-              name = "gpt-5.6-terra";
-              variants = {
-                low = { };
-                medium = { };
-                high = { };
-                xhigh = { };
-              };
-            };
-            "gpt-5.6-luna" = {
-              name = "gpt-5.6-luna";
-              variants = {
-                low = { };
-                medium = { };
-                high = { };
-                xhigh = { };
-              };
-            };
-          };
+          models =
+            lib.genAttrs
+              [
+                "gpt-5.6-sol"
+                "gpt-5.6-terra"
+                "gpt-5.6-luna"
+              ]
+              (name: {
+                inherit name;
+                variants = lib.genAttrs [
+                  "low"
+                  "medium"
+                  "high"
+                  "xhigh"
+                ] (_: { });
+              });
         };
       };
     };

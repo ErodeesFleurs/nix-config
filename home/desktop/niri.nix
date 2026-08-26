@@ -102,17 +102,16 @@ let
     };
   };
 
-  niriSettingsLib =
-    let
-      settings = import (inputs.niri + "/settings.nix") {
-        inherit lib settings;
-        inherit (inputs.niri.lib) kdl;
-        inputs = inputs.niri.inputs;
-        binds = _: [ ];
-        docs = null;
-      };
-    in
-    settings;
+  # niri-flake 的 settings 渲染库（内部文件，fixpoint：settings 参数即渲染库自身；
+  # 若 niri-flake 上游变更该接口，此处需要同步）
+  niriSettingsLib = import (inputs.niri + "/settings.nix") {
+    inherit lib;
+    inherit (inputs.niri.lib) kdl;
+    inputs = inputs.niri.inputs;
+    binds = _: [ ];
+    docs = null;
+    settings = niriSettingsLib;
+  };
 
   renderedSettings = inputs.niri.lib.kdl.serialize.nodes (
     niriSettingsLib.render config.programs.niri.settings

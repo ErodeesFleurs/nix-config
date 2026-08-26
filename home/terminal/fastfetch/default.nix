@@ -5,7 +5,6 @@
   home.file.".config/fastfetch/logo" = {
     source = ./logo;
     recursive = true;
-    executable = true;
   };
 
   # Fastfetch 程序配置

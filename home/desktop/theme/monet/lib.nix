@@ -1,4 +1,8 @@
-{ config, lib }:
+{
+  config,
+  lib,
+  pkgs,
+}:
 
 let
   homeDir = config.home.homeDirectory;
@@ -117,6 +121,34 @@ let
       # 内容引用由 path 参数携带（toFile 产物的 basename 自带 hash，需剥离 context）
       name = builtins.unsafeDiscardStringContext (builtins.baseNameOf (toString path));
     };
+
+  # 主题切换时的运行时重载脚本（darkman hook 与各应用 activation postLink 共用）
+  reloadScripts = {
+    # Waybar — USR2 触发样式重载
+    waybar = ''
+      ${pkgs.procps}/bin/pkill -SIGUSR2 waybar 2>/dev/null || true
+    '';
+
+    # Fcitx5 — 重载 classicui addon（候选框主题属于该 addon）
+    fcitx5 = ''
+      if ${pkgs.glib}/bin/gdbus call \
+        --session \
+        --dest org.freedesktop.DBus \
+        --object-path /org/freedesktop/DBus \
+        --method org.freedesktop.DBus.NameHasOwner \
+        org.fcitx.Fcitx5 \
+        | ${pkgs.gnugrep}/bin/grep -q '(true,)'; then
+        ${pkgs.glib}/bin/gdbus call \
+          --session \
+          --dest org.fcitx.Fcitx5 \
+          --object-path /controller \
+          --method org.fcitx.Fcitx.Controller1.ReloadAddonConfig \
+          classicui >/dev/null 2>&1 \
+          || ${pkgs.fcitx5}/bin/fcitx5-remote -r >/dev/null 2>&1 \
+          || true
+      fi
+    '';
+  };
 in
 {
   inherit
@@ -127,6 +159,7 @@ in
     mkXdgPlaceholder
     terminalColorTokens
     stablePath
+    reloadScripts
     ;
 
   renderTemplate =

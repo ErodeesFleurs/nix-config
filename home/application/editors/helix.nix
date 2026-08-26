@@ -7,6 +7,8 @@
 
 let
   cfg = config.homeModules.helix;
+  # 附加到各语言的 GPT LSP（按开关）
+  gptLs = lib.optionals cfg.language-servers.gpt.enable [ "gpt" ];
 in
 {
   options.homeModules.helix = {
@@ -244,12 +246,12 @@ in
             }
             {
               name = "rust";
-              language-servers = [ "rust-analyzer" ] ++ lib.optionals cfg.language-servers.gpt.enable [ "gpt" ];
+              language-servers = [ "rust-analyzer" ] ++ gptLs;
               auto-format = true;
             }
             {
               name = "python";
-              language-servers = [ "pylsp" ] ++ lib.optionals cfg.language-servers.gpt.enable [ "gpt" ];
+              language-servers = [ "pylsp" ] ++ gptLs;
               formatter = {
                 command = "sh";
                 args = [
@@ -264,7 +266,7 @@ in
               language-servers = [
                 "emmylua-ls"
               ]
-              ++ lib.optionals cfg.language-servers.gpt.enable [ "gpt" ];
+              ++ gptLs;
               formatter = {
                 command = "stylua";
                 args = [ "-" ];
