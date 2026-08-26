@@ -6,7 +6,7 @@
 
 let
   cfg = config.homeModules.terminal.shell.nushell;
-  theme = config.home-modules.desktop.darkman;
+  theme = config.homeModules.desktop.darkman;
   enableMonetTheme = theme.enable && theme.monet.enable;
 in
 {

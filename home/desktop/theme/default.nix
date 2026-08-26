@@ -10,12 +10,6 @@ let
 in
 {
   options.homeModules.theme = {
-    wallpaper = lib.mkOption {
-      type = lib.types.path;
-      default = ../../../assets/wallpaper.jpg;
-      description = "Wallpaper image used as the source for local theme generation";
-    };
-
     fonts = {
       emoji = {
         package = lib.mkOption {

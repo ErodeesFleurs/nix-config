@@ -6,7 +6,7 @@
 }:
 
 let
-  cfg = config.home-modules.desktop.darkman;
+  cfg = config.homeModules.desktop.darkman;
   homeDir = config.home.homeDirectory;
   shellArg = value: lib.escapeShellArg (toString value);
   wallpaperArg = wallpaper: if wallpaper == null then "''" else shellArg wallpaper;
@@ -220,7 +220,7 @@ in
   # ═══════════════════════════════════════════════════
   # Options
   # ═══════════════════════════════════════════════════
-  options.home-modules.desktop.darkman = {
+  options.homeModules.desktop.darkman = {
     enable = lib.mkEnableOption "darkman-based automatic day/night theme switching";
 
     # ── 地理坐标 ─────────────────────────────────────

@@ -5,11 +5,11 @@
   ...
 }:
 let
-  cfg = config.home-modules.desktop.waybar;
+  cfg = config.homeModules.desktop.waybar;
   m3FallbackStyle = builtins.readFile ../../../assets/waybar/m3-expressive-dark.css;
 in
 {
-  options.home-modules.desktop.waybar = {
+  options.homeModules.desktop.waybar = {
     enable = lib.mkEnableOption "Waybar configuration";
   };
 
@@ -54,7 +54,7 @@ in
             format = "{title}";
             max-length = 50;
             tooltip = false;
-            seperate-outputs = true;
+            separate-outputs = true;
           };
 
           clock = {

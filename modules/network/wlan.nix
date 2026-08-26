@@ -4,36 +4,34 @@
   ...
 }:
 
-with lib;
-
 let
   cfg = config.modules.network.wlan;
   enable_persistent = !config.modules.etc.overlay-mutable;
 in
 {
   options.modules.network.wlan = {
-    enable = mkEnableOption "Wireless LAN and NetworkManager support";
+    enable = lib.mkEnableOption "Wireless LAN and NetworkManager support";
 
-    host-name = mkOption {
-      type = types.str;
+    host-name = lib.mkOption {
+      type = lib.types.str;
       default = "nixos";
       description = "The hostName of the system";
     };
 
-    enable-nm-applet = mkOption {
-      type = types.bool;
+    enable-nm-applet = lib.mkOption {
+      type = lib.types.bool;
       default = true;
       description = "Whether to enable nm-applet tray icon";
     };
 
-    show-indicator = mkOption {
-      type = types.bool;
+    show-indicator = lib.mkOption {
+      type = lib.types.bool;
       default = true;
       description = "Whether to show network indicator in nm-applet";
     };
 
-    allowed-tcp-ports = mkOption {
-      type = types.listOf types.port;
+    allowed-tcp-ports = lib.mkOption {
+      type = lib.types.listOf lib.types.port;
       default = [ ];
       description = "List of allowed TCP ports through the firewall";
       example = [
@@ -42,8 +40,8 @@ in
       ];
     };
 
-    allowed-udp-ports = mkOption {
-      type = types.listOf types.port;
+    allowed-udp-ports = lib.mkOption {
+      type = lib.types.listOf lib.types.port;
       default = [ ];
       description = "List of allowed UDP ports through the firewall";
       example = [
@@ -52,14 +50,14 @@ in
       ];
     };
 
-    enable-firewall = mkOption {
-      type = types.bool;
+    enable-firewall = lib.mkOption {
+      type = lib.types.bool;
       default = true;
       description = "Whether to enable the firewall";
     };
   };
 
-  config = mkIf cfg.enable {
+  config = lib.mkIf cfg.enable {
     networking = {
       hostName = cfg.host-name;
       networkmanager = {
@@ -67,7 +65,7 @@ in
         wifi.backend = "iwd";
       };
 
-      firewall = mkIf cfg.enable-firewall {
+      firewall = lib.mkIf cfg.enable-firewall {
         enable = true;
         allowedTCPPorts = cfg.allowed-tcp-ports;
         allowedUDPPorts = cfg.allowed-udp-ports;
@@ -75,7 +73,7 @@ in
     };
 
     # 启用 WiFi 托盘图标
-    programs.nm-applet = mkIf cfg.enable-nm-applet {
+    programs.nm-applet = lib.mkIf cfg.enable-nm-applet {
       enable = true;
       indicator = cfg.show-indicator;
     };

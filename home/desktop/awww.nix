@@ -1,9 +1,9 @@
 { config, lib, ... }:
 let
-  cfg = config.home-modules.desktop.awww;
+  cfg = config.homeModules.desktop.awww;
 in
 {
-  options.home-modules.desktop.awww = {
+  options.homeModules.desktop.awww = {
     enable = lib.mkEnableOption "awww Wayland compositor configuration";
   };
 

@@ -1,9 +1,9 @@
 { config, lib, ... }:
 let
-  cfg = config.home-modules.application.playerctl;
+  cfg = config.homeModules.application.playerctl;
 in
 {
-  options.home-modules.application.playerctl = {
+  options.homeModules.application.playerctl = {
     enable = lib.mkEnableOption "Playerctl (media player controller)";
   };
 

@@ -61,7 +61,6 @@
 
     mihomo = {
       enable = true;
-      socks-port = 7891;
       webui = true;
     };
   };

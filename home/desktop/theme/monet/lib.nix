@@ -105,6 +105,18 @@ let
       value,
     }:
     "--replace-fail ${lib.escapeShellArg "@${token}@"} ${lib.escapeShellArg value}";
+
+  # 把仓库内文件复制为独立 store 路径（按内容寻址）。
+  # 直接引用 flake 源码树的子路径会导致任何仓库改动都改变路径字符串，
+  # 从而触发所有主题派生的无谓重建。
+  stablePath =
+    path:
+    builtins.path {
+      inherit path;
+      # unsafeDiscardStringContext：name 仅是输出路径的标签，
+      # 内容引用由 path 参数携带（toFile 产物的 basename 自带 hash，需剥离 context）
+      name = builtins.unsafeDiscardStringContext (builtins.baseNameOf (toString path));
+    };
 in
 {
   inherit
@@ -114,6 +126,7 @@ in
     mkThemeLink
     mkXdgPlaceholder
     terminalColorTokens
+    stablePath
     ;
 
   renderTemplate =
@@ -131,10 +144,12 @@ in
       substituteArgs = lib.concatStringsSep " \\\n        " (
         (map (mkSubstituteArg polarity) allReplacements) ++ (map mkLiteralSubstituteArg literalReplacements)
       );
-      appendCommands = lib.concatMapStringsSep "\n" (path: "cat ${path} >> \"${target}\"") append;
+      appendCommands = lib.concatMapStringsSep "\n" (
+        path: "cat ${stablePath path} >> \"${target}\""
+      ) append;
     in
     ''
-      cp ${source} "${target}"
+      cp ${stablePath source} "${target}"
       substituteInPlace "${target}" \
         ${substituteArgs}
       ${appendCommands}

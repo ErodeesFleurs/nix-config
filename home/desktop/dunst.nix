@@ -11,219 +11,42 @@ in
   options.homeModules.dunst = {
     enable = lib.mkEnableOption "Dunst notification daemon";
 
-    settings = {
-      global = {
-        follow = lib.mkOption {
-          type = lib.types.str;
-          default = "none";
-          description = "Follow mouse, keyboard or none";
-        };
-
-        width = lib.mkOption {
-          type = lib.types.int;
-          default = 360;
-          description = "Width of notification window";
-        };
-
-        height = lib.mkOption {
-          type = lib.types.int;
-          default = 145;
-          description = "Height of notification window";
-        };
-
-        origin = lib.mkOption {
-          type = lib.types.str;
-          default = "top-right";
-          description = "Position of notification (top-right, top-left, etc.)";
-        };
-
-        offset = lib.mkOption {
-          type = lib.types.str;
-          default = "15x15";
-          description = "Offset from the origin";
-        };
-
-        padding = lib.mkOption {
-          type = lib.types.int;
-          default = 20;
-          description = "Padding between text and separator";
-        };
-
-        horizontal-padding = lib.mkOption {
-          type = lib.types.int;
-          default = 20;
-          description = "Horizontal padding";
-        };
-
-        corner-radius = lib.mkOption {
-          type = lib.types.int;
-          default = 24;
-          description = "Corner radius of notification window";
-        };
-
-        frame-width = lib.mkOption {
-          type = lib.types.int;
-          default = 1;
-          description = "Width of notification frame";
-        };
-
-        frame-color = lib.mkOption {
-          type = lib.types.str;
-          default = "#79747e";
-          description = "Color of notification frame";
-        };
-
-        gap-size = lib.mkOption {
-          type = lib.types.int;
-          default = 12;
-          description = "Gap between notifications";
-        };
-
-        icon-position = lib.mkOption {
-          type = lib.types.str;
-          default = "left";
-          description = "Position of icon (left, right, off)";
-        };
-
-        min-icon-size = lib.mkOption {
-          type = lib.types.int;
-          default = 48;
-          description = "Minimum icon size";
-        };
-
-        max-icon-size = lib.mkOption {
-          type = lib.types.int;
-          default = 64;
-          description = "Maximum icon size";
-        };
-
-        progress-bar = {
-          height = lib.mkOption {
-            type = lib.types.int;
-            default = 6;
-            description = "Height of progress bar";
-          };
-
-          frame-width = lib.mkOption {
-            type = lib.types.int;
-            default = 1;
-            description = "Frame width of progress bar";
-          };
-
-          min-width = lib.mkOption {
-            type = lib.types.int;
-            default = 150;
-            description = "Minimum width of progress bar";
-          };
-
-          max-width = lib.mkOption {
-            type = lib.types.int;
-            default = 300;
-            description = "Maximum width of progress bar";
-          };
-        };
-
-        idle-threshold = lib.mkOption {
-          type = lib.types.int;
-          default = 120;
-          description = "Idle threshold in seconds";
-        };
-
-        history-length = lib.mkOption {
-          type = lib.types.int;
-          default = 20;
-          description = "Maximum number of notifications to keep in history";
-        };
-
-        format = lib.mkOption {
-          type = lib.types.str;
-          default = "<b>%s</b>\n%b";
-          description = "Format string for notifications";
-        };
-
-        mouse-left-click = lib.mkOption {
-          type = lib.types.str;
-          default = "do_action";
-          description = "Action on left mouse click";
-        };
-
-        mouse-middle-click = lib.mkOption {
-          type = lib.types.str;
-          default = "close_all";
-          description = "Action on middle mouse click";
-        };
-
-        mouse-right-click = lib.mkOption {
-          type = lib.types.str;
-          default = "close_current";
-          description = "Action on right mouse click";
-        };
-      };
-
-      urgency = {
-        low = {
-          timeout = lib.mkOption {
-            type = lib.types.int;
-            default = 4;
-            description = "Timeout for low urgency notifications";
-          };
-        };
-
-        normal = {
-          timeout = lib.mkOption {
-            type = lib.types.int;
-            default = 6;
-            description = "Timeout for normal urgency notifications";
-          };
-        };
-
-        critical = {
-          timeout = lib.mkOption {
-            type = lib.types.int;
-            default = 0;
-            description = "Timeout for critical urgency notifications (0 = no timeout)";
-          };
-        };
-      };
-    };
-  };
-
-  config = lib.mkIf cfg.enable {
-    services.dunst = {
-      enable = true;
-      settings = {
+    # 单一数据源：同时应用于 services.dunst.settings 与 monet 主题模板
+    settings = lib.mkOption {
+      type = lib.types.attrs;
+      default = {
         global = {
-          follow = cfg.settings.global.follow;
-          width = cfg.settings.global.width;
-          height = cfg.settings.global.height;
-          origin = cfg.settings.global.origin;
+          follow = "none";
+          width = 360;
+          height = 145;
+          origin = "top-right";
           alignment = "left";
           vertical_alignment = "center";
           ellipsize = "middle";
-          offset = cfg.settings.global.offset;
-          padding = cfg.settings.global.padding;
-          horizontal_padding = cfg.settings.global.horizontal-padding;
-          text_icon_padding = 15;
-          icon_position = cfg.settings.global.icon-position;
-          min_icon_size = cfg.settings.global.min-icon-size;
-          max_icon_size = cfg.settings.global.max-icon-size;
-          progress_bar_height = cfg.settings.global.progress-bar.height;
-          progress_bar_frame_width = cfg.settings.global.progress-bar.frame-width;
-          progress_bar_min_width = cfg.settings.global.progress-bar.min-width;
-          progress_bar_max_width = cfg.settings.global.progress-bar.max-width;
-          separator_height = 2;
-          frame_width = cfg.settings.global.frame-width;
-          frame_color = cfg.settings.global.frame-color;
-          corner_radius = cfg.settings.global.corner-radius;
+          offset = "15x15";
+          padding = 20;
+          horizontal_padding = 20;
+          text_icon_padding = 16;
+          icon_position = "left";
+          min_icon_size = 48;
+          max_icon_size = 64;
+          progress_bar_height = 6;
+          progress_bar_frame_width = 1;
+          progress_bar_min_width = 150;
+          progress_bar_max_width = 300;
+          separator_height = 0;
+          frame_width = 1;
+          frame_color = "#79747e";
+          corner_radius = 24;
           transparency = 0;
-          gap_size = cfg.settings.global.gap-size;
+          gap_size = 12;
           line_height = 0;
           notification_limit = 0;
-          idle_threshold = cfg.settings.global.idle-threshold;
-          history_length = cfg.settings.global.history-length;
+          idle_threshold = 120;
+          history_length = 20;
           show_age_threshold = 60;
           markup = "full";
-          format = cfg.settings.global.format;
+          format = "<b>%s</b>\n%b";
           word_wrap = "yes";
           sort = "yes";
           shrink = "no";
@@ -237,9 +60,9 @@ in
           ignore_dbusclose = false;
           force_xwayland = false;
           force_xinerama = false;
-          mouse_left_click = cfg.settings.global.mouse-left-click;
-          mouse_middle_click = cfg.settings.global.mouse-middle-click;
-          mouse_right_click = cfg.settings.global.mouse-right-click;
+          mouse_left_click = "do_action";
+          mouse_middle_click = "close_all";
+          mouse_right_click = "close_current";
         };
 
         experimental = {
@@ -247,17 +70,25 @@ in
         };
 
         urgency_low = {
-          timeout = cfg.settings.urgency.low.timeout;
+          timeout = 4;
         };
 
         urgency_normal = {
-          timeout = cfg.settings.urgency.normal.timeout;
+          timeout = 6;
         };
 
         urgency_critical = {
-          timeout = cfg.settings.urgency.critical.timeout;
+          timeout = 0;
         };
       };
+      description = "Dunst settings table (single source of truth).";
+    };
+  };
+
+  config = lib.mkIf cfg.enable {
+    services.dunst = {
+      enable = true;
+      settings = cfg.settings;
     };
   };
 }

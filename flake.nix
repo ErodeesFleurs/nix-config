@@ -17,9 +17,7 @@
   };
 
   inputs = {
-    nixpkgs = {
-      url = "github:nixos/nixpkgs/nixos-unstable-small";
-    };
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable-small";
 
     home-manager = {
       url = "github:nix-community/home-manager";
@@ -33,16 +31,6 @@
 
     vicinae = {
       url = "github:vicinaehq/vicinae";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
-    nur = {
-      url = "github:nix-community/NUR";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
-    xddxdd-nur = {
-      url = "github:xddxdd/nur-packages";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -77,11 +65,6 @@
       self,
       nixpkgs,
       home-manager,
-      nixcord,
-      vicinae,
-      daeuniverse,
-      agenix,
-      niri,
       ...
     }@inputs:
     let
@@ -95,90 +78,61 @@
       overlays = import ./overlays { inherit inputs fleursLib; };
 
       pkgs = import nixpkgs {
-        inherit system;
+        inherit system overlays;
         config.allowUnfree = true;
-        overlays = overlays;
       };
 
       specialArgs = {
         inherit inputs self fleursLib;
       };
 
+      mkHost =
+        hostDir:
+        nixpkgs.lib.nixosSystem {
+          inherit system specialArgs;
+          modules = [
+            { nixpkgs.pkgs = pkgs; }
+            inputs.daeuniverse.nixosModules.dae
+            inputs.daeuniverse.nixosModules.daed
+            inputs.niri.nixosModules.niri
+            inputs.agenix.nixosModules.default
+            ./modules
+            hostDir
+          ];
+        };
+
+      mkHome =
+        userDir:
+        home-manager.lib.homeManagerConfiguration {
+          inherit pkgs;
+          extraSpecialArgs = specialArgs;
+          modules = [
+            inputs.nixcord.homeModules.nixcord
+            inputs.vicinae.homeManagerModules.default
+            inputs.niri.homeModules.niri
+            inputs.agenix.homeManagerModules.default
+            ./home
+            userDir
+          ];
+        };
     in
     {
-      nixosConfigurations."spectre" = nixpkgs.lib.nixosSystem {
-        inherit system;
-        specialArgs = specialArgs;
-        modules = [
-          { nixpkgs.pkgs = pkgs; }
-          daeuniverse.nixosModules.dae
-          daeuniverse.nixosModules.daed
-          niri.nixosModules.niri
-          agenix.nixosModules.default
-          ./modules
-          ./hosts/spectre
-        ];
+      nixosConfigurations = {
+        spectre = mkHost ./hosts/spectre;
+        spectre-surface = mkHost ./hosts/spectre-surface;
       };
 
-      nixosConfigurations."spectre-surface" = nixpkgs.lib.nixosSystem {
-        inherit system;
-        specialArgs = specialArgs;
-        modules = [
-          { nixpkgs.pkgs = pkgs; }
-          daeuniverse.nixosModules.dae
-          daeuniverse.nixosModules.daed
-          niri.nixosModules.niri
-          agenix.nixosModules.default
-          ./modules
-          ./hosts/spectre-surface
-        ];
-      };
-
-      homeConfigurations."fleurs@spectre" = home-manager.lib.homeManagerConfiguration {
-        pkgs = pkgs;
-        extraSpecialArgs = specialArgs;
-        modules = [
-          nixcord.homeModules.nixcord
-          vicinae.homeManagerModules.default
-          niri.homeModules.niri
-          agenix.homeManagerModules.default
-          ./home
-          ./users/fleurs
-        ];
-      };
-
-      homeConfigurations."fleurs@spectre-surface" = home-manager.lib.homeManagerConfiguration {
-        pkgs = pkgs;
-        extraSpecialArgs = specialArgs;
-        modules = [
-          nixcord.homeModules.nixcord
-          vicinae.homeManagerModules.default
-          niri.homeModules.niri
-          agenix.homeManagerModules.default
-          ./home
-          ./users/fleurs-surface
-        ];
+      homeConfigurations = {
+        "fleurs@spectre" = mkHome ./users/fleurs;
+        "fleurs@spectre-surface" = mkHome ./users/fleurs-surface;
       };
 
       packages.${system} = {
-        spectre = self.nixosConfigurations."spectre".config.system.build.toplevel;
-        spectre-surface = self.nixosConfigurations."spectre-surface".config.system.build.toplevel;
+        spectre = self.nixosConfigurations.spectre.config.system.build.toplevel;
+        spectre-surface = self.nixosConfigurations.spectre-surface.config.system.build.toplevel;
         fleurs = self.homeConfigurations."fleurs@spectre".activationPackage;
         fleurs-surface = self.homeConfigurations."fleurs@spectre-surface".activationPackage;
       };
-
-      nixosModules.default =
-        { lib, ... }:
-        (import ./modules {
-          inherit lib;
-          inputs = { };
-        });
-      homeModules.default =
-        { lib, ... }:
-        (import ./home {
-          inherit lib;
-          inputs = { };
-        });
 
       formatter.${system} = pkgs.nixfmt;
     };

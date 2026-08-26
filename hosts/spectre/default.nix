@@ -1,253 +1,80 @@
-# Spectre 主机配置
-{ pkgs, ... }:
+# Spectre 主机配置（共享配置在 ../common/）
+{ lib, pkgs, ... }:
 
 {
   imports = [
     ./hardware-configuration.nix
     ./users.nix
-    ../common/network.nix
+    ../common
   ];
 
-  # ==========================================
-  # 系统基础配置
-  # ==========================================
-
-  modules.nix = {
-    enable = true;
-    trusted-users = [ "fleurs" ];
-    auto-gc = false; # 使用 nh 来管理垃圾回收
-    auto-optimise = true;
-    substituters = [ "https://cache.nixos.org" ];
-    trusted-public-keys = [ ];
-  };
-
-  modules.security = {
-    sudo = {
-      enable = true;
-      use-rust = true;
-      enable-polkit = true;
-      wheel-needs-password = true;
-      extra-rules = [ ];
-    };
-
-    agenix = {
-      identity-paths = [
-        "/home/fleurs/.ssh/id_ed25519"
-        "/home/fleurs/.ssh/dae_ed25519"
-      ];
-
-      secrets = {
-        "config.mihomo.yaml" = {
-          file = ../../secrets/config.mihomo.yaml.age;
-        };
-      };
-    };
-  };
-
-  modules.etc = {
-    state-version = "26.05";
-    enable = true;
-    enable-init = true;
-    overlay-mutable = false;
-  };
-
-  # ==========================================
-  # 本地化配置
-  # ==========================================
-  modules.localization = {
-    enable = true;
-    default-locale = "zh_CN.UTF-8";
-    supported-locales = [
-      "zh_CN.UTF-8/UTF-8"
-      "en_US.UTF-8/UTF-8"
-    ];
-    extra-locale-settings = { };
-    apply-to-all = true;
-
-    input-methods = {
-      enable = true;
-      type = "fcitx5";
-      fcitx5 = {
-        wayland-frontend = true;
-        addons = with pkgs; [
-          fcitx5-gtk
-          kdePackages.fcitx5-qt
-          qt6Packages.fcitx5-chinese-addons
-          fcitx5-material-color
-          fcitx5-pinyin-moegirl
-          fcitx5-pinyin-zhwiki
-        ];
-      };
-    };
-
-    fonts = {
-      enable = true;
-      enable-default-packages = true;
-      font-dir = {
-        enable = true;
-      };
-      fontconfig = {
-        enable = true;
-      };
-      packages = with pkgs; [
-        noto-fonts
-        noto-fonts-cjk-sans
-        noto-fonts-color-emoji
-
-        font-awesome
-
-        source-code-pro
-        source-han-sans
-        source-han-serif
-        source-han-mono
-
-        sarasa-gothic
-
-        corefonts
-
-        wqy_microhei
-        wqy_zenhei
-
-        nerd-fonts.caskaydia-cove
-        nerd-fonts.caskaydia-mono
-        nerd-fonts.symbols-only
-      ];
-    };
-
-    time = {
-      enable = true;
-      time-zone = "Asia/Shanghai";
-    };
-  };
-
-  # 启动配置
-  modules.boot = {
-    enable = true;
-    use-latest-kernel = true;
-    enable-systemd-boot = true;
-    enable-systemd-initrd = true;
-    efi-can-touch-variables = true;
-    enable-iommu = true;
-  };
-
-  # 硬件配置
-  modules.hardware = {
-    graphics = {
-      enable = true;
-      enable-32bit = true;
-      vulkan.enable = true;
-      vaapi.enable = true;
-      vdpau.enable = true;
-    };
-
-    nvidia = {
-      enable = true;
-      modesetting = true;
-      open = true;
-      nvidia-settings = true;
-      package = "stable";
-      power-management = {
-        enable = true;
-        finegrained = true;
-      };
-      prime = {
-        enable = true;
-        offload = {
-          enable = true;
-          enable-offload-cmd = true;
-        };
-        amdgpu-bus-id = "PCI:0:6:0";
-        nvidia-bus-id = "PCI:0:1:0";
-      };
-      apply-patches = false;
-    };
-
-    nvidia-container = {
-      enable = false;
-    };
-
-    power.enable = true;
-
-    printing = {
-      enable = true;
-      service = {
-        enable = true;
-      };
-      drivers = with pkgs; [
-        hplip
-        gutenprint
-        splix
-      ];
-    };
-
-    storage = {
-      enable = true;
-      gvfs = {
-        enable = true;
-      };
-    };
-
-    logitech = {
-      enable = true;
-      wireless = {
-        enable = true;
-        enable-graphical = true;
-      };
-    };
-  };
-
-  # 容器配置
-  modules.virtualization = {
-    podman.enable = true;
-  };
-
-  # 桌面环境
-  modules.display-manager = {
-    tuigreet.enable = true;
-  };
-
-  modules.compositor = {
-    niri.enable = true;
-  };
-
-  modules.xserver = {
-    enable = true;
-    video-drivers = [ "nvidia" ];
-    layout = "cn";
-    libinput.enable = true;
-  };
-
-  modules.xdg.enable = true;
-
-  # ==========================================
-  # 音频配置
-  # ==========================================
-  modules.pipewire = {
-    enable = true;
-    alsa-32bit = true;
-    pulse = true;
-  };
-
-  # ==========================================
-  # 网络配置（共享配置在 ./common/network.nix，此处仅覆盖主机特定项）
-  # ==========================================
   modules.network.wlan.host-name = "spectre";
 
-  # 游戏配置
-  modules.programs.gaming.enable = true;
-  modules.programs.steam.enable = true;
+  # IOMMU（虚拟化）
+  boot.kernelParams = [
+    "amd_iommu=on"
+    "iommu=pt"
+  ];
 
-  modules.programs.nh = {
+  # NVIDIA 显卡（PRIME offload：AMD 核显 + NVIDIA 独显）
+  modules.hardware.nvidia = {
     enable = true;
-    clean = {
+    modesetting = true;
+    open = true;
+    nvidia-settings = true;
+    package = "stable";
+    power-management = {
       enable = true;
-      extra-args = "--keep-since 7d --keep 3";
+      finegrained = true;
     };
+    prime = {
+      enable = true;
+      offload = {
+        enable = true;
+        enable-offload-cmd = true;
+      };
+      amdgpu-bus-id = "PCI:0:6:0";
+      nvidia-bus-id = "PCI:0:1:0";
+    };
+    apply-patches = false;
   };
+  services.xserver.videoDrivers = [ "nvidia" ];
 
-  modules.programs = {
-    appimage.enable = true;
-    localsend.enable = true;
+  # VDPAU 视频加速
+  hardware.graphics.extraPackages = with pkgs; [
+    vdpauinfo
+    libvdpau-va-gl
+  ];
+  environment.sessionVariables.VDPAU_DRIVER = lib.mkDefault "auto";
+
+  # Podman 容器
+  virtualisation.podman = {
+    enable = true;
+    dockerCompat = true;
   };
+  users.users.fleurs = {
+    subUidRanges = [
+      {
+        startUid = 100000;
+        count = 65536;
+      }
+    ];
+    subGidRanges = [
+      {
+        startGid = 100000;
+        count = 65536;
+      }
+    ];
+  };
+  environment.etc = {
+    "subuid".text = "fleurs:100000:65536\n";
+    "subgid".text = "fleurs:100000:65536\n";
+  };
+  environment.systemPackages = with pkgs; [ podman-compose ];
 
+  # AppImage
+  programs.appimage = {
+    enable = true;
+    binfmt = true;
+  };
 }

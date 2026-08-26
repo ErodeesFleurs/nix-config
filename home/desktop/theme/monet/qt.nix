@@ -100,8 +100,8 @@ themeLib.mkApp {
   generate =
     { polarity }:
     let
-      style = config.home-modules.desktop.darkman.${polarity}.qt5ctStyle;
-      iconTheme = config.home-modules.desktop.darkman.${polarity}.iconTheme;
+      style = config.homeModules.desktop.darkman.${polarity}.qt5ctStyle;
+      iconTheme = config.homeModules.desktop.darkman.${polarity}.iconTheme;
     in
     ''
       ${themeLib.renderTemplate {

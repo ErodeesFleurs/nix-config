@@ -57,7 +57,11 @@ in
     enable = monetLib.mkEnableOption "Generate system-level Material You / Monet theme resources from wallpaper colors.";
 
     wallpaper = monetLib.mkWallpaperOption {
-      default = ../../../assets/wallpaper.jpg;
+      # builtins.path 单独拷贝入 store（按内容寻址），避免仓库改动触发主题重建
+      default = builtins.path {
+        path = ../../../assets/wallpaper.jpg;
+        name = "wallpaper.jpg";
+      };
       description = "Wallpaper image used as the source for system-level Monet colors.";
     };
 

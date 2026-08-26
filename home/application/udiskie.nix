@@ -1,9 +1,9 @@
 { config, lib, ... }:
 let
-  cfg = config.home-modules.application.udiskie;
+  cfg = config.homeModules.application.udiskie;
 in
 {
-  options.home-modules.application.udiskie = {
+  options.homeModules.application.udiskie = {
     enable = lib.mkEnableOption "Udiskie automounting configuration for Home Manager";
   };
 

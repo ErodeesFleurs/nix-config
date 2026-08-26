@@ -5,33 +5,31 @@
   ...
 }:
 
-with lib;
-
 let
   cfg = config.modules.network.ssh;
 in
 {
   options.modules.network.ssh = {
-    enable = mkEnableOption "SSH client and server support";
+    enable = lib.mkEnableOption "SSH client and server support";
 
-    enable-server = mkOption {
-      type = types.bool;
+    enable-server = lib.mkOption {
+      type = lib.types.bool;
       default = true;
       description = "Whether to enable OpenSSH server";
     };
 
-    enable-agent = mkOption {
-      type = types.bool;
+    enable-agent = lib.mkOption {
+      type = lib.types.bool;
       default = false;
       description = "Whether to start SSH agent automatically";
     };
 
-    known-hosts = mkOption {
-      type = types.attrsOf (
-        types.submodule {
+    known-hosts = lib.mkOption {
+      type = lib.types.attrsOf (
+        lib.types.submodule {
           options = {
-            publicKey = mkOption {
-              type = types.str;
+            publicKey = lib.mkOption {
+              type = lib.types.str;
               description = "The public key of the host";
             };
           };
@@ -44,11 +42,11 @@ in
       };
     };
 
-    server-settings = mkOption {
-      type = types.submodule {
+    server-settings = lib.mkOption {
+      type = lib.types.submodule {
         options = {
-          permit-root-login = mkOption {
-            type = types.enum [
+          permit-root-login = lib.mkOption {
+            type = lib.types.enum [
               "yes"
               "no"
               "prohibit-password"
@@ -58,14 +56,14 @@ in
             description = "Whether root can login via SSH";
           };
 
-          password-authentication = mkOption {
-            type = types.bool;
+          password-authentication = lib.mkOption {
+            type = lib.types.bool;
             default = false;
             description = "Whether to allow password authentication";
           };
 
-          port = mkOption {
-            type = types.port;
+          port = lib.mkOption {
+            type = lib.types.port;
             default = 22;
             description = "SSH server port";
           };
@@ -76,13 +74,13 @@ in
     };
   };
 
-  config = mkIf cfg.enable {
+  config = lib.mkIf cfg.enable {
     programs.ssh = {
       startAgent = cfg.enable-agent;
       knownHosts = cfg.known-hosts;
     };
 
-    services.openssh = mkIf cfg.enable-server {
+    services.openssh = lib.mkIf cfg.enable-server {
       enable = true;
       ports = [ cfg.server-settings.port ];
       settings = {

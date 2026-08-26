@@ -10,7 +10,7 @@ themeLib.mkApp {
   generate =
     { polarity }:
     let
-      darkmanConfig = config.home-modules.desktop.darkman.${polarity};
+      darkmanConfig = config.homeModules.desktop.darkman.${polarity};
 
       renderGtkSettings = target: ''
         cp ${builtins.toFile "gtk-settings.ini" ''

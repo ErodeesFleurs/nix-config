@@ -62,13 +62,13 @@ in
       printf '\n@media (prefers-color-scheme: dark) {\n' >> "$out/firefox/userChrome.css"
       sed 's/^/  /' "$out/firefox/userChrome-vars-dark.css" >> "$out/firefox/userChrome.css"
       printf '}\n\n' >> "$out/firefox/userChrome.css"
-      cat ${./templates/firefox-userChrome.css} >> "$out/firefox/userChrome.css"
+      cat ${themeLib.stablePath ./templates/firefox-userChrome.css} >> "$out/firefox/userChrome.css"
 
       cat "$out/firefox/userContent-vars-light.css" > "$out/firefox/userContent.css"
       printf '\n@media (prefers-color-scheme: dark) {\n' >> "$out/firefox/userContent.css"
       sed 's/^/  /' "$out/firefox/userContent-vars-dark.css" >> "$out/firefox/userContent.css"
       printf '}\n\n' >> "$out/firefox/userContent.css"
-      cat ${./templates/firefox-userContent.css} >> "$out/firefox/userContent.css"
+      cat ${themeLib.stablePath ./templates/firefox-userContent.css} >> "$out/firefox/userContent.css"
 
       rm "$out/firefox"/userChrome-vars-*.css "$out/firefox"/userContent-vars-*.css
     '';

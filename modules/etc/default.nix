@@ -53,7 +53,7 @@ in
       etc = {
         overlay = {
           enable = true;
-          mutable = false;
+          mutable = cfg.overlay-mutable;
         };
       };
     };

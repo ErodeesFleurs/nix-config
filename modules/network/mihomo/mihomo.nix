@@ -22,7 +22,8 @@ in
     socks-port = lib.mkOption {
       type = lib.types.port;
       default = 7891;
-      description = "Local Mihomo SOCKS5 port used by dae";
+      readOnly = true;
+      description = "Local Mihomo SOCKS5 port used by dae (fixed: the dae config points to it)";
     };
 
     webui = lib.mkOption {
@@ -33,13 +34,6 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    assertions = [
-      {
-        assertion = cfg.socks-port == 7891;
-        message = "modules.network.mihomo.socks-port must remain 7891 because the dae config points to it.";
-      }
-    ];
-
     services.mihomo = {
       enable = true;
       package = pkgs.mihomo;
