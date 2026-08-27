@@ -9,48 +9,36 @@ let
   cfg = config.modules.desktop.theme.monet;
   monetLib = import ../../../lib/monet.nix { inherit lib pkgs; };
 
-  mkTuigreetThemeSpec =
-    {
-      mode,
-      colorsJson,
-    }:
-    pkgs.runCommand "tuigreet-monet-theme-${mode}"
+  # tuigreet 主题模板（matugen 原生语法，无需 jq）
+  tuigreetTpl = builtins.toFile "tuigreet-theme.tpl" ''
+    text={{colors.on_surface.default.hex}};time={{colors.primary.default.hex}};container={{colors.surface_container.default.hex}};border={{colors.outline_variant.default.hex}};title={{colors.primary.default.hex}};greet={{colors.on_surface.default.hex}};prompt={{colors.primary.default.hex}};input={{colors.on_surface.default.hex}};action={{colors.on_surface_variant.default.hex}};button={{colors.primary.default.hex}}
+  '';
+
+  matugenConfig = builtins.toFile "matugen-config.toml" ''
+    [config]
+    version_check = false
+    caching = false
+    [templates."tuigreet"]
+    input_path = "${tuigreetTpl}"
+    output_path = "themeSpec"
+  '';
+
+  tuigreetThemeSpec =
+    pkgs.runCommand "tuigreet-monet-theme-${cfg.mode}"
       {
-        nativeBuildInputs = [ pkgs.jq ];
+        wallpaperPath = cfg.wallpaper;
       }
       ''
-        jq -r ${lib.escapeShellArg ''
-          def c(name): .colors[name]["${mode}"].color;
-          [
-            "text=" + c("on_surface"),
-            "time=" + c("primary"),
-            "container=" + c("surface_container"),
-            "border=" + c("outline_variant"),
-            "title=" + c("primary"),
-            "greet=" + c("on_surface"),
-            "prompt=" + c("primary"),
-            "input=" + c("on_surface"),
-            "action=" + c("on_surface_variant"),
-            "button=" + c("primary")
-          ] | join(";")
-        ''} ${colorsJson} > "$out"
+        cp ${matugenConfig} config.toml
+        ${pkgs.matugen}/bin/matugen image \
+          --mode ${cfg.mode} \
+          --type ${cfg.scheme} \
+          --source-color-index ${toString cfg.sourceColorIndex} \
+          --fallback-color ${lib.escapeShellArg cfg.fallbackColor} \
+          "$wallpaperPath" \
+          -c config.toml
+        mv themeSpec "$out"
       '';
-
-  colorsJson = monetLib.mkColorsJson {
-    name = "system-monet-colors-${cfg.mode}";
-    inherit (cfg)
-      mode
-      wallpaper
-      scheme
-      sourceColorIndex
-      fallbackColor
-      ;
-  };
-
-  tuigreetThemeSpec = mkTuigreetThemeSpec {
-    inherit (cfg) mode;
-    inherit colorsJson;
-  };
 in
 {
   options.modules.desktop.theme.monet = {
@@ -85,12 +73,6 @@ in
       description = "Fallback source color used when wallpaper extraction cannot produce a color.";
     };
 
-    colorsJson = lib.mkOption {
-      type = lib.types.path;
-      readOnly = true;
-      description = "Generated matugen JSON colors for system-level theme consumers.";
-    };
-
     tuigreet.themeSpec = lib.mkOption {
       type = lib.types.path;
       readOnly = true;
@@ -99,9 +81,6 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    modules.desktop.theme.monet = {
-      inherit colorsJson;
-      tuigreet.themeSpec = tuigreetThemeSpec;
-    };
+    modules.desktop.theme.monet.tuigreet.themeSpec = tuigreetThemeSpec;
   };
 }

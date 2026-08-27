@@ -1,73 +1,56 @@
-{ config, themeLib }:
+{
+  config,
+  lib,
+  themeLib,
+}:
 
 let
-  enabled = config.programs.zed-editor.enable;
+  capitalize = mode: if mode == "dark" then "Dark" else "Light";
+
+  # 单主题对象片段（无 output_path，仅供主模板 include）
+  mkObjInput =
+    mode:
+    themeLib.materialize {
+      source = ./templates/zed-md3-theme.json;
+      inherit mode;
+      literals = {
+        theme_name = "Monet MD3 ${capitalize mode}";
+        appearance = mode;
+      };
+    };
+
+  # 主模板：matugen include 原生拼装双模式主题族，无需 jq
+  mainTemplate = builtins.toFile "zed-md3.matugen.json" ''
+    {
+      "$schema": "https://zed.dev/schema/themes/v0.2.0.json",
+      "name": "Monet MD3",
+      "author": "matugen",
+      "themes": [
+        <* include "zed-light-obj" *>,
+        <* include "zed-dark-obj" *>
+      ]
+    }
+  '';
 in
 themeLib.mkApp {
-  enable = enabled;
+  enable = config.programs.zed-editor.enable;
   outputDirs = [ "$out/zed/themes" ];
 
-  generate =
-    { polarity }:
-    let
-      renderZedTheme =
-        themePolarity: themeName:
-        themeLib.renderTemplate {
-          source = ./templates/zed-md3.json;
-          target = "$out/zed/themes/monet-md3-${themePolarity}.json";
-          polarity = themePolarity;
-          colors = themeLib.mergeColorTokens [
-            themeLib.terminalColorTokens
-            [
-              "outline_variant"
-              "primary"
-              "surface_container_high"
-              "surface_container"
-              "surface"
-              "surface_container_highest"
-              "primary_container"
-              "on_primary_container"
-              "on_surface"
-              "on_surface_variant"
-              "surface_container_low"
-              "tertiary"
-              "on_tertiary_container"
-              "outline"
-              "error"
-              "on_error_container"
-              "secondary"
-              "on_secondary_container"
-              "secondary_container"
-              "error_container"
-              "tertiary_container"
-            ]
-          ];
-          literalReplacements = [
-            {
-              token = "appearance";
-              value = themePolarity;
-            }
-            {
-              token = "theme_name";
-              value = themeName;
-            }
-          ];
-        };
-    in
-    ''
-      ${renderZedTheme "light" "Monet MD3 Light"}
-      ${renderZedTheme "dark" "Monet MD3 Dark"}
-      jq -s '{
-        "$schema": "https://zed.dev/schema/themes/v0.2.0.json",
-        "name": "Monet MD3",
-        "author": "matugen",
-        "themes": (.[0].themes + .[1].themes)
-      }' \
-        "$out/zed/themes/monet-md3-light.json" \
-        "$out/zed/themes/monet-md3-dark.json" \
-        > "$out/zed/themes/monet-md3.json"
-      rm "$out/zed/themes/monet-md3-light.json" "$out/zed/themes/monet-md3-dark.json"
-    '';
+  templates = [
+    {
+      name = "zed-light-obj";
+      input = mkObjInput "light";
+    }
+    {
+      name = "zed-dark-obj";
+      input = mkObjInput "dark";
+    }
+    {
+      name = "zed";
+      input = mainTemplate;
+      output = "zed/themes/monet-md3.json";
+    }
+  ];
 
   links = [
     {

@@ -3,79 +3,6 @@
 let
   inherit (themeLib) currentSymlink;
 
-  rgbColors = [
-    {
-      token = "surface_rgb";
-      color = "surface";
-      transform = "noHash";
-    }
-    {
-      token = "surface_container_rgb";
-      color = "surface_container";
-      transform = "noHash";
-    }
-    {
-      token = "surface_container_low_rgb";
-      color = "surface_container_low";
-      transform = "noHash";
-    }
-    {
-      token = "surface_container_high_rgb";
-      color = "surface_container_high";
-      transform = "noHash";
-    }
-    {
-      token = "surface_container_highest_rgb";
-      color = "surface_container_highest";
-      transform = "noHash";
-    }
-    {
-      token = "on_surface_rgb";
-      color = "on_surface";
-      transform = "noHash";
-    }
-    {
-      token = "on_surface_variant_rgb";
-      color = "on_surface_variant";
-      transform = "noHash";
-    }
-    {
-      token = "outline_rgb";
-      color = "outline";
-      transform = "noHash";
-    }
-    {
-      token = "outline_variant_rgb";
-      color = "outline_variant";
-      transform = "noHash";
-    }
-    {
-      token = "primary_rgb";
-      color = "primary";
-      transform = "noHash";
-    }
-    {
-      token = "on_primary_rgb";
-      color = "on_primary";
-      transform = "noHash";
-    }
-    {
-      token = "primary_container_rgb";
-      color = "primary_container";
-      transform = "noHash";
-    }
-    {
-      token = "on_primary_container_rgb";
-      color = "on_primary_container";
-      transform = "noHash";
-    }
-    {
-      token = "error_rgb";
-      color = "error";
-      transform = "noHash";
-    }
-  ];
-
   mkQtctConf =
     {
       style,
@@ -97,19 +24,22 @@ themeLib.mkApp {
     "$out/qt6ct/colors"
   ];
 
-  generate =
+  templates = [
+    {
+      name = "qtct-colors";
+      input = themeLib.materialize { source = ./templates/qtct-colors.conf; };
+      output = "qt5ct/colors/monet.conf";
+    }
+  ];
+
+  # qt6ct 共享配色；qtct.conf 为纯字面值（style/iconTheme 随 polarity）
+  postSteps =
     { polarity }:
     let
       style = config.homeModules.desktop.darkman.${polarity}.qt5ctStyle;
       iconTheme = config.homeModules.desktop.darkman.${polarity}.iconTheme;
     in
     ''
-      ${themeLib.renderTemplate {
-        source = ./templates/qtct-colors.conf;
-        target = "$out/qt5ct/colors/monet.conf";
-        inherit polarity;
-        replacements = rgbColors;
-      }}
       cp "$out/qt5ct/colors/monet.conf" "$out/qt6ct/colors/monet.conf"
       cp ${
         mkQtctConf {

@@ -50,66 +50,6 @@ let
 
   mergeAttrs = lib.foldl' (acc: value: acc // value) { };
 
-  mergeColorTokens = lists: lib.unique (lib.concatLists lists);
-
-  terminalColorTokens = [
-    "surface_container_low"
-    "on_surface"
-    "on_surface_variant"
-    "primary"
-    "on_primary_container"
-    "secondary"
-    "on_secondary_container"
-    "tertiary"
-    "on_tertiary_container"
-    "error"
-    "on_error_container"
-    "outline"
-  ];
-
-  normalizeReplacement =
-    replacement:
-    if builtins.isString replacement then
-      {
-        token = replacement;
-        color = replacement;
-        transform = "hex";
-      }
-    else
-      {
-        transform = "hex";
-      }
-      // replacement;
-
-  colorFilter =
-    polarity:
-    {
-      color,
-      transform,
-      ...
-    }:
-    let
-      raw = ''.colors.${color}["${polarity}"].color'';
-    in
-    builtins.getAttr transform {
-      hex = raw;
-      noHash = ''${raw} | ltrimstr("#")'';
-    };
-
-  mkSubstituteArg =
-    polarity: replacement:
-    let
-      normalized = normalizeReplacement replacement;
-    in
-    "--replace-fail ${lib.escapeShellArg "@${normalized.token}@"} \"$(jq -r ${lib.escapeShellArg (colorFilter polarity normalized)} colors.json)\"";
-
-  mkLiteralSubstituteArg =
-    {
-      token,
-      value,
-    }:
-    "--replace-fail ${lib.escapeShellArg "@${token}@"} ${lib.escapeShellArg value}";
-
   # 把仓库内文件复制为独立 store 路径（按内容寻址）。
   # 直接引用 flake 源码树的子路径会导致任何仓库改动都改变路径字符串，
   # 从而触发所有主题派生的无谓重建。
@@ -149,63 +89,89 @@ let
       fi
     '';
   };
+
+  # 把 @token@ 源模板物化为 matugen 原生语法模板（{{ colors.<role>.<mode>.<format> }}）。
+  # - literals：eval 期已知的字面 token（字体名、home 目录、主题名等）
+  # - mode：颜色引用的模式（default 跟随 matugen -m；light/dark 用于双渲染 app）
+  materialize =
+    {
+      source,
+      mode ? "default",
+      literals ? { },
+    }:
+    let
+      literalSeds = lib.concatStringsSep "\n" (
+        lib.mapAttrsToList (token: value: ''
+          sed -i 's|@${token}@|${value}|g' "$out"
+        '') literals
+      );
+    in
+    pkgs.runCommand
+      "matugen-tpl-${builtins.unsafeDiscardStringContext (builtins.baseNameOf (toString source))}-${mode}"
+      { }
+      ''
+        cp ${stablePath source} "$out"
+        ${literalSeds}
+        sed -E -i \
+          -e 's/@([a-z_]+)_rgb@/{{colors.\1.${mode}.hex_stripped}}/g' \
+          -e 's/@([a-z_]+)@/{{colors.\1.${mode}.hex}}/g' \
+          "$out"
+      '';
+
+  # 由 template 条目列表生成 matugen config.toml。
+  # output_path 为相对路径（从 config.toml 所在目录解析），
+  # 因此同一份 config 放在不同 $out 根目录即可用于两个 polarity。
+  mkMatugenConfig =
+    entries:
+    pkgs.writeTextFile {
+      name = "matugen-config.toml";
+      text = ''
+        [config]
+        version_check = false
+        caching = false
+      ''
+      + lib.concatMapStringsSep "\n" (e: ''
+        [templates."${e.name}"]
+        input_path = "${e.input}"
+        ${lib.optionalString (e ? output) ''output_path = "${e.output}"''}
+      '') entries;
+    };
 in
 rec {
   inherit
     homeDir
     currentSymlink
-    mergeColorTokens
     mkThemeLink
     mkXdgPlaceholder
-    terminalColorTokens
     stablePath
     reloadScripts
+    materialize
     ;
-
-  renderTemplate =
-    {
-      source,
-      target,
-      polarity,
-      colors ? [ ],
-      replacements ? [ ],
-      literalReplacements ? [ ],
-      append ? [ ],
-    }:
-    let
-      allReplacements = (map normalizeReplacement colors) ++ (map normalizeReplacement replacements);
-      substituteArgs = lib.concatStringsSep " \\\n        " (
-        (map (mkSubstituteArg polarity) allReplacements) ++ (map mkLiteralSubstituteArg literalReplacements)
-      );
-      appendCommands = lib.concatMapStringsSep "\n" (
-        path: "cat ${stablePath path} >> \"${target}\""
-      ) append;
-    in
-    ''
-      cp ${stablePath source} "${target}"
-      substituteInPlace "${target}" \
-        ${substituteArgs}
-      ${appendCommands}
-    '';
 
   mkApp =
     {
       enable,
       outputDirs,
-      generate,
+      templates ? [ ],
+      postSteps ? (_: ""),
       links ? [ ],
       xdgPlaceholders ? [ ],
       activation ? { },
       xdgConfig ? { },
     }:
     {
-      inherit enable outputDirs generate;
+      inherit
+        enable
+        outputDirs
+        templates
+        postSteps
+        ;
       activation = activation // mergeAttrs (map mkThemeLink links);
       xdgConfig = xdgConfig // mergeAttrs (map mkXdgPlaceholder xdgPlaceholders);
     };
 
   # 单模板应用的构造器：从 themePath/configPath 推导 outputDirs、activation
-  # 链接与 xdg 占位符，消除每个 app 的重复样板。
+  # 链接与 xdg 占位符，模板经 materialize 转为 matugen 语法。
   # configPath 为 null 时表示不创建链接（如 discord，经 current 软链消费）。
   mkColorApp =
     {
@@ -214,32 +180,26 @@ rec {
       template,
       themePath,
       configPath ? null,
-      colors ? [ ],
-      replacements ? [ ],
-      literalReplacements ? [ ],
-      # 依赖 polarity 的字面替换（如 variant = polarity）
-      literalReplacementsFor ? (_: [ ]),
-      append ? [ ],
+      mode ? "default",
+      literals ? { },
       placeholder ? false,
       placeholderText ? "# Managed by Monet theme activation\n",
       postLink ? "",
+      postSteps ? (_: ""),
     }:
     mkApp {
-      inherit enable;
+      inherit enable postSteps;
       outputDirs = [ "$out/${builtins.dirOf themePath}" ];
-      generate =
-        { polarity }:
-        renderTemplate {
-          source = template;
-          target = "$out/${themePath}";
-          inherit
-            polarity
-            colors
-            replacements
-            append
-            ;
-          literalReplacements = literalReplacements ++ literalReplacementsFor polarity;
-        };
+      templates = [
+        {
+          name = lib.toLower name;
+          input = materialize {
+            source = template;
+            inherit mode literals;
+          };
+          output = themePath;
+        }
+      ];
       xdgPlaceholders = lib.optional placeholder {
         path = lib.removePrefix ".config/" configPath;
         text = placeholderText;
@@ -256,14 +216,27 @@ rec {
     let
       enabledApps = builtins.filter (app: app.enable) apps;
       outputDirs = lib.concatMap (app: app.outputDirs) enabledApps;
+      # templates 可以是列表（polarity 无关）或函数（按 polarity 产出条目，如 icons）
+      templatesFor =
+        polarity:
+        lib.concatMap (
+          app:
+          let
+            t = app.templates or [ ];
+          in
+          if builtins.isFunction t then t { inherit polarity; } else t
+        ) enabledApps;
     in
     {
-      inherit outputDirs;
+      inherit outputDirs templatesFor;
+
       createOutputDirs = lib.concatMapStringsSep "\n" (dir: "mkdir -p ${dir}") outputDirs;
+
+      configToml = polarity: mkMatugenConfig (templatesFor polarity);
 
       generate =
         { polarity }:
-        lib.concatStringsSep "\n" (map (app: app.generate { inherit polarity; }) enabledApps);
+        lib.concatStringsSep "\n" (map (app: (app.postSteps or (_: "")) { inherit polarity; }) enabledApps);
 
       activation = mergeAttrs (map (app: app.activation or { }) enabledApps);
       xdgConfig = mergeAttrs (map (app: app.xdgConfig or { }) enabledApps);

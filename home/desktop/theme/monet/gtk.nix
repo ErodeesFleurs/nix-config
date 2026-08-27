@@ -1,5 +1,21 @@
 { config, themeLib }:
 
+let
+  # settings.ini 无颜色 token，纯字面值，按 polarity 在构建期生成
+  mkSettings =
+    polarity:
+    let
+      darkmanConfig = config.homeModules.desktop.darkman.${polarity};
+    in
+    builtins.toFile "gtk-settings-${polarity}.ini" ''
+      [Settings]
+      gtk-theme-name=${darkmanConfig.gtkTheme}
+      gtk-icon-theme-name=${darkmanConfig.iconTheme}
+      gtk-cursor-theme-name=${darkmanConfig.cursorTheme}
+      gtk-cursor-theme-size=${toString darkmanConfig.cursorSize}
+      gtk-application-prefer-dark-theme=${if polarity == "dark" then "true" else "false"}
+    '';
+in
 themeLib.mkApp {
   enable = true;
   outputDirs = [
@@ -7,55 +23,24 @@ themeLib.mkApp {
     "$out/gtk-4.0"
   ];
 
-  generate =
+  # 同一 gtk.css 模板渲染到 gtk-3.0 与 gtk-4.0
+  templates =
+    map
+      (dir: {
+        name = "gtk-${dir}";
+        input = themeLib.materialize { source = ./templates/gtk.css; };
+        output = "${dir}/gtk.css";
+      })
+      [
+        "gtk-3.0"
+        "gtk-4.0"
+      ];
+
+  postSteps =
     { polarity }:
-    let
-      darkmanConfig = config.homeModules.desktop.darkman.${polarity};
-
-      renderGtkSettings = target: ''
-        cp ${builtins.toFile "gtk-settings.ini" ''
-          [Settings]
-          gtk-theme-name=${darkmanConfig.gtkTheme}
-          gtk-icon-theme-name=${darkmanConfig.iconTheme}
-          gtk-cursor-theme-name=${darkmanConfig.cursorTheme}
-          gtk-cursor-theme-size=${toString darkmanConfig.cursorSize}
-          gtk-application-prefer-dark-theme=${if polarity == "dark" then "true" else "false"}
-        ''} "${target}"
-      '';
-
-      renderGtkCss = target: ''
-        ${themeLib.renderTemplate {
-          source = ./templates/gtk.css;
-          inherit target polarity;
-          colors = [
-            "surface"
-            "surface_container_lowest"
-            "surface_container_low"
-            "surface_container"
-            "surface_container_high"
-            "surface_container_highest"
-            "on_surface"
-            "on_surface_variant"
-            "outline"
-            "outline_variant"
-            "primary"
-            "on_primary"
-            "primary_container"
-            "on_primary_container"
-            "tertiary"
-            "tertiary_container"
-            "error"
-            "error_container"
-            "on_error_container"
-          ];
-        }}
-      '';
-    in
     ''
-      ${renderGtkCss "$out/gtk-3.0/gtk.css"}
-      ${renderGtkCss "$out/gtk-4.0/gtk.css"}
-      ${renderGtkSettings "$out/gtk-3.0/settings.ini"}
-      ${renderGtkSettings "$out/gtk-4.0/settings.ini"}
+      cp ${mkSettings polarity} "$out/gtk-3.0/settings.ini"
+      cp ${mkSettings polarity} "$out/gtk-4.0/settings.ini"
     '';
 
   xdgPlaceholders = [

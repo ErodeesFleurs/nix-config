@@ -11,8 +11,9 @@
       trusted-users = [ "fleurs" ];
       substituters = [ "https://cache.nixos.org" ];
       trusted-public-keys = [ ];
-    };
 
-    optimise.automatic = true;
+      # 写入 store 时即时硬链接去重（替代周期性全店扫描）
+      auto-optimise-store = true;
+    };
   };
 }

@@ -5,4 +5,11 @@
   imports = fleursLib.importDir ./. {
     exclude = [ ./desktop/theme/monet ];
   };
+
+  # 不构建 HM 手册页（每次 activation 省几秒）
+  manual = {
+    html.enable = false;
+    manpages.enable = false;
+    json.enable = false;
+  };
 }

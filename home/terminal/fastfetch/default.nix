@@ -10,7 +10,6 @@
     recursive = true;
   };
 
-  # Fastfetch 程序配置
   programs.fastfetch = {
     enable = true;
   };

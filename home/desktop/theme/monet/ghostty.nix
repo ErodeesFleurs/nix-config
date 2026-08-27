@@ -5,38 +5,27 @@
 }:
 
 let
-  enabled = config.programs.ghostty.enable;
   inherit (themeLib) currentSymlink homeDir;
 in
 themeLib.mkApp {
-  enable = enabled;
+  enable = config.programs.ghostty.enable;
   outputDirs = [ "$out/ghostty/themes" ];
 
-  generate =
-    { polarity }:
-    let
-      renderGhosttyTheme =
-        themePolarity:
-        themeLib.renderTemplate {
+  # 单模板双显式模式渲染（两份输入仅在 mode 上不同）
+  templates =
+    map
+      (mode: {
+        name = "ghostty-${mode}";
+        input = themeLib.materialize {
           source = ./templates/ghostty.theme;
-          target = "$out/ghostty/themes/monet-${themePolarity}";
-          polarity = themePolarity;
-          colors = themeLib.mergeColorTokens [
-            themeLib.terminalColorTokens
-            [
-              "surface_container_high"
-              "on_primary"
-              "primary_container"
-              "tertiary_container"
-              "outline_variant"
-            ]
-          ];
+          inherit mode;
         };
-    in
-    ''
-      ${renderGhosttyTheme "light"}
-      ${renderGhosttyTheme "dark"}
-    '';
+        output = "ghostty/themes/monet-${mode}";
+      })
+      [
+        "light"
+        "dark"
+      ];
 
   links = [
     {

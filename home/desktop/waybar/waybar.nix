@@ -62,7 +62,6 @@ in
             tooltip-format = "{:%A, %Y (%S)}";
             interval = 1;
             on-click = "vicinae toggle";
-            # on-click-right = "fuzzel-logout-menu";
           };
 
           mpris = {

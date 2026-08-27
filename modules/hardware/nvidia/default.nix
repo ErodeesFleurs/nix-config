@@ -158,14 +158,8 @@ in
           selectedPackage
           // {
             open = selectedPackage.open.overrideAttrs (old: {
-              patches = (old.patches or [ ]) ++ [
-                # (pkgs.fetchpatch {
-                #   name = "get_dev_pagemap.patch";
-                #   url = "https://github.com/NVIDIA/open-gpu-kernel-modules/commit/16e88bbbaa3e1f4f1a49cd82bc6d55a695dd1027.patch";
-                #   hash = "sha256-BhL4mtuY5W+eLofwhHVnZnVf0msDj7XBxskZi8e6/k8=";
-                # })
-                # 说不定啥时候又有bug。
-              ];
+              # 需要打补丁时在此追加：说不定啥时候又有bug。
+              patches = old.patches or [ ];
             });
           }
         else

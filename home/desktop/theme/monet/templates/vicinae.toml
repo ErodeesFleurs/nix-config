@@ -1,8 +1,8 @@
 [meta]
 name = "Monet MD3"
 description = "Material Design 3 dynamic color theme"
-variant = "@variant@"
-inherits = "vicinae-@variant@"
+variant = "{{mode}}"
+inherits = "vicinae-{{mode}}"
 
 [colors.core]
 accent = "@primary@"

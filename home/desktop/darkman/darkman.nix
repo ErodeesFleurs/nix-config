@@ -83,29 +83,27 @@ let
       iconTheme,
     }:
     pkgs.runCommand "darkman-theme-${polarity}"
-      (
-        {
-          nativeBuildInputs = [ pkgs.jq ];
-        }
-        // lib.optionalAttrs (cfg.monet.enable && wallpaper != null) {
-          wallpaperPath = wallpaper;
-        }
-      )
+      (lib.optionalAttrs (cfg.monet.enable && wallpaper != null) {
+        wallpaperPath = wallpaper;
+      })
       ''
         ${monetTheme.createOutputDirs}
 
         ${
           if cfg.monet.enable && wallpaper != null then
             ''
-              ${monetLib.mkMatugenImageCommand {
-                mode = polarity;
-                inherit (cfg.monet)
-                  scheme
-                  sourceColorIndex
-                  fallbackColor
-                  ;
-              }}
+              # matugen 原生模板引擎：一次运行渲染全部模板
+              cp ${monetTheme.configToml polarity} "$out/config.toml"
+              ${pkgs.matugen}/bin/matugen image \
+                --mode ${polarity} \
+                --type ${cfg.monet.scheme} \
+                --source-color-index ${toString cfg.monet.sourceColorIndex} \
+                --fallback-color ${lib.escapeShellArg cfg.monet.fallbackColor} \
+                "$wallpaperPath" \
+                -c "$out/config.toml"
+              rm "$out/config.toml"
 
+              # 各应用的自定义后处理（rsvg-convert、cat 追加/合并等）
               ${monetTheme.generate { inherit polarity; }}
             ''
           else
@@ -352,7 +350,6 @@ in
 
     # ── 构建 light + dark 主题 derivation ────────────
     home.file = {
-      # 日间主题文件
       ".local/share/themes/light".source = mkThemeDerivation {
         polarity = "light";
         waybarCss = cfg.light.waybarCss;
@@ -361,7 +358,6 @@ in
         iconTheme = cfg.light.iconTheme;
       };
 
-      # 夜间主题文件
       ".local/share/themes/dark".source = mkThemeDerivation {
         polarity = "dark";
         waybarCss = cfg.dark.waybarCss;

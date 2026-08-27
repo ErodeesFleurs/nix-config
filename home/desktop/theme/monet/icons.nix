@@ -6,6 +6,8 @@
 let
   inherit (themeLib) currentSymlink homeDir;
 
+  capitalize = mode: if mode == "dark" then "Dark" else "Light";
+
   folderAliases = [
     "folder-documents"
     "folder-download"
@@ -22,53 +24,51 @@ let
     "user-desktop"
     "user-home"
   ];
+
+  mkThemeTemplates =
+    mode:
+    let
+      themeName = "Monet-Papirus-${capitalize mode}";
+    in
+    [
+      {
+        name = "icons-${mode}-index";
+        input = themeLib.materialize {
+          source = ./templates/icon-theme.index;
+          inherit mode;
+          literals = {
+            theme_name = themeName;
+            base_theme = "Papirus-${capitalize mode}";
+          };
+        };
+        output = "icons/${themeName}/index.theme";
+      }
+      {
+        name = "icons-${mode}-folder";
+        input = themeLib.materialize {
+          source = ./templates/folder.svg;
+          inherit mode;
+        };
+        output = "icons/${themeName}/scalable/places/folder.svg";
+      }
+    ];
 in
 themeLib.mkApp {
   enable = true;
-  outputDirs = [ "$out/icons" ];
+  # 输出目录由 matugen 自行创建；本应用按 polarity 只渲染对应主题
+  outputDirs = [ ];
 
-  generate =
+  templates = { polarity }: mkThemeTemplates polarity;
+
+  # 常用目录别名软链（按 polarity 只对当次主题目录操作）
+  postSteps =
     { polarity }:
     let
-      themeName = if polarity == "dark" then "Monet-Papirus-Dark" else "Monet-Papirus-Light";
-      baseTheme = if polarity == "dark" then "Papirus-Dark" else "Papirus-Light";
-      themeDir = "$out/icons/${themeName}";
+      themeDir = "$out/icons/Monet-Papirus-${capitalize polarity}";
     in
-    ''
-      mkdir -p "${themeDir}/scalable/places"
-
-      ${themeLib.renderTemplate {
-        source = ./templates/icon-theme.index;
-        target = "${themeDir}/index.theme";
-        inherit polarity;
-        literalReplacements = [
-          {
-            token = "theme_name";
-            value = themeName;
-          }
-          {
-            token = "base_theme";
-            value = baseTheme;
-          }
-        ];
-      }}
-
-      ${themeLib.renderTemplate {
-        source = ./templates/folder.svg;
-        target = "${themeDir}/scalable/places/folder.svg";
-        inherit polarity;
-        colors = [
-          "primary"
-          "primary_container"
-          "on_primary_container"
-          "outline_variant"
-        ];
-      }}
-
-      ${lib.concatMapStringsSep "\n" (name: ''
-        ln -sfn folder.svg "${themeDir}/scalable/places/${name}.svg"
-      '') folderAliases}
-    '';
+    lib.concatMapStringsSep "\n" (name: ''
+      ln -sfn folder.svg "${themeDir}/scalable/places/${name}.svg"
+    '') folderAliases;
 
   activation.linkMonetIconThemes =
     lib.hm.dag.entryAfter

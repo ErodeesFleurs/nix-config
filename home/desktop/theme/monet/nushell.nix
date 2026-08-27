@@ -11,18 +11,4 @@ themeLib.mkColorApp {
     # Managed by Monet theme activation
     $env.config.color_config = ($env.config.color_config | merge {})
   '';
-  colors = [
-    "surface_container_high"
-    "on_surface"
-    "on_surface_variant"
-    "outline"
-    "outline_variant"
-    "primary"
-    "primary_container"
-    "on_primary_container"
-    "secondary"
-    "tertiary"
-    "error_container"
-    "on_error_container"
-  ];
 }

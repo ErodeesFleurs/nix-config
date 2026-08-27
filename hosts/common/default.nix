@@ -22,4 +22,7 @@
 
   # tuigreet 登录界面（monet 主题由 modules.desktop.theme 生成）
   modules.display-manager.tuigreet.enable = true;
+
+  # 不构建本地 NixOS 手册与 options.json（每次 rebuild 省约 30~60s）
+  documentation.nixos.enable = false;
 }

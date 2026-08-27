@@ -70,17 +70,6 @@ themeLib.mkColorApp {
   themePath = "dunst/dunstrc";
   configPath = ".config/dunst/dunstrc";
   placeholder = true;
-  colors = [
-    "surface_container_low"
-    "surface_container_high"
-    "on_surface"
-    "on_surface_variant"
-    "outline_variant"
-    "primary"
-    "error"
-    "error_container"
-    "on_error_container"
-  ];
   postLink = ''
     ${pkgs.dunst}/bin/dunstctl reload "$SOURCE" 2>/dev/null || ${pkgs.procps}/bin/pkill -HUP dunst 2>/dev/null || true
   '';

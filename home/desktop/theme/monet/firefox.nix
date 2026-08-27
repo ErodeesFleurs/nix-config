@@ -10,68 +10,46 @@ let
   homeDir = config.home.homeDirectory;
   profileName = config.homeModules.firefox.profile-name;
   currentSymlink = "${homeDir}/.local/share/themes/current";
+
+  mkVarsTemplates =
+    name: source:
+    map
+      (mode: {
+        name = "firefox-${name}-vars-${mode}";
+        input = themeLib.materialize {
+          inherit source mode;
+        };
+        output = "firefox/${name}-vars-${mode}.css";
+      })
+      [
+        "light"
+        "dark"
+      ];
 in
 {
   enable = enabled;
   outputDirs = [ "$out/firefox" ];
 
-  generate =
-    { polarity }:
-    let
-      renderChromeVars =
-        themePolarity:
-        themeLib.renderTemplate {
-          source = ./templates/firefox-userChrome-vars.css;
-          target = "$out/firefox/userChrome-vars-${themePolarity}.css";
-          polarity = themePolarity;
-          colors = [
-            "surface"
-            "surface_container"
-            "surface_container_high"
-            "on_surface"
-            "on_surface_variant"
-            "outline_variant"
-            "primary"
-            "primary_container"
-            "on_primary_container"
-          ];
-        };
+  templates =
+    mkVarsTemplates "userChrome" ./templates/firefox-userChrome-vars.css
+    ++ mkVarsTemplates "userContent" ./templates/firefox-userContent-vars.css;
 
-      renderContentVars =
-        themePolarity:
-        themeLib.renderTemplate {
-          source = ./templates/firefox-userContent-vars.css;
-          target = "$out/firefox/userContent-vars-${themePolarity}.css";
-          polarity = themePolarity;
-          colors = [
-            "surface"
-            "surface_container"
-            "on_surface"
-            "on_surface_variant"
-            "primary"
-          ];
-        };
-    in
-    ''
-      ${renderChromeVars "light"}
-      ${renderChromeVars "dark"}
-      ${renderContentVars "light"}
-      ${renderContentVars "dark"}
+  # 合并：light 变量为基，dark 变量包进 @media，再追加静态样式
+  postSteps = _: ''
+    cat "$out/firefox/userChrome-vars-light.css" > "$out/firefox/userChrome.css"
+    printf '\n@media (prefers-color-scheme: dark) {\n' >> "$out/firefox/userChrome.css"
+    sed 's/^/  /' "$out/firefox/userChrome-vars-dark.css" >> "$out/firefox/userChrome.css"
+    printf '}\n\n' >> "$out/firefox/userChrome.css"
+    cat ${themeLib.stablePath ./templates/firefox-userChrome.css} >> "$out/firefox/userChrome.css"
 
-      cat "$out/firefox/userChrome-vars-light.css" > "$out/firefox/userChrome.css"
-      printf '\n@media (prefers-color-scheme: dark) {\n' >> "$out/firefox/userChrome.css"
-      sed 's/^/  /' "$out/firefox/userChrome-vars-dark.css" >> "$out/firefox/userChrome.css"
-      printf '}\n\n' >> "$out/firefox/userChrome.css"
-      cat ${themeLib.stablePath ./templates/firefox-userChrome.css} >> "$out/firefox/userChrome.css"
+    cat "$out/firefox/userContent-vars-light.css" > "$out/firefox/userContent.css"
+    printf '\n@media (prefers-color-scheme: dark) {\n' >> "$out/firefox/userContent.css"
+    sed 's/^/  /' "$out/firefox/userContent-vars-dark.css" >> "$out/firefox/userContent.css"
+    printf '}\n\n' >> "$out/firefox/userContent.css"
+    cat ${themeLib.stablePath ./templates/firefox-userContent.css} >> "$out/firefox/userContent.css"
 
-      cat "$out/firefox/userContent-vars-light.css" > "$out/firefox/userContent.css"
-      printf '\n@media (prefers-color-scheme: dark) {\n' >> "$out/firefox/userContent.css"
-      sed 's/^/  /' "$out/firefox/userContent-vars-dark.css" >> "$out/firefox/userContent.css"
-      printf '}\n\n' >> "$out/firefox/userContent.css"
-      cat ${themeLib.stablePath ./templates/firefox-userContent.css} >> "$out/firefox/userContent.css"
-
-      rm "$out/firefox"/userChrome-vars-*.css "$out/firefox"/userContent-vars-*.css
-    '';
+    rm "$out/firefox"/userChrome-vars-*.css "$out/firefox"/userContent-vars-*.css
+  '';
 
   activation.linkFirefoxTheme =
     lib.hm.dag.entryAfter [ "initThemeLinks" "cleanupDarkmanLegacyHooks" ]

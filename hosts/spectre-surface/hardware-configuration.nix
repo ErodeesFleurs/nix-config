@@ -61,7 +61,6 @@
   # 网络硬件
   # ==========================================
   networking.useDHCP = lib.mkDefault true;
-  # networking.interfaces.wlp1s0.useDHCP = lib.mkDefault true;
 
   # 显示配置
   hardware.graphics = {
