@@ -38,6 +38,9 @@
     };
     apply-patches = false;
   };
+  # 注意：nixpkgs 的 hardware.nvidia 模块以 videoDrivers 成员作为驱动栈启用开关
+  # （nvidiaEnabled = elem "nvidia" videoDrivers，与 services.xserver.enable 无关）。
+  # 不启用 X server，但必须保留此项以激活驱动配置（settings/EGL/PRIME/电源管理）。
   services.xserver.videoDrivers = [ "nvidia" ];
 
   # VDPAU 视频加速

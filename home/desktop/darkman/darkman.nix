@@ -112,14 +112,7 @@ let
               ${waybarCss}
               WAYBAREOF
 
-              mkdir -p "$out/qt5ct" "$out/qt6ct"
-
-              cat > "$out/qt5ct/qt5ct.conf" << 'QT5EOF'
-              [Appearance]
-              style=${qt5ctStyle}
-              icon_theme=${iconTheme}
-              custom_palette=false
-              QT5EOF
+              mkdir -p "$out/qt6ct"
 
               cat > "$out/qt6ct/qt6ct.conf" << 'QT6EOF'
               [Appearance]
@@ -393,11 +386,7 @@ in
           $DRY_RUN_CMD ln -sfn light "${currentSymlink}"
         fi
 
-        # Qt5ct — 让 qt5ct 从 current symlink 读取
-        $DRY_RUN_CMD rm -rf ${homeDir}/.config/qt5ct
-        $DRY_RUN_CMD ln -sfn ${currentSymlink}/qt5ct ${homeDir}/.config/qt5ct
-
-        # Qt6ct
+        # Qt6ct — 让 qt6ct 从 current symlink 读取
         $DRY_RUN_CMD rm -rf ${homeDir}/.config/qt6ct
         $DRY_RUN_CMD ln -sfn ${currentSymlink}/qt6ct ${homeDir}/.config/qt6ct
       '';

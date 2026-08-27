@@ -9,6 +9,4 @@
     go-musicfox
     aria2
   ];
-
-  homeModules.application.udiskie.enable = true;
 }

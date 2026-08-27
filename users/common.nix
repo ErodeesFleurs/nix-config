@@ -85,4 +85,7 @@
 
   # 启用 Home Manager 自管理
   programs.home-manager.enable = true;
+
+  # 锁屏（monet 主题由主题系统链接到 ~/.config/hypr/hyprlock.conf）
+  programs.hyprlock.enable = true;
 }

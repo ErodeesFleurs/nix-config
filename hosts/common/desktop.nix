@@ -1,5 +1,5 @@
 # 桌面环境：compositor、portal、音频、键盘输入（greeter 由 modules.display-manager.tuigreet 提供）
-# （主机特定项：services.xserver.videoDrivers、libinput 触摸板在各 host 中设置）
+# （纯 Wayland 会话：无 X server；输入设备与键盘布局在 niri 配置中设置）
 { pkgs, ... }:
 
 {
@@ -41,18 +41,5 @@
       support32Bit = true;
     };
     pulse.enable = true;
-  };
-
-  # X server 公共部分（videoDrivers 按主机设置）
-  services.xserver = {
-    enable = true;
-    xkb.layout = "cn";
-  };
-  services.libinput = {
-    enable = true;
-    touchpad = {
-      tapping = true;
-      disableWhileTyping = true;
-    };
   };
 }

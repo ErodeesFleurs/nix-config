@@ -21,6 +21,17 @@ let
 
     prefer-no-csd = true;
 
+    # 输入设备（原 services.libinput / xserver.xkb 仅作用于 X11，对 niri 无效，迁移至此）
+    input = {
+      keyboard.xkb.layout = "cn";
+      touchpad = {
+        tap = true;
+        dwt = true;
+        # niri-flake 的 natural-scroll 默认 true；显式关闭，各用户文件可覆盖
+        natural-scroll = lib.mkDefault false;
+      };
+    };
+
     binds = {
       "Mod+T" = {
         action.spawn = [ "ghostty" ];

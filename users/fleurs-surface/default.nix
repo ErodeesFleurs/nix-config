@@ -16,4 +16,7 @@
     "x-scheme-handler/about" = "firefox.desktop";
     "x-scheme-handler/unknown" = "firefox.desktop";
   };
+
+  # Surface 触摸板自然滚动（合并进共享 niri 配置）
+  programs.niri.settings.input.touchpad.natural-scroll = true;
 }

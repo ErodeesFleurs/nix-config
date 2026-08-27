@@ -181,8 +181,12 @@ in
       };
     };
 
-    # Add nvidia-offload script if prime offload is enabled
-    environment.systemPackages =
+    # 无 X server 环境下 xserver 模块不再提供驱动工具包（nvidia-smi 等），自行提供；
+    # prime offload 启用时附带 nvidia-offload 脚本
+    environment.systemPackages = [
+      config.hardware.nvidia.package
+    ]
+    ++
       lib.optionals (cfg.prime.enable && cfg.prime.offload.enable && cfg.prime.offload.enable-offload-cmd)
         [
           (pkgs.writeShellScriptBin "nvidia-offload" ''
