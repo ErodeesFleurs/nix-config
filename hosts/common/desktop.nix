@@ -25,8 +25,11 @@
 
   programs.dconf.enable = true;
 
-  # darkman 的 geoclue 定位来源
-  services.geoclue2.enable = true;
+  # darkman 的 geoclue 定位来源（niri 无桌面 agent，启用 demo agent）
+  services.geoclue2 = {
+    enable = true;
+    enableDemoAgent = true;
+  };
 
   environment.sessionVariables = {
     NIXOS_OZONE_WL = "1";

@@ -379,14 +379,10 @@ in
       # ── Darkman 配置文件 ─────────────────────────────
       "darkman/config.yaml".text =
         let
-          locationConfig =
-            if cfg.useGeoclue then
-              "use-geoclue: true"
-            else
-              ''
-                lat: ${cfg.latitude}
-                lng: ${cfg.longitude}
-              '';
+          locationConfig = lib.optionalString cfg.useGeoclue "usegeoclue: true\n" + ''
+            lat: ${cfg.latitude}
+            lng: ${cfg.longitude}
+          '';
         in
         ''
           ${locationConfig}
