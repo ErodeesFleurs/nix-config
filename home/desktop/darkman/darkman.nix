@@ -45,14 +45,9 @@ let
       ${pkgs.procps}/bin/pkill -SIGUSR2 ghostty || true
     '')
 
-    (mkHookBlock "Dunst — 重新读取 current symlink 指向的 dunstrc" ''
-      DUNST_CONFIG="${currentSymlink}/dunst/dunstrc"
-      if command -v dunstctl &>/dev/null; then
-        ${pkgs.dunst}/bin/dunstctl reload "$DUNST_CONFIG" 2>/dev/null \
-          || ${pkgs.procps}/bin/pkill -HUP dunst 2>/dev/null \
-          || true
-      else
-        ${pkgs.procps}/bin/pkill -HUP dunst 2>/dev/null || true
+    (mkHookBlock "Mako — 重新读取 current symlink 指向的配置" ''
+      if command -v makoctl &>/dev/null; then
+        ${pkgs.mako}/bin/makoctl reload 2>/dev/null || true
       fi
     '')
 

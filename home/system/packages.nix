@@ -47,7 +47,6 @@ in
         # 生产力
         typora
         filezilla
-        openvpn
         freerdp
 
         # 开发

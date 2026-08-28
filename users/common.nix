@@ -1,5 +1,5 @@
 # Fleurs 用户共享配置（各用户文件仅保留差异项）
-{ ... }:
+{ pkgs, ... }:
 
 {
   home = {
@@ -65,7 +65,7 @@
       vesktop.enable = true;
     };
 
-    dunst.enable = true;
+    mako.enable = true;
     easyeffects.enable = true;
     keyring.gnome.enable = true;
     vicinae.enable = true;
@@ -88,4 +88,27 @@
 
   # 锁屏（monet 主题由主题系统链接到 ~/.config/hypr/hyprlock.conf）
   programs.hyprlock.enable = true;
+
+  # 空闲管理：5 分钟锁屏，10 分钟关屏
+  services.hypridle = {
+    enable = true;
+    settings = {
+      general = {
+        lock_cmd = "pidof hyprlock || ${pkgs.hyprlock}/bin/hyprlock";
+        before_sleep_cmd = "loginctl lock-session";
+        after_sleep_cmd = "niri msg action power-on-monitors";
+      };
+      listeners = [
+        {
+          timeout = 300;
+          on-timeout = "loginctl lock-session";
+        }
+        {
+          timeout = 600;
+          on-timeout = "niri msg action power-off-monitors";
+          on-resume = "niri msg action power-on-monitors";
+        }
+      ];
+    };
+  };
 }

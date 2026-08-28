@@ -8,7 +8,7 @@
 let
   themeLib = import ./lib.nix { inherit config lib pkgs; };
   waybar = import ./waybar.nix { inherit themeLib waybarBodyCssPath; };
-  dunst = import ./dunst.nix {
+  mako = import ./mako.nix {
     inherit
       config
       lib
@@ -59,7 +59,7 @@ let
 
   apps = [
     waybar
-    dunst
+    mako
     btop
     ghostty
     firefox
