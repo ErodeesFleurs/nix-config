@@ -41,9 +41,11 @@ in
           ];
           modules-right = [
             "custom/darkman"
+            "idle_inhibitor"
             "tray"
             "network"
             "wireplumber"
+            "backlight"
             "cpu"
             "memory"
             "battery"
@@ -55,6 +57,10 @@ in
             max-length = 50;
             tooltip = false;
             separate-outputs = true;
+            # 标题美化：剥掉应用后缀并补图标
+            rewrite = {
+              "^(.*) — Mozilla Firefox$" = " $1";
+            };
           };
 
           clock = {
@@ -72,6 +78,7 @@ in
             ];
             max-length = 30;
             tooltip-format = "{status}";
+            on-click = "playerctl play-pause";
             on-scroll-up = "playerctl volume 0.10+";
             on-scroll-down = "playerctl volume 0.10-";
           };
@@ -94,6 +101,31 @@ in
             tooltip-format-muted = "{node_name}\nMuted";
             on-click = "${pkgs.wireplumber}/bin/wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle";
             on-click-right = "${pkgs.pavucontrol}/bin/pavucontrol";
+          };
+
+          # 背光（滚轮调节亮度，与音量滚轮对称）
+          backlight = {
+            format = "{icon} {percent}%";
+            format-icons = [
+              "󰃚"
+              "󰃛"
+              "󰃜"
+              "󰃝"
+              "󰃞"
+              "󰃟"
+              "󰃠"
+            ];
+          };
+
+          # 空闲抑制（一键暂停 hypridle 自动锁屏/关屏）
+          "idle_inhibitor" = {
+            format = "{icon}";
+            format-icons = {
+              activated = "󰅶";
+              deactivated = "󰾪";
+            };
+            tooltip-format-activated = "空闲抑制已开启 — 点击恢复自动锁屏";
+            tooltip-format-deactivated = "空闲抑制已关闭 — 点击暂停自动锁屏";
           };
 
           network = {
@@ -153,31 +185,18 @@ in
           };
 
           "custom/darkman" = {
+            # darkman watch：事件驱动（启动时立即打印当前模式，切换时逐行推送）
             exec = ''
-              if [ "$(readlink ${config.home.homeDirectory}/.local/share/themes/current)" = dark ]; then
-                printf '{"text":"󰖔","tooltip":"Night mode — click for day","class":"dark"}'
-              else
-                printf '{"text":"󰖨","tooltip":"Day mode — click for night","class":"light"}'
-              fi
+              ${pkgs.darkman}/bin/darkman watch | while read -r mode; do
+                if [ "$mode" = "dark" ]; then
+                  printf '{"text":"󰖔","tooltip":"夜间模式 — 点击切换日间","class":"dark"}\n'
+                else
+                  printf '{"text":"󰖨","tooltip":"日间模式 — 点击切换夜间","class":"light"}\n'
+                fi
+              done
             '';
-            interval = 10;
             return-type = "json";
-            on-click = ''
-              CURRENT=$(readlink ${config.home.homeDirectory}/.local/share/themes/current)
-              if [ "$CURRENT" = dark ]; then
-                if ${pkgs.darkman}/bin/darkman set light 2>/dev/null; then
-                  :
-                else
-                  ${config.home.homeDirectory}/.local/share/darkman/switch-theme.sh light
-                fi
-              else
-                if ${pkgs.darkman}/bin/darkman set dark 2>/dev/null; then
-                  :
-                else
-                  ${config.home.homeDirectory}/.local/share/darkman/switch-theme.sh dark
-                fi
-              fi
-            '';
+            on-click = "${pkgs.darkman}/bin/darkman toggle";
           };
         };
       };
