@@ -19,15 +19,22 @@ let
 in
 themeLib.mkApp {
   enable = true;
-  outputDirs = [ "$out/qt6ct/colors" ];
 
-  templates = [
-    {
-      name = "qtct-colors";
-      input = themeLib.materialize { source = ./templates/qtct-colors.conf; };
-      output = "qt6ct/colors/monet.conf";
-    }
-  ];
+  # 配色按子树的 polarity 渲染
+  templates =
+    map
+      (polarity: {
+        name = "qtct-colors-${polarity}";
+        input = themeLib.materialize {
+          source = ./templates/qtct-colors.conf;
+          mode = polarity;
+        };
+        output = "${polarity}/qt6ct/colors/monet.conf";
+      })
+      [
+        "light"
+        "dark"
+      ];
 
   # qtct.conf 为纯字面值（style/iconTheme 随 polarity）
   postSteps =

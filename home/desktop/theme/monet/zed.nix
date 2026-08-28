@@ -34,7 +34,6 @@ let
 in
 themeLib.mkApp {
   enable = config.programs.zed-editor.enable;
-  outputDirs = [ "$out/zed/themes" ];
 
   templates = [
     {
@@ -45,12 +44,19 @@ themeLib.mkApp {
       name = "zed-dark-obj";
       input = mkObjInput "dark";
     }
-    {
-      name = "zed";
-      input = mainTemplate;
-      output = "zed/themes/monet-md3.json";
-    }
-  ];
+  ]
+  # 主题族文件（内含双模式）复制到两棵子树
+  ++
+    map
+      (subtree: {
+        name = "zed-${subtree}";
+        input = mainTemplate;
+        output = "${subtree}/zed/themes/monet-md3.json";
+      })
+      [
+        "light"
+        "dark"
+      ];
 
   links = [
     {

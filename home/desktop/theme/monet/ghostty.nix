@@ -4,24 +4,28 @@
   themeLib,
 }:
 
-let
-  inherit (themeLib) currentSymlink homeDir;
-in
 themeLib.mkApp {
   enable = config.programs.ghostty.enable;
-  outputDirs = [ "$out/ghostty/themes" ];
 
-  # 单模板双显式模式渲染（两份输入仅在 mode 上不同）
+  # 单模板双显式模式渲染 × 两棵子树（翻转 current 后两棵子树都需要双主题文件）
   templates =
-    map
-      (mode: {
-        name = "ghostty-${mode}";
-        input = themeLib.materialize {
-          source = ./templates/ghostty.theme;
-          inherit mode;
-        };
-        output = "ghostty/themes/monet-${mode}";
-      })
+    lib.concatMap
+      (
+        subtree:
+        map
+          (mode: {
+            name = "ghostty-${mode}-${subtree}";
+            input = themeLib.materialize {
+              source = ./templates/ghostty.theme;
+              inherit mode;
+            };
+            output = "${subtree}/ghostty/themes/monet-${mode}";
+          })
+          [
+            "light"
+            "dark"
+          ]
+      )
       [
         "light"
         "dark"
@@ -39,26 +43,4 @@ themeLib.mkApp {
       source = "ghostty/themes/monet-dark";
     }
   ];
-
-  activation.linkGhosttyCurrentTheme =
-    lib.hm.dag.entryAfter
-      [
-        "linkGhosttyLightTheme"
-        "linkGhosttyDarkTheme"
-      ]
-      ''
-        MODE="$(readlink ${currentSymlink} 2>/dev/null || printf light)"
-        case "$MODE" in
-          dark|light) ;;
-          *) MODE=light ;;
-        esac
-
-        TARGET="${homeDir}/.config/ghostty/themes/monet-current"
-        SOURCE="${currentSymlink}/ghostty/themes/monet-$MODE"
-
-        if [ -f "$SOURCE" ]; then
-          $DRY_RUN_CMD mkdir -p "$(dirname "$TARGET")"
-          $DRY_RUN_CMD ln -sfn "$SOURCE" "$TARGET"
-        fi
-      '';
 }

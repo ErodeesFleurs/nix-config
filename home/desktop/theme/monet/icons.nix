@@ -25,6 +25,7 @@ let
     "user-home"
   ];
 
+  # 各子树只含对应模式的主题（light 子树只有 Light 图标主题）
   mkThemeTemplates =
     mode:
     let
@@ -41,7 +42,7 @@ let
             base_theme = "Papirus-${capitalize mode}";
           };
         };
-        output = "icons/${themeName}/index.theme";
+        output = "${mode}/icons/${themeName}/index.theme";
       }
       {
         name = "icons-${mode}-folder";
@@ -49,18 +50,19 @@ let
           source = ./templates/folder.svg;
           inherit mode;
         };
-        output = "icons/${themeName}/scalable/places/folder.svg";
+        output = "${mode}/icons/${themeName}/scalable/places/folder.svg";
       }
     ];
 in
 themeLib.mkApp {
   enable = true;
-  # 输出目录由 matugen 自行创建；本应用按 polarity 只渲染对应主题
-  outputDirs = [ ];
 
-  templates = { polarity }: mkThemeTemplates polarity;
+  templates = lib.concatMap mkThemeTemplates [
+    "light"
+    "dark"
+  ];
 
-  # 常用目录别名软链（按 polarity 只对当次主题目录操作）
+  # 常用目录别名软链（按子树执行）
   postSteps =
     { polarity }:
     let

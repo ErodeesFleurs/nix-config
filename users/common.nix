@@ -37,6 +37,8 @@
       waybar.enable = true;
       darkman = {
         enable = true;
+        # geoclue 自动定位（替代硬编码经纬度）
+        useGeoclue = true;
         # builtins.path 单独拷贝入 store（按内容寻址），避免仓库改动触发主题重建
         light.wallpaper = builtins.path {
           path = ../assets/wallpaper.jpg;

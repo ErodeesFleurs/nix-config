@@ -151,7 +151,6 @@ rec {
   mkApp =
     {
       enable,
-      outputDirs,
       templates ? [ ],
       postSteps ? (_: ""),
       links ? [ ],
@@ -162,7 +161,6 @@ rec {
     {
       inherit
         enable
-        outputDirs
         templates
         postSteps
         ;
@@ -170,8 +168,8 @@ rec {
       xdgConfig = xdgConfig // mergeAttrs (map mkXdgPlaceholder xdgPlaceholders);
     };
 
-  # 单模板应用的构造器：从 themePath/configPath 推导 outputDirs、activation
-  # 链接与 xdg 占位符，模板经 materialize 转为 matugen 语法。
+  # 单模板应用的构造器：每个模板生成 light/ dark 两棵子树的条目，
+  # 从 themePath/configPath 推导 activation 链接与 xdg 占位符。
   # configPath 为 null 时表示不创建链接（如 discord，经 current 软链消费）。
   mkColorApp =
     {
@@ -180,8 +178,9 @@ rec {
       template,
       themePath,
       configPath ? null,
-      mode ? "default",
       literals ? { },
+      # 按 polarity 变化的字面替换（如 vicinae 的 variant）
+      literalsFor ? (_: { }),
       placeholder ? false,
       placeholderText ? "# Managed by Monet theme activation\n",
       postLink ? "",
@@ -189,17 +188,21 @@ rec {
     }:
     mkApp {
       inherit enable postSteps;
-      outputDirs = [ "$out/${builtins.dirOf themePath}" ];
-      templates = [
-        {
-          name = lib.toLower name;
-          input = materialize {
-            source = template;
-            inherit mode literals;
-          };
-          output = themePath;
-        }
-      ];
+      templates =
+        map
+          (polarity: {
+            name = "${lib.toLower name}-${polarity}";
+            input = materialize {
+              source = template;
+              mode = polarity;
+              literals = literals // literalsFor polarity;
+            };
+            output = "${polarity}/${themePath}";
+          })
+          [
+            "light"
+            "dark"
+          ];
       xdgPlaceholders = lib.optional placeholder {
         path = lib.removePrefix ".config/" configPath;
         text = placeholderText;
@@ -215,24 +218,18 @@ rec {
     apps:
     let
       enabledApps = builtins.filter (app: app.enable) apps;
-      outputDirs = lib.concatMap (app: app.outputDirs) enabledApps;
-      # templates 可以是列表（polarity 无关）或函数（按 polarity 产出条目，如 icons）
-      templatesFor =
-        polarity:
-        lib.concatMap (
-          app:
-          let
-            t = app.templates or [ ];
-          in
-          if builtins.isFunction t then t { inherit polarity; } else t
-        ) enabledApps;
+      # 所有条目带 light/ dark/ 子树前缀，一次 matugen 运行渲染两个主题
+      templates = lib.concatMap (app: app.templates or [ ]) enabledApps;
+
+      subtreeEntries = polarity: builtins.filter (e: lib.hasPrefix "${polarity}/" e.output) templates;
     in
     {
-      inherit outputDirs templatesFor;
+      inherit templates;
 
-      createOutputDirs = lib.concatMapStringsSep "\n" (dir: "mkdir -p ${dir}") outputDirs;
-
-      configToml = polarity: mkMatugenConfig (templatesFor polarity);
+      # 同一壁纸时：单 config 一次渲染全部
+      configToml = mkMatugenConfig templates;
+      # 壁纸不同时：按子树拆分的 config（每个壁纸一次运行）
+      configTomlFor = polarity: mkMatugenConfig (subtreeEntries polarity);
 
       generate =
         { polarity }:

@@ -11,16 +11,25 @@ let
   profileName = config.homeModules.firefox.profile-name;
   currentSymlink = "${homeDir}/.local/share/themes/current";
 
+  # vars 中间产物按子树生成（后处理在各子树内合并）
   mkVarsTemplates =
     name: source:
-    map
-      (mode: {
-        name = "firefox-${name}-vars-${mode}";
-        input = themeLib.materialize {
-          inherit source mode;
-        };
-        output = "firefox/${name}-vars-${mode}.css";
-      })
+    lib.concatMap
+      (
+        subtree:
+        map
+          (mode: {
+            name = "firefox-${name}-vars-${mode}-${subtree}";
+            input = themeLib.materialize {
+              inherit source mode;
+            };
+            output = "${subtree}/firefox/${name}-vars-${mode}.css";
+          })
+          [
+            "light"
+            "dark"
+          ]
+      )
       [
         "light"
         "dark"
@@ -28,13 +37,12 @@ let
 in
 {
   enable = enabled;
-  outputDirs = [ "$out/firefox" ];
 
   templates =
     mkVarsTemplates "userChrome" ./templates/firefox-userChrome-vars.css
     ++ mkVarsTemplates "userContent" ./templates/firefox-userContent-vars.css;
 
-  # 合并：light 变量为基，dark 变量包进 @media，再追加静态样式
+  # 合并：light 变量为基，dark 变量包进 @media，再追加静态样式（按子树执行）
   postSteps = _: ''
     cat "$out/firefox/userChrome-vars-light.css" > "$out/firefox/userChrome.css"
     printf '\n@media (prefers-color-scheme: dark) {\n' >> "$out/firefox/userChrome.css"

@@ -33,18 +33,6 @@ let
   switchActions = lib.concatStringsSep "\n" [
     (mkHookBlock "Waybar — 发送 USR2 信号触发重载" themeLib.reloadScripts.waybar)
 
-    (mkHookBlock "Ghostty — 显式切换当前主题文件" ''
-      GHOSTTY_THEME="${homeDir}/.config/ghostty/themes/monet-current"
-      GHOSTTY_THEME_SOURCE="${currentSymlink}/ghostty/themes/monet-$target"
-      if [ -f "$GHOSTTY_THEME_SOURCE" ]; then
-        ln -sfn "$GHOSTTY_THEME_SOURCE" "$GHOSTTY_THEME"
-      fi
-    '')
-
-    (mkHookBlock "Ghostty — 发送 USR2 信号触发配置和 light/dark 主题重载" ''
-      ${pkgs.procps}/bin/pkill -SIGUSR2 ghostty || true
-    '')
-
     (mkHookBlock "Mako — 重新读取 current symlink 指向的配置" ''
       if command -v makoctl &>/dev/null; then
         ${pkgs.mako}/bin/makoctl reload 2>/dev/null || true
@@ -68,65 +56,106 @@ let
     '')
   ];
 
-  # ── 构建一个 polarity 变体的所有主题文件 ────────
-  mkThemeDerivation =
+  # ── 单产物构建：一棵产物含 light/ 与 dark/ 两棵子树 ──
+  variants = {
+    light = {
+      inherit (cfg.light)
+        wallpaper
+        waybarCss
+        qt5ctStyle
+        iconTheme
+        ;
+    };
+    dark = {
+      inherit (cfg.dark)
+        wallpaper
+        waybarCss
+        qt5ctStyle
+        iconTheme
+        ;
+    };
+  };
+
+  wallpapers = lib.unique (
+    lib.filter (w: w != null) [
+      variants.light.wallpaper
+      variants.dark.wallpaper
+    ]
+  );
+  sameWallpaper = builtins.length wallpapers == 1;
+
+  matugenCmd = config: wallpaper: ''
+    cp ${config} "$out/config.toml"
+    ${pkgs.matugen}/bin/matugen image \
+      --mode dark \
+      --type ${cfg.monet.scheme} \
+      --source-color-index ${toString cfg.monet.sourceColorIndex} \
+      --fallback-color ${lib.escapeShellArg cfg.monet.fallbackColor} \
+      "${wallpaper}" \
+      -c "$out/config.toml"
+    rm "$out/config.toml"
+  '';
+
+  mkThemeJson = polarity: v: ''
+    mkdir -p "$out/${polarity}"
+    cat > "$out/${polarity}/theme.json" << JSONEOF
     {
-      polarity,
-      waybarCss,
-      wallpaper,
-      qt5ctStyle,
-      iconTheme,
-    }:
-    pkgs.runCommand "darkman-theme-${polarity}"
-      (lib.optionalAttrs (cfg.monet.enable && wallpaper != null) {
-        wallpaperPath = wallpaper;
-      })
-      ''
-        ${monetTheme.createOutputDirs}
+      "polarity": "${polarity}",
+      "qt5ct_style": "${v.qt5ctStyle}",
+      "icon_theme": "${v.iconTheme}"
+    }
+    JSONEOF
+  '';
 
-        ${
-          if cfg.monet.enable && wallpaper != null then
-            ''
-              # matugen 原生模板引擎：一次运行渲染全部模板
-              cp ${monetTheme.configToml polarity} "$out/config.toml"
-              ${pkgs.matugen}/bin/matugen image \
-                --mode ${polarity} \
-                --type ${cfg.monet.scheme} \
-                --source-color-index ${toString cfg.monet.sourceColorIndex} \
-                --fallback-color ${lib.escapeShellArg cfg.monet.fallbackColor} \
-                "$wallpaperPath" \
-                -c "$out/config.toml"
-              rm "$out/config.toml"
+  mkThemes = pkgs.runCommand "darkman-themes" { } ''
+    mkdir -p "$out"
 
-              # 各应用的自定义后处理（rsvg-convert、cat 追加/合并等）
-              ${monetTheme.generate { inherit polarity; }}
-            ''
-          else
-            ''
-              cat > "$out/waybar/style.css" << 'WAYBAREOF'
-              ${waybarCss}
-              WAYBAREOF
+    ${
+      if cfg.monet.enable && wallpapers != [ ] then
+        if sameWallpaper then
+          # 同一壁纸：单次 matugen 运行渲染两棵子树
+          matugenCmd monetTheme.configToml (builtins.head wallpapers)
+        else
+          # 壁纸不同：按子树各跑一次
+          matugenCmd (monetTheme.configTomlFor "light") variants.light.wallpaper
+          + matugenCmd (monetTheme.configTomlFor "dark") variants.dark.wallpaper
+      else
+        # 非 monet / 无壁纸：静态样式写入两棵子树
+        ''
+          mkdir -p "$out/light/waybar" "$out/dark/waybar" "$out/light/qt6ct" "$out/dark/qt6ct"
 
-              mkdir -p "$out/qt6ct"
+          cat > "$out/light/waybar/style.css" << 'WAYBAREOF'
+          ${variants.light.waybarCss}
+          WAYBAREOF
 
-              cat > "$out/qt6ct/qt6ct.conf" << 'QT6EOF'
-              [Appearance]
-              style=${qt5ctStyle}
-              icon_theme=${iconTheme}
-              custom_palette=false
-              QT6EOF
-            ''
-        }
+          cat > "$out/dark/waybar/style.css" << 'WAYBAREOF'
+          ${variants.dark.waybarCss}
+          WAYBAREOF
 
-        # 主题元数据 JSON — 供外部脚本查询当前状态
-        cat > "$out/theme.json" << JSONEOF
-        {
-          "polarity": "${polarity}",
-          "qt5ct_style": "${qt5ctStyle}",
-          "icon_theme": "${iconTheme}"
-        }
-        JSONEOF
-      '';
+          cat > "$out/light/qt6ct/qt6ct.conf" << 'QT6EOF'
+          [Appearance]
+          style=${variants.light.qt5ctStyle}
+          icon_theme=${variants.light.iconTheme}
+          custom_palette=false
+          QT6EOF
+
+          cat > "$out/dark/qt6ct/qt6ct.conf" << 'QT6EOF'
+          [Appearance]
+          style=${variants.dark.qt5ctStyle}
+          icon_theme=${variants.dark.iconTheme}
+          custom_palette=false
+          QT6EOF
+        ''
+    }
+
+    # 各应用的自定义后处理（按子树执行，out 变量指向对应子树）
+    ( out="$out/light"; ${monetTheme.generate { polarity = "light"; }} )
+    ( out="$out/dark"; ${monetTheme.generate { polarity = "dark"; }} )
+
+    # 主题元数据 JSON — 供外部脚本查询当前状态
+    ${mkThemeJson "light" variants.light}
+    ${mkThemeJson "dark" variants.dark}
+  '';
 
   # ── Darkman hook 脚本：翻转 current 链接并重载应用 ──
   mkHookScript = pkgs.writeShellScript "darkman-switch-theme-hook" ''
@@ -336,23 +365,10 @@ in
       pkgs.libnotify
     ];
 
-    # ── 构建 light + dark 主题 derivation ────────────
+    # ── 单主题产物（light/ dark 子树） ────────────
     home.file = {
-      ".local/share/themes/light".source = mkThemeDerivation {
-        polarity = "light";
-        waybarCss = cfg.light.waybarCss;
-        wallpaper = cfg.light.wallpaper;
-        qt5ctStyle = cfg.light.qt5ctStyle;
-        iconTheme = cfg.light.iconTheme;
-      };
-
-      ".local/share/themes/dark".source = mkThemeDerivation {
-        polarity = "dark";
-        waybarCss = cfg.dark.waybarCss;
-        wallpaper = cfg.dark.wallpaper;
-        qt5ctStyle = cfg.dark.qt5ctStyle;
-        iconTheme = cfg.dark.iconTheme;
-      };
+      ".local/share/themes/light".source = "${mkThemes}/light";
+      ".local/share/themes/dark".source = "${mkThemes}/dark";
     };
 
     xdg.configFile = lib.optionalAttrs cfg.monet.enable monetTheme.xdgConfig // {
@@ -392,6 +408,9 @@ in
         # 旧配置误把 legacy 目录放在 darkman/ 内，导致 darkman 试图执行目录本身。
         $DRY_RUN_CMD rm -rf ${homeDir}/.local/share/darkman/dark-mode.d
         $DRY_RUN_CMD rm -rf ${homeDir}/.local/share/darkman/light-mode.d
+
+        # 清理 ghostty 原生双主题取代的 monet-current 遗留软链
+        $DRY_RUN_CMD rm -f ${homeDir}/.config/ghostty/themes/monet-current
       '';
 
     };

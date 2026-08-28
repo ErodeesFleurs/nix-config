@@ -13,35 +13,43 @@ let
 
   capitalize = mode: if mode == "dark" then "Dark" else "Light";
 
-  # 双显式模式渲染（theme.conf + 3 个 svg）× 2 主题目录
+  # 双显式模式渲染（theme.conf + 3 个 svg）× 2 主题目录 × 2 子树
   themeTemplates =
     lib.concatMap
       (
-        mode:
-        let
-          themeName = "Monet${capitalize mode}";
-          mkEntry = name: source: {
-            name = "fcitx5-${mode}-${lib.removeSuffix ".conf" (lib.removeSuffix ".svg" name)}";
-            input = themeLib.materialize {
-              inherit source mode;
-              literals.font = font;
-            };
-            output = "fcitx5/themes/${themeName}/${name}";
-          };
-        in
-        [
-          (mkEntry "theme.conf" ./templates/fcitx5-theme.conf)
-          (mkEntry "panel.svg" ./templates/fcitx5-panel.svg)
-          (mkEntry "panel-highlight.svg" ./templates/fcitx5-panel-highlight.svg)
-          (mkEntry "menu-highlight.svg" ./templates/fcitx5-menu-highlight.svg)
-        ]
+        subtree:
+        lib.concatMap
+          (
+            mode:
+            let
+              themeName = "Monet${capitalize mode}";
+              mkEntry = name: source: {
+                name = "fcitx5-${mode}-${lib.removeSuffix ".conf" (lib.removeSuffix ".svg" name)}-${subtree}";
+                input = themeLib.materialize {
+                  inherit source mode;
+                  literals.font = font;
+                };
+                output = "${subtree}/fcitx5/themes/${themeName}/${name}";
+              };
+            in
+            [
+              (mkEntry "theme.conf" ./templates/fcitx5-theme.conf)
+              (mkEntry "panel.svg" ./templates/fcitx5-panel.svg)
+              (mkEntry "panel-highlight.svg" ./templates/fcitx5-panel-highlight.svg)
+              (mkEntry "menu-highlight.svg" ./templates/fcitx5-menu-highlight.svg)
+            ]
+          )
+          [
+            "light"
+            "dark"
+          ]
       )
       [
         "light"
         "dark"
       ];
 
-  # svg → png 转换与图标拷贝（路径与 polarity 无关）
+  # svg → png 转换与图标拷贝（按子树执行，路径随 out 变量走）
   postStepsText =
     lib.concatMapStringsSep "\n"
       (
@@ -64,23 +72,27 @@ let
 in
 themeLib.mkApp {
   enable = true;
-  outputDirs = [
-    "$out/fcitx5/conf"
-    "$out/fcitx5/themes/MonetLight"
-    "$out/fcitx5/themes/MonetDark"
-  ];
 
-  templates = [
-    {
-      name = "fcitx5-classicui";
-      input = themeLib.materialize {
-        source = ./templates/fcitx5-classicui.conf;
-        literals.font = font;
-      };
-      output = "fcitx5/conf/classicui.conf";
-    }
-  ]
-  ++ themeTemplates;
+  templates =
+    # classicui.conf 按子树的 polarity 渲染（Theme=MonetLight/MonetDark）
+    map
+      (polarity: {
+        name = "fcitx5-classicui-${polarity}";
+        input = themeLib.materialize {
+          source = ./templates/fcitx5-classicui.conf;
+          mode = polarity;
+          literals = {
+            inherit font;
+            theme = "Monet${capitalize polarity}";
+          };
+        };
+        output = "${polarity}/fcitx5/conf/classicui.conf";
+      })
+      [
+        "light"
+        "dark"
+      ]
+    ++ themeTemplates;
 
   postSteps = _: postStepsText;
 

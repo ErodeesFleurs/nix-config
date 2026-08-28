@@ -1,4 +1,8 @@
-{ config, themeLib }:
+{
+  config,
+  lib,
+  themeLib,
+}:
 
 let
   # settings.ini 无颜色 token，纯字面值，按 polarity 在构建期生成
@@ -18,22 +22,26 @@ let
 in
 themeLib.mkApp {
   enable = true;
-  outputDirs = [
-    "$out/gtk-3.0"
-    "$out/gtk-4.0"
-  ];
 
-  # 同一 gtk.css 模板渲染到 gtk-3.0 与 gtk-4.0
+  # 同一 gtk.css 模板渲染到 gtk-3.0 与 gtk-4.0 × 两棵子树
   templates =
-    map
-      (dir: {
-        name = "gtk-${dir}";
-        input = themeLib.materialize { source = ./templates/gtk.css; };
-        output = "${dir}/gtk.css";
-      })
+    lib.concatMap
+      (
+        subtree:
+        map
+          (dir: {
+            name = "gtk-${dir}-${subtree}";
+            input = themeLib.materialize { source = ./templates/gtk.css; };
+            output = "${subtree}/${dir}/gtk.css";
+          })
+          [
+            "gtk-3.0"
+            "gtk-4.0"
+          ]
+      )
       [
-        "gtk-3.0"
-        "gtk-4.0"
+        "light"
+        "dark"
       ];
 
   postSteps =

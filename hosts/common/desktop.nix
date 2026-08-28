@@ -25,6 +25,9 @@
 
   programs.dconf.enable = true;
 
+  # darkman 的 geoclue 定位来源
+  services.geoclue2.enable = true;
+
   environment.sessionVariables = {
     NIXOS_OZONE_WL = "1";
     QT_IM_MODULE = "fcitx";
