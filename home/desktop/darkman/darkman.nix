@@ -33,6 +33,10 @@ let
   switchActions = lib.concatStringsSep "\n" [
     (mkHookBlock "Waybar — 发送 USR2 信号触发重载" themeLib.reloadScripts.waybar)
 
+    (mkHookBlock "Ghostty — 发送 USR2 信号触发主题文件重读" ''
+      ${pkgs.procps}/bin/pkill -SIGUSR2 ghostty || true
+    '')
+
     (mkHookBlock "Mako — 重新读取 current symlink 指向的配置" ''
       if command -v makoctl &>/dev/null; then
         ${pkgs.mako}/bin/makoctl reload 2>/dev/null || true
@@ -408,9 +412,6 @@ in
         # 旧配置误把 legacy 目录放在 darkman/ 内，导致 darkman 试图执行目录本身。
         $DRY_RUN_CMD rm -rf ${homeDir}/.local/share/darkman/dark-mode.d
         $DRY_RUN_CMD rm -rf ${homeDir}/.local/share/darkman/light-mode.d
-
-        # 清理 ghostty 原生双主题取代的 monet-current 遗留软链
-        $DRY_RUN_CMD rm -f ${homeDir}/.config/ghostty/themes/monet-current
       '';
 
     };

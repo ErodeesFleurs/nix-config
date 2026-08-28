@@ -16,8 +16,8 @@ in
       font-feature = "+liga,+calt,+dlig";
       font-size = 12;
       shell-integration-features = "ssh-terminfo,ssh-env";
-      # ghostty 原生双主题：跟随桌面明暗模式（由 darkman 的 gsettings color-scheme 驱动）
-      theme = "light:monet-light,dark:monet-dark";
+      # 指向 monet-current 软链；darkman hook 切换该软链后由 USR2 触发 ghostty 重读
+      theme = "monet-current";
       window-padding-x = 12;
       window-padding-y = 12;
       window-padding-balance = true;
