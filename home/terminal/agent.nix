@@ -1,4 +1,9 @@
-{ pkgs, lib, inputs, ... }:
+{
+  pkgs,
+  lib,
+  inputs,
+  ...
+}:
 {
   home.packages = [
     inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system}.omp
