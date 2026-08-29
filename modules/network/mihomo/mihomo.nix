@@ -42,9 +42,40 @@ in
       webui = if cfg.webui then pkgs.metacubexd else null;
     };
 
+    # 等待真实外网连通再启动代理栈：mihomo 启动时拉取订阅（kycloud provider）、
+    # dae 按默认路由确定 wan 接口，二者失败后都不自愈。
+    # 注意 network-online.target 不可靠：NM-wait-online 在 iwd 后端下，
+    # 若 WiFi 固件未就绪时启动会立即通过（无设备可等），不代表真实连通。
+    # 45 秒超时后 mihomo/dae 仍会启动（离线场景的优雅降级）。
+    systemd.services.proxy-net-wait = {
+      description = "Wait for internet connectivity before starting the proxy stack";
+      serviceConfig = {
+        Type = "oneshot";
+        RemainAfterExit = true;
+        TimeoutStartSec = 45;
+      };
+      path = [ pkgs.curl ];
+      script = ''
+        until curl -fs --max-time 3 -o /dev/null http://cp.cloudflare.com; do
+          sleep 1
+        done
+      '';
+    };
+
+    systemd.services.mihomo = {
+      wants = [ "proxy-net-wait.service" ];
+      after = [ "proxy-net-wait.service" ];
+    };
+
     systemd.services.dae = {
-      wants = [ "mihomo.service" ];
-      after = [ "mihomo.service" ];
+      wants = [
+        "mihomo.service"
+        "proxy-net-wait.service"
+      ];
+      after = [
+        "mihomo.service"
+        "proxy-net-wait.service"
+      ];
     };
   };
 }
