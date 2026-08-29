@@ -77,7 +77,38 @@
 
       pkgs = import nixpkgs {
         inherit system overlays;
-        config.allowUnfree = true;
+        # 非自由包白名单（替代全局 allowUnfree；eval 报错的包按名追加）
+        config.allowUnfreePredicate =
+          pkg:
+          builtins.elem (nixpkgs.lib.getName pkg) [
+            # NVIDIA 驱动栈
+            "nvidia-x11"
+            "nvidia-settings"
+            "nvidia-persistenced"
+            # 游戏
+            "steam"
+            "steam-unwrapped"
+            "steam-run"
+            "steamcmd"
+            "proton-ge-bin"
+            "openstarbound"
+            # IM / 工具
+            "qq"
+            "wechat-uos"
+            "feishu"
+            "baidupcs-go"
+            # 输入法词库（CC BY-NC-SA）
+            "fcitx5-pinyin-moegirl"
+            "fcitx5-pinyin-zhwiki"
+            # 微软核心字体（unfreeRedistributable）
+            "corefonts"
+            # osu! 官方二进制（CC BY-NC）
+            "osu-lazer-bin"
+            # Markdown 编辑器（商业软件）
+            "typora"
+            # RAR 压缩工具（共享软件）
+            "rar"
+          ];
       };
 
       specialArgs = {
