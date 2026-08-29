@@ -100,7 +100,7 @@ in
             tooltip-format = "{node_name}\nVolume: {volume}%";
             tooltip-format-muted = "{node_name}\nMuted";
             on-click = "${pkgs.wireplumber}/bin/wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle";
-            on-click-right = "${pkgs.pavucontrol}/bin/pavucontrol";
+            on-click-right = "${pkgs.pwvucontrol}/bin/pwvucontrol";
           };
 
           # 背光（滚轮调节亮度，与音量滚轮对称）

@@ -28,25 +28,22 @@ in
         usbutils
         networkmanagerapplet
         sshfs
-        sshpass
         adwaita-icon-theme
         wineWow64Packages.waylandFull
         winetricks
 
         # 压缩/归档
-        unzip
-        zip
+        ouch
         kdePackages.ark
 
         # 媒体处理
         ffmpeg
+        pwvucontrol
 
         # 游戏
         osu-lazer-bin
 
         # 生产力
-        typora
-        filezilla
         freerdp
 
         # 开发
