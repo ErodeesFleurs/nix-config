@@ -73,10 +73,12 @@ in
     };
     networking.resolvconf.enable = finalResolvconf;
 
-    # When dnsproxy is the system resolver, make sure resolved starts after it
-    # and pulls it in so DNS is available as soon as resolved is up.
+    # resolved 以 dnsproxy 为上游（见上方 DNS = 127.0.0.1），require 保证联动拉起。
+    # 注意：不要在此加 after = [ "dnsproxy.service" ]——它会构成
+    # iwd → network.target → dnsproxy → resolved → sysinit → iwd 的排序环，
+    # systemd 打破环时可能随机删除 iwd/resolved/nss-lookup 的启动任务（曾导致 WiFi 无法连接）。
+    # 启动顺序在此无功能需求：dnsproxy 仅在响应查询时才需要 resolved（bootstrap）。
     systemd.services.systemd-resolved = lib.mkIf (finalResolved && useDnsproxy) {
-      after = [ "dnsproxy.service" ];
       requires = [ "dnsproxy.service" ];
     };
 
