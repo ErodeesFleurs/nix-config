@@ -161,33 +161,49 @@
         fleurs-surface = self.homeConfigurations."fleurs@spectre-surface".activationPackage;
       };
 
-      formatter.${system} = pkgs.nixfmt-tree;
+      # nix fmt：treefmt 统一入口（nixfmt + deadnix --edit，见 treefmt.toml）
+      formatter.${system} = pkgs.writeShellApplication {
+        name = "treefmt";
+        runtimeInputs = [
+          pkgs.treefmt
+          pkgs.nixfmt
+          pkgs.deadnix
+        ];
+        text = ''exec treefmt --config-file ${./treefmt.toml} "$@"'';
+      };
 
       # nix flake check 时运行的静态检查
-      checks.${system} =
-        let
-          mkCheck =
-            name: nativeBuildInputs: script:
-            pkgs.runCommand "check-${name}" { inherit nativeBuildInputs; } ''
-              cd ${self}
-              ${script}
+      checks.${system} = {
+        # 格式门禁：treefmt 重跑全部 formatter，有任何改动即失败
+        treefmt =
+          pkgs.runCommand "check-treefmt"
+            {
+              nativeBuildInputs = [
+                pkgs.treefmt
+                pkgs.nixfmt
+                pkgs.deadnix
+              ];
+            }
+            ''
+              cp -r ${self} tree && chmod -R u+w tree && cd tree
+              treefmt --fail-on-change --no-cache --config-file ${./treefmt.toml} --tree-root .
               touch $out
             '';
-        in
-        {
-          nixfmt = mkCheck "nixfmt" [ pkgs.nixfmt ] ''
-            failed=0
-            while IFS= read -r f; do
-              nixfmt --check "$f" || failed=1
-            done < <(find . -name '*.nix' -type f)
-            [ "$failed" -eq 0 ]
-          '';
-          statix = mkCheck "statix" [ pkgs.statix ] ''
-            statix check .
-          '';
-          deadnix = mkCheck "deadnix" [ pkgs.deadnix ] ''
-            deadnix --fail .
-          '';
-        };
+        # 语义门禁：statix/deadnix 中不可自动修复的部分
+        lint =
+          pkgs.runCommand "check-lint"
+            {
+              nativeBuildInputs = [
+                pkgs.statix
+                pkgs.deadnix
+              ];
+            }
+            ''
+              cd ${self}
+              statix check .
+              deadnix --fail .
+              touch $out
+            '';
+      };
     };
 }

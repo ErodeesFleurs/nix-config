@@ -1,0 +1,13 @@
+# treefmt 统一格式化入口：nix fmt 一键运行以下全部 formatter
+# 与 flake.nix 的 checks.treefmt（--fail-on-change）共用本配置
+# 注：statix 不在此处——statix fix 只接受单目标，无法作为 treefmt 批处理
+# formatter；lint 门禁由 flake.nix 的 checks.lint（statix check）把关
+
+[formatter.nixfmt]
+command = "nixfmt"
+includes = [ "*.nix" ]
+
+[formatter.deadnix]
+command = "deadnix"
+options = [ "--edit" ]
+includes = [ "*.nix" ]

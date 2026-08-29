@@ -3,6 +3,10 @@
 { lib, pkgs, ... }:
 
 {
+  # niri-flake 的 NixOS 模块无条件开启系统级 gnome-keyring；
+  # 密钥环已由 oo7 取代（home/system/keyring.nix），强制关闭
+  services.gnome.gnome-keyring.enable = lib.mkForce false;
+
   # niri 合成器（niri-flake 模块）
   programs.niri = {
     enable = true;

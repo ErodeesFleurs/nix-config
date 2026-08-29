@@ -51,7 +51,7 @@
           "org.freedesktop.impl.portal.Access" = "gtk";
           "org.freedesktop.impl.portal.Notification" = "gtk";
           "org.freedesktop.impl.portal.FileChooser" = "gtk";
-          "org.freedesktop.impl.portal.Secret" = "gnome-keyring";
+          "org.freedesktop.impl.portal.Secret" = "oo7";
         };
       };
 
@@ -60,6 +60,7 @@
       extraPortals = with pkgs; [
         xdg-desktop-portal-gnome
         xdg-desktop-portal-gtk
+        oo7-portal
       ];
 
       xdgOpenUsePortal = true;

@@ -28,7 +28,6 @@ let
   };
   hyprlock = import ./hyprlock.nix { inherit config themeLib; };
   yazi = import ./yazi.nix { inherit config themeLib; };
-  gitui = import ./gitui.nix { inherit config themeLib; };
   helix = import ./helix.nix { inherit config themeLib; };
   zed = import ./zed.nix { inherit config themeLib; };
   fastfetch = import ./fastfetch.nix { inherit config themeLib; };
@@ -65,7 +64,6 @@ let
     firefox
     hyprlock
     yazi
-    gitui
     helix
     zed
     fastfetch

@@ -69,7 +69,7 @@
 
     mako.enable = true;
     easyeffects.enable = true;
-    keyring.gnome.enable = true;
+    keyring.enable = true;
     vicinae.enable = true;
     packages.enable = true;
   };
