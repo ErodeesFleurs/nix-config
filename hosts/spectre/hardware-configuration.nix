@@ -27,9 +27,11 @@
     extraModulePackages = [ ];
   };
 
-  fileSystems."/" = {
+  # impermanence：原根分区改挂 /persist（stage 1 即需），/ 由 tmpfs 提供（见 impermanence.nix）
+  fileSystems."/persist" = {
     device = "/dev/disk/by-uuid/db49ca8e-d9ed-40b8-83fa-d34ace01aba0";
     fsType = "ext4";
+    neededForBoot = true;
   };
 
   fileSystems."/media/next" = {

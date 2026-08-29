@@ -28,6 +28,15 @@
 
       # 写入 store 时即时硬链接去重（替代周期性全店扫描）
       auto-optimise-store = true;
+
+      # 两台主机均为 tmpfs 根（impermanence）：大型构建若落在 /tmp 会受
+      # 50% RAM 上限约束。用 nix 标准构建目录：父链全是 root 0755，
+      # 不会有 world-writable 检查问题（/var/tmp 会触发）。
+      build-dir = "/nix/var/nix/builds";
     };
   };
+
+  systemd.tmpfiles.rules = [
+    "d /nix/var/nix/builds 0755 root root -"
+  ];
 }
