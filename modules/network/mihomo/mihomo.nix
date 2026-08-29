@@ -44,8 +44,8 @@ in
 
     # 等待真实外网连通再启动代理栈：mihomo 启动时拉取订阅（kycloud provider）、
     # dae 按默认路由确定 wan 接口，二者失败后都不自愈。
-    # 注意 network-online.target 不可靠：NM-wait-online 在 iwd 后端下，
-    # 若 WiFi 固件未就绪时启动会立即通过（无设备可等），不代表真实连通。
+    # network-online.target 只代表 L3 就绪，不代表 WAN/DNS 可用
+    # （当年 NM-wait-online 在 iwd 后端下甚至会提前放行），故用真实探测。
     # 45 秒超时后 mihomo/dae 仍会启动（离线场景的优雅降级）。
     systemd.services.proxy-net-wait = {
       description = "Wait for internet connectivity before starting the proxy stack";

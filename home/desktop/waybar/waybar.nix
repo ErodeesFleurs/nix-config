@@ -143,7 +143,7 @@ in
               "󰤨"
             ];
             tooltip-format = "{ifname} - {ipaddr}\nDown Speed: {bandwidthDownBytes}\nUp Speed: {bandwidthUpBytes}";
-            on-click-right = "ghostty -e nmtui";
+            on-click-right = "ghostty -e impala";
           };
 
           cpu = {

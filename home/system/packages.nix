@@ -26,7 +26,7 @@ in
         libnotify
         brightnessctl
         usbutils
-        networkmanagerapplet
+        impala
         sshfs
         adwaita-icon-theme
         wineWow64Packages.waylandFull

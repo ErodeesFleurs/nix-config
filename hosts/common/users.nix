@@ -11,7 +11,8 @@
       shell = pkgs.nushell;
       extraGroups = [
         "wheel"
-        "networkmanager"
+        # netdev：允许非 root 使用 iwctl/impala 管理 iwd
+        "netdev"
         "audio"
         "video"
         "input"

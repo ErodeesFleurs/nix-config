@@ -61,15 +61,22 @@ in
   config = lib.mkIf cfg.enable {
     services.resolved = {
       enable = finalResolved;
-      settings.Resolve = lib.mkIf (finalResolved && useDnsproxy) {
-        DNS = [ "127.0.0.1" ];
-        FallbackDNS = [
-          "1.1.1.1"
-          "8.8.8.8"
-          "119.29.29.29"
-        ];
-        DNSStubListener = true;
-      };
+      settings.Resolve = lib.mkMerge [
+        (lib.mkIf finalResolved {
+          # 关闭 mDNS/LLMNR（原 NetworkManager connectionConfig 的对应项）
+          LLMNR = false;
+          MulticastDNS = false;
+        })
+        (lib.mkIf (finalResolved && useDnsproxy) {
+          DNS = [ "127.0.0.1" ];
+          FallbackDNS = [
+            "1.1.1.1"
+            "8.8.8.8"
+            "119.29.29.29"
+          ];
+          DNSStubListener = true;
+        })
+      ];
     };
     networking.resolvconf.enable = finalResolvconf;
 

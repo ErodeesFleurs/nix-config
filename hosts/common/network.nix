@@ -5,8 +5,6 @@
   modules.network = {
     wlan = {
       enable = true;
-      enable-nm-applet = true;
-      show-indicator = true;
       enable-firewall = true;
     };
 
@@ -67,11 +65,6 @@
 
   networking.enableIPv6 = true;
   networking.tempAddresses = "default";
-
-  networking.networkmanager.connectionConfig = {
-    "connection.mdns" = 0;
-    "connection.llmnr" = 0;
-  };
 
   boot.kernel.sysctl = {
     "net.ipv4.tcp_congestion_control" = "bbr";

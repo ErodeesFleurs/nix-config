@@ -79,7 +79,6 @@ let
             # Mihomo must bypass dae to prevent a proxy loop.
             pname(mihomo) -> must_direct
 
-            pname(NetworkManager) -> direct
             pname(systemd-networkd) -> direct
             dip(224.0.0.0/3, 'ff00::/8') -> direct
             dscp(4) -> direct
