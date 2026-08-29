@@ -69,10 +69,7 @@
       }
     ];
   };
-  environment.etc = {
-    "subuid".text = "fleurs:100000:65536\n";
-    "subgid".text = "fleurs:100000:65536\n";
-  };
+  # /etc/subuid、/etc/subgid 由 users.users.fleurs.subUidRanges/subGidRanges 自动生成
   environment.systemPackages = with pkgs; [ podman-compose ];
 
   # AppImage

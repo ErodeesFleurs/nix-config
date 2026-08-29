@@ -43,4 +43,13 @@
 
   # GVFS（可移动设备访问）
   services.gvfs.enable = true;
+
+  # SSD 每周 TRIM
+  services.fstrim.enable = true;
+
+  # 固件更新（LVFS）
+  services.fwupd.enable = true;
+
+  # zstd 压缩的内存交换（默认算法即 zstd）
+  zramSwap.enable = true;
 }

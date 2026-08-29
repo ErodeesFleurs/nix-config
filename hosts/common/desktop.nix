@@ -1,6 +1,6 @@
 # 桌面环境：compositor、portal、音频、键盘输入（greeter 由 modules.display-manager.tuigreet 提供）
 # （纯 Wayland 会话：无 X server；输入设备与键盘布局在 niri 配置中设置）
-{ pkgs, ... }:
+{ lib, pkgs, ... }:
 
 {
   # niri 合成器（niri-flake 模块）
@@ -8,7 +8,9 @@
     enable = true;
     package = pkgs.niri;
   };
-  environment.defaultPackages = with pkgs; [ xwayland-satellite ];
+  environment.systemPackages = with pkgs; [ xwayland-satellite ];
+  # 不附带 perl/nano 等默认包
+  environment.defaultPackages = lib.mkForce [ ];
 
   # XDG portals
   xdg.portal = {
