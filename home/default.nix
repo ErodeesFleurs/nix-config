@@ -12,4 +12,7 @@
     manpages.enable = false;
     json.enable = false;
   };
+
+  # activation 不打印 news 条目
+  news.display = "silent";
 }
