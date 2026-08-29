@@ -30,13 +30,15 @@
   # ==========================================
   # 文件系统
   # ==========================================
-  fileSystems."/" = {
+  # 持久 backing：tmpfs 根下挂载到 /persist（见 impermanence.nix）
+  fileSystems."/persist" = {
     device = "/dev/disk/by-uuid/2b6178d3-cd6a-4fad-b8c4-2cb995cd7a0e";
     fsType = "btrfs";
     options = [
       "compress=zstd"
       "noatime"
     ];
+    neededForBoot = true;
   };
 
   fileSystems."/boot" = {

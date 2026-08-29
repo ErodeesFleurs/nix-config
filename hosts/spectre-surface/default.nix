@@ -4,6 +4,7 @@
 {
   imports = [
     ./hardware-configuration.nix
+    ./impermanence.nix
     ./users.nix
     ../common
   ];
