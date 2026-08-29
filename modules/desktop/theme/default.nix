@@ -7,7 +7,7 @@
 
 let
   cfg = config.modules.desktop.theme.monet;
-  monetLib = import ../../../lib/monet.nix { inherit lib pkgs; };
+  monetLib = import ../../../lib/monet.nix { inherit lib; };
 
   # tuigreet 主题模板（matugen 原生语法，无需 jq）
   tuigreetTpl = builtins.toFile "tuigreet-theme.tpl" ''

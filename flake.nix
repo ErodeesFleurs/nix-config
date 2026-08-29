@@ -69,7 +69,7 @@
       system = "x86_64-linux";
 
       fleursLib = import ./lib {
-        lib = nixpkgs.lib;
+        inherit (nixpkgs) lib;
         inherit inputs;
       };
 
@@ -133,5 +133,32 @@
       };
 
       formatter.${system} = pkgs.nixfmt-tree;
+
+      # nix flake check 时运行的静态检查
+      checks.${system} =
+        let
+          mkCheck =
+            name: nativeBuildInputs: script:
+            pkgs.runCommand "check-${name}" { inherit nativeBuildInputs; } ''
+              cd ${self}
+              ${script}
+              touch $out
+            '';
+        in
+        {
+          nixfmt = mkCheck "nixfmt" [ pkgs.nixfmt ] ''
+            failed=0
+            while IFS= read -r f; do
+              nixfmt --check "$f" || failed=1
+            done < <(find . -name '*.nix' -type f)
+            [ "$failed" -eq 0 ]
+          '';
+          statix = mkCheck "statix" [ pkgs.statix ] ''
+            statix check .
+          '';
+          deadnix = mkCheck "deadnix" [ pkgs.deadnix ] ''
+            deadnix --fail .
+          '';
+        };
     };
 }

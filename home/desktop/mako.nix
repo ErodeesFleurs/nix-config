@@ -52,7 +52,7 @@ in
   config = lib.mkIf cfg.enable {
     services.mako = {
       enable = true;
-      settings = cfg.settings;
+      inherit (cfg) settings;
     };
   };
 }

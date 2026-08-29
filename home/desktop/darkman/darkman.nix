@@ -10,7 +10,7 @@ let
   homeDir = config.home.homeDirectory;
   shellArg = value: lib.escapeShellArg (toString value);
   wallpaperArg = wallpaper: if wallpaper == null then "''" else shellArg wallpaper;
-  monetLib = import ../../../lib/monet.nix { inherit lib pkgs; };
+  monetLib = import ../../../lib/monet.nix { inherit lib; };
 
   # ── 主题文件基础路径 ────────────────────────────
   themeBase = "${homeDir}/.local/share/themes";

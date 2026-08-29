@@ -69,15 +69,16 @@ in
   config = lib.mkIf cfg.enable {
     programs.yazi = {
       enable = true;
-      enableNushellIntegration = cfg.enableNushellIntegration;
-      enableZshIntegration = cfg.enableZshIntegration;
-      enableBashIntegration = cfg.enableBashIntegration;
-      enableFishIntegration = cfg.enableFishIntegration;
+      inherit (cfg)
+        enableNushellIntegration
+        enableZshIntegration
+        enableBashIntegration
+        enableFishIntegration
+        ;
 
       theme = lib.mkIf (cfg.theme != null) cfg.theme;
       keymap = lib.mkIf (cfg.keymap != null) cfg.keymap;
-      settings = cfg.settings;
-      plugins = cfg.plugins;
+      inherit (cfg) settings plugins;
     };
   };
 }

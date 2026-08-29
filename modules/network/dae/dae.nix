@@ -186,7 +186,7 @@ in
   config = lib.mkIf (cfg.enable || cfg.enable-daed) {
 
     services.dae = {
-      enable = cfg.enable;
+      inherit (cfg) enable;
 
       package = inputs.daeuniverse.packages.${pkgs.stdenv.hostPlatform.system}.dae-unstable;
 

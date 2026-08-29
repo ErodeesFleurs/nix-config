@@ -19,7 +19,7 @@
           files = lib.filterAttrs (
             name: type: type == "regular" && lib.hasSuffix ".nix" name && !(isRoot && name == "default.nix")
           ) entries;
-          subdirs = lib.filterAttrs (name: type: type == "directory") entries;
+          subdirs = lib.filterAttrs (_: type: type == "directory") entries;
         in
         (lib.mapAttrsToList (name: _: d + "/${name}") files)
         ++ lib.concatMap (

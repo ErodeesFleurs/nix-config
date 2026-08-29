@@ -133,14 +133,12 @@ in
     programs.mpv = {
       enable = true;
 
-      scripts = cfg.scripts;
-
-      bindings = cfg.bindings;
+      inherit (cfg) scripts bindings;
 
       config = lib.mkMerge [
         {
           # Video quality
-          profile = cfg.profile;
+          inherit (cfg) profile;
 
           # Hardware acceleration
           hwdec = lib.mkIf cfg.hardware-acceleration cfg.hwdec-method;
@@ -150,8 +148,7 @@ in
           save-position-on-quit = cfg.save-position;
 
           # Audio
-          volume = cfg.volume;
-          volume-max = cfg.volume-max;
+          inherit (cfg) volume volume-max;
 
           # Screenshots
           screenshot-format = cfg.screenshot.format;
@@ -173,7 +170,7 @@ in
           sub-font = theme.fonts.sans-serif.name;
 
           # YouTube-DL
-          ytdl-format = cfg.ytdl-format;
+          inherit (cfg) ytdl-format;
 
           # Additional settings
           keep-open = true;

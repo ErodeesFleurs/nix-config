@@ -92,15 +92,17 @@ in
         enable = cfg.enable-service;
 
         # Command-line flags
-        flags = cfg.flags;
+        inherit (cfg) flags;
 
         # Nested settings passed to the service
         settings = {
-          bootstrap = cfg.bootstrap;
-          listen-addrs = cfg.listen-addrs;
-          listen-ports = cfg.listen-ports;
-          upstream-mode = cfg.upstream-mode;
-          upstream = cfg.upstream;
+          inherit (cfg)
+            bootstrap
+            listen-addrs
+            listen-ports
+            upstream-mode
+            upstream
+            ;
         };
       };
     }

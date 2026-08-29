@@ -1,0 +1,7 @@
+# statix 检查配置（nix flake check 使用）
+# - empty_pattern: NixOS/HM 模块惯例用 { ... }: 忽略参数，属正常写法
+# - repeated_keys: hardware-configuration.nix 为自动生成，分散赋值是 NixOS 惯例
+disabled = [
+  "empty_pattern",
+  "repeated_keys",
+]

@@ -137,7 +137,7 @@ in
         finegrained = cfg.power-management.finegrained;
       };
 
-      open = cfg.open;
+      inherit (cfg) open;
       nvidiaSettings = cfg.nvidia-settings;
 
       # Select package version
@@ -146,11 +146,13 @@ in
           kernelPackages = config.boot.kernelPackages.nvidiaPackages;
           selectedPackage =
             {
-              stable = kernelPackages.stable;
-              beta = kernelPackages.beta;
-              production = kernelPackages.production;
-              legacy_470 = kernelPackages.legacy_470;
-              legacy_390 = kernelPackages.legacy_390;
+              inherit (kernelPackages)
+                stable
+                beta
+                production
+                legacy_470
+                legacy_390
+                ;
             }
             .${cfg.package};
         in
