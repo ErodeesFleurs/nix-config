@@ -57,7 +57,7 @@ in
             "--text-input-version=3"
           ];
         })
-        wechat-uos
+        wechat
         feishu
         telegram-desktop
       ]

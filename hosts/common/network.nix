@@ -12,7 +12,7 @@
 
     bluetooth = {
       enable = true;
-      enable-blueman = true;
+      enable-manager = true;
       power-on-boot = true;
     };
 

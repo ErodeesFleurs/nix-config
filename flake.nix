@@ -94,7 +94,7 @@
             "openstarbound"
             # IM / 工具
             "qq"
-            "wechat-uos"
+            "wechat"
             "feishu"
             "baidupcs-go"
             # 输入法词库（CC BY-NC-SA）
@@ -104,8 +104,6 @@
             "corefonts"
             # osu! 官方二进制（CC BY-NC）
             "osu-lazer-bin"
-            # Markdown 编辑器（商业软件）
-            "typora"
             # RAR 压缩工具（共享软件）
             "rar"
           ];

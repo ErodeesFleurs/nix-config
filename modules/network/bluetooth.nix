@@ -12,10 +12,10 @@ in
   options.modules.network.bluetooth = {
     enable = lib.mkEnableOption "Bluetooth support";
 
-    enable-blueman = lib.mkOption {
+    enable-manager = lib.mkOption {
       type = lib.types.bool;
       default = true;
-      description = "Whether to enable Blueman Bluetooth manager";
+      description = "Whether to install a GUI Bluetooth manager (overskride)";
     };
 
     power-on-boot = lib.mkOption {
@@ -37,14 +37,13 @@ in
       };
     };
 
-    services.blueman.enable = lib.mkIf cfg.enable-blueman true;
-
-    # 添加蓝牙相关工具到系统包
+    # 蓝牙管理 GUI：overskride（GTK4，替代 GTK3 时代的 blueman）
     environment.systemPackages =
       with pkgs;
-      lib.mkIf cfg.enable-blueman [
+      lib.mkIf cfg.enable-manager [
         bluez
         bluez-tools
+        overskride
       ];
   };
 }
