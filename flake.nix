@@ -110,7 +110,7 @@
             "corefonts"
             # osu! 官方二进制（CC BY-NC）
             "osu-lazer-bin"
-            # RAR 压缩工具（共享软件）
+            # RAR 压缩工具（共享软件；users/*/default.nix 显式安装）
             "rar"
           ];
       };

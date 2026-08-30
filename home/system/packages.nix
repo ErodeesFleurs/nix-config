@@ -32,9 +32,8 @@ in
         wineWow64Packages.waylandFull
         winetricks
 
-        # 压缩/归档
+        # 压缩/归档（GUI 场景由 nemo + gvfs 直接挂载浏览）
         ouch
-        kdePackages.ark
 
         # 媒体处理
         ffmpeg

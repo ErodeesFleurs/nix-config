@@ -14,12 +14,12 @@
 
     mimeApps = {
       enable = true;
+      # 压缩包由 nemo + gvfs 挂载浏览，无需专用归档工具
       defaultApplicationPackages = [
         config.homeModules.nemo.package
         config.programs.ghostty.package
         config.programs.zed-editor.package
         config.programs.firefox.package
-        pkgs.kdePackages.ark
       ];
     };
 

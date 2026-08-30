@@ -37,12 +37,12 @@ in
       };
     };
 
-    # 蓝牙管理 GUI：overskride（GTK4，替代 GTK3 时代的 blueman）
+    # 蓝牙管理 GUI：overskride（GTK4，替代 GTK3 时代的 blueman）；
+    # CLI 用 bluez 自带的 bluetoothctl（bluez-tools 是停更的第三方包装，不装）
     environment.systemPackages =
       with pkgs;
       lib.mkIf cfg.enable-manager [
         bluez
-        bluez-tools
         overskride
       ];
   };

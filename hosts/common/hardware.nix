@@ -20,14 +20,10 @@
     vulkan-tools
   ];
 
-  # 打印
+  # 打印（gutenprint 通用驱动；无三星打印机，splix 已移除）
   services.printing = {
     enable = true;
-    drivers = with pkgs; [
-      hplip
-      gutenprint
-      splix
-    ];
+    drivers = with pkgs; [ gutenprint ];
   };
 
   # Logitech 无线设备
