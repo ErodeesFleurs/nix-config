@@ -48,6 +48,12 @@ let
           title = "Application Launcher";
         };
       };
+      "Mod+V" = {
+        action.spawn = [ "vicinae" "cmd" "launch" "clipboard:history" ];
+        hotkey-overlay = {
+          title = "Clipboard History";
+        };
+      };
       "Mod+C" = {
         action.close-window = [ ];
       };
