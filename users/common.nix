@@ -62,6 +62,7 @@
     mpv.enable = true;
     obs.enable = true;
     starbound.enable = true;
+    mycard.enable = true;
     discord = {
       enable = false;
       vesktop.enable = true;
