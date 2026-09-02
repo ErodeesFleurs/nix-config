@@ -49,7 +49,12 @@ let
         };
       };
       "Mod+V" = {
-        action.spawn = [ "vicinae" "cmd" "launch" "clipboard:history" ];
+        action.spawn = [
+          "vicinae"
+          "cmd"
+          "launch"
+          "clipboard:history"
+        ];
         hotkey-overlay = {
           title = "Clipboard History";
         };

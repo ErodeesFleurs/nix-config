@@ -1,7 +1,6 @@
 {
   config,
   lib,
-  pkgs,
   ...
 }:
 
@@ -89,72 +88,7 @@ in
       };
     };
 
-    # 一次性迁移：把 NM 保存的 WiFi 凭据转换为 iwd 网络文件
-    # （/var/lib/iwd 已随 /var 持久化；已存在的网络跳过；仅 WPA-PSK，
-    # 企业网/隐藏网络需手动重建。spectre-surface 已迁移，
-    # 待 spectre 也部署新网络栈并确认后此服务可删）
-    systemd.services.iwd-import-nm-connections = {
-      description = "Import WiFi credentials from NetworkManager into iwd";
-      wantedBy = [ "iwd.service" ];
-      before = [ "iwd.service" ];
-      unitConfig.ConditionPathExists = "/persist/etc/NetworkManager/system-connections";
-      serviceConfig = {
-        Type = "oneshot";
-        RemainAfterExit = true;
-      };
-      script =
-        let
-          # 注意不用 writers.writePython3：它附带 flake8 检查，样式问题会直接构建失败
-          importer = pkgs.writeText "iwd-import-nm.py" ''
-            import configparser
-            import pathlib
-
-            SRC = pathlib.Path("/persist/etc/NetworkManager/system-connections")
-            DST = pathlib.Path("/var/lib/iwd")
-
-            SAFE = frozenset(
-                b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 _.-"
-            )
-
-            def iwd_name(ssid: str) -> str:
-                # iwd 文件名：不安全字符按 =XX（UTF-8 字节十六进制）编码
-                out = []
-                for b in ssid.encode("utf-8"):
-                    out.append(chr(b) if b in SAFE else f"={b:02X}")
-                return "".join(out) + ".psk"
-
-            imported = skipped = 0
-            for f in sorted(SRC.glob("*.nmconnection")):
-                cp = configparser.ConfigParser(strict=False)
-                cp.optionxform = str
-                try:
-                    cp.read(f)
-                except configparser.Error:
-                    continue
-                if not cp.has_section("wifi") or not cp.has_section("wifi-security"):
-                    continue
-                ssid = cp["wifi"].get("ssid")
-                psk = cp["wifi-security"].get("psk")
-                if not ssid or not psk:
-                    continue
-                out = DST / iwd_name(ssid)
-                if out.exists():
-                    skipped += 1
-                    continue
-                if len(psk) == 64 and all(c in "0123456789abcdefABCDEF" for c in psk):
-                    body = f"[Security]\nPreSharedKey={psk}\n"
-                else:
-                    body = f"[Security]\nPassphrase={psk}\n"
-                out.write_text(body)
-                out.chmod(0o600)
-                imported += 1
-
-            print(f"iwd-import-nm: {imported} imported, {skipped} skipped")
-          '';
-        in
-        ''
-          ${pkgs.python3}/bin/python3 ${importer}
-        '';
-    };
+    # NM→iwd 凭据迁移已在两台主机完成并验证（2026-08）；
+    # 迁移服务与 /persist/etc/NetworkManager 均已移除。
   };
 }
