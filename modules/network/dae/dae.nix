@@ -15,6 +15,12 @@ let
     indent: domains: action:
     lib.concatMapStringsSep "\n" (d: "${indent}domain(suffix: ${d}) -> ${action}") domains;
 
+  # DNS request 段的域名匹配器是 qname()；domain() 只在 traffic 路由段合法，
+  # 否则 dae 启动即 FATAL unknown function: domain
+  renderQnameSuffixRules =
+    indent: domains: action:
+    lib.concatMapStringsSep "\n" (d: "${indent}qname(suffix: ${d}) -> ${action}") domains;
+
   # Render a list of geosite rules.
   renderGeositeRules =
     indent: sites: action:
@@ -68,7 +74,7 @@ let
             }
             routing {
                 request {
-    ${renderDomainRules "                " cfg.subscription-domains "alidns"}
+    ${renderQnameSuffixRules "                " cfg.subscription-domains "alidns"}
                     qname(geosite:cn) -> alidns
                     fallback: googledns
                 }
@@ -198,6 +204,14 @@ in
       ];
 
       configFile = "/etc/dae/config.dae";
+    };
+
+    # daeuniverse 模块用 reloadTriggers 让 dae 热重载配置，但 `dae reload`
+    # 不应用路由规则变更（实测：reload 成功后新增的直连规则仍走代理）。
+    # 改为配置变更即重启（切换瞬间重建 eBPF 链路，秒级抖动）
+    systemd.services.dae = {
+      reloadTriggers = lib.mkForce [ ];
+      restartTriggers = [ config.environment.etc."dae/config.dae".source ];
     };
 
     services.daed = {

@@ -53,7 +53,10 @@
     dae = {
       enable = true;
       enable-daed = false;
+      # geoclue 的 beacondb GeoIP 查询必须走直连：
+      # 经代理出口会让 IP 定位解析到代理机房城市（日出日落随之偏移）
       subscription-domains = [
+        "api.beacondb.net"
       ];
     };
 
