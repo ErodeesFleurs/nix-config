@@ -16,12 +16,11 @@
   # 不附带 perl/nano 等默认包
   environment.defaultPackages = lib.mkForce [ ];
 
-  # XDG portals
+  # XDG portals：系统层只提供开关；
+  # portal 后端包与接口路由由 home/desktop/xdg.nix 单一管理
+  # （home 层 ~/.config/xdg-desktop-portal 优先于 /etc，系统层配置是死配置）
   xdg.portal = {
     enable = true;
-    config.common.default = [ "gtk" ];
-    configPackages = [ ];
-    extraPortals = with pkgs; [ xdg-desktop-portal-gtk ];
     xdgOpenUsePortal = true;
   };
   systemd.user.services.xdg-desktop-portal = {
@@ -36,6 +35,15 @@
     enable = true;
     enableDemoAgent = true;
   };
+
+  # iwd 下 geoclue 的 WiFi 源无法扫描 AP；geoclue 2.8 的 IP 源需显式 method，
+  # NixOS 模块未生成 [ip] 段（method=null → 源被禁用，darkman/Firefox 定位超时）。
+  # etc text 是 lines 类型，此段会并入模块生成的 geoclue.conf（复用 wifi 的 beacondb url）
+  environment.etc."geoclue/geoclue.conf".text = ''
+    [ip]
+    enable=true
+    method=ichnaea
+  '';
 
   # Qt ≥6.5 内置平台主题：读 Settings portal 的 color-scheme，昼夜自动跟随
   environment.sessionVariables = {
