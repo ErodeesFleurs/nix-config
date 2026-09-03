@@ -30,11 +30,9 @@
   hardware.logitech.wireless.enable = true;
   programs.solaar.enable = true;
 
-  # 电源管理
-  powerManagement = {
-    enable = true;
-    powertop.enable = true;
-  };
+  # 电源管理：ppd 全权负责；不与 powertop --auto-tune 并存
+  # （auto-tune 开机全局写 sysfs 且无模式感知，会覆盖 ppd performance 档）
+  powerManagement.enable = true;
   services.power-profiles-daemon.enable = true;
 
   # GVFS（可移动设备访问）
