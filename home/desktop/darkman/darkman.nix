@@ -66,7 +66,6 @@ let
       inherit (cfg.light)
         wallpaper
         waybarCss
-        qt5ctStyle
         iconTheme
         ;
     };
@@ -74,7 +73,6 @@ let
       inherit (cfg.dark)
         wallpaper
         waybarCss
-        qt5ctStyle
         iconTheme
         ;
     };
@@ -105,7 +103,6 @@ let
     cat > "$out/${polarity}/theme.json" << JSONEOF
     {
       "polarity": "${polarity}",
-      "qt5ct_style": "${v.qt5ctStyle}",
       "icon_theme": "${v.iconTheme}"
     }
     JSONEOF
@@ -126,7 +123,7 @@ let
       else
         # 非 monet / 无壁纸：静态样式写入两棵子树
         ''
-          mkdir -p "$out/light/waybar" "$out/dark/waybar" "$out/light/qt6ct" "$out/dark/qt6ct"
+          mkdir -p "$out/light/waybar" "$out/dark/waybar"
 
           cat > "$out/light/waybar/style.css" << 'WAYBAREOF'
           ${variants.light.waybarCss}
@@ -135,20 +132,6 @@ let
           cat > "$out/dark/waybar/style.css" << 'WAYBAREOF'
           ${variants.dark.waybarCss}
           WAYBAREOF
-
-          cat > "$out/light/qt6ct/qt6ct.conf" << 'QT6EOF'
-          [Appearance]
-          style=${variants.light.qt5ctStyle}
-          icon_theme=${variants.light.iconTheme}
-          custom_palette=false
-          QT6EOF
-
-          cat > "$out/dark/qt6ct/qt6ct.conf" << 'QT6EOF'
-          [Appearance]
-          style=${variants.dark.qt5ctStyle}
-          icon_theme=${variants.dark.iconTheme}
-          custom_palette=false
-          QT6EOF
         ''
     }
 
@@ -202,14 +185,12 @@ let
     # ── 翻转 current 软链接 (原子操作) ──
     ln -sfn "$target" "${currentSymlink}"
 
-    # ── GTK 主题 (gsettings 即时生效) ──
-    if command -v gsettings &>/dev/null; then
-      gsettings set org.gnome.desktop.interface gtk-theme "$GTK_THEME" || true
-      gsettings set org.gnome.desktop.interface icon-theme "$ICON_THEME" || true
-      gsettings set org.gnome.desktop.interface color-scheme "$COLOR_SCHEME" || true
-      gsettings set org.gnome.desktop.interface cursor-theme "$CURSOR_THEME" || true
-      gsettings set org.gnome.desktop.interface cursor-size "$CURSOR_SIZE" || true
-    fi
+    # ── GTK 主题 (gsettings 即时生效；绝对路径：hook 的 PATH 无 glib) ──
+    ${pkgs.glib}/bin/gsettings set org.gnome.desktop.interface gtk-theme "$GTK_THEME" || true
+    ${pkgs.glib}/bin/gsettings set org.gnome.desktop.interface icon-theme "$ICON_THEME" || true
+    ${pkgs.glib}/bin/gsettings set org.gnome.desktop.interface color-scheme "$COLOR_SCHEME" || true
+    ${pkgs.glib}/bin/gsettings set org.gnome.desktop.interface cursor-theme "$CURSOR_THEME" || true
+    ${pkgs.glib}/bin/gsettings set org.gnome.desktop.interface cursor-size "$CURSOR_SIZE" || true
 
     ${switchActions}
 
@@ -251,12 +232,6 @@ in
         description = "Waybar CSS for light mode";
       };
 
-      qt5ctStyle = lib.mkOption {
-        type = lib.types.str;
-        default = "Fusion";
-        description = "Qt5ct style name for light mode";
-      };
-
       gtkTheme = lib.mkOption {
         type = lib.types.str;
         default = "Adwaita";
@@ -295,12 +270,6 @@ in
         type = lib.types.lines;
         default = m3DarkWaybarCss;
         description = "Waybar CSS for dark mode";
-      };
-
-      qt5ctStyle = lib.mkOption {
-        type = lib.types.str;
-        default = "Fusion";
-        description = "Qt5ct style name for dark mode";
       };
 
       gtkTheme = lib.mkOption {
@@ -397,9 +366,8 @@ in
           $DRY_RUN_CMD ln -sfn light "${currentSymlink}"
         fi
 
-        # Qt6ct — 让 qt6ct 从 current symlink 读取
-        $DRY_RUN_CMD rm -rf ${homeDir}/.config/qt6ct
-        $DRY_RUN_CMD ln -sfn ${currentSymlink}/qt6ct ${homeDir}/.config/qt6ct
+        # Qt6ct 死轨清理：qt6ct 从未生效，Qt 经 Settings portal 跟随昼夜
+        $DRY_RUN_CMD rm -f ${homeDir}/.config/qt6ct
       '';
 
       # ── 清理旧的错误 hook 路径 ────────────────────────

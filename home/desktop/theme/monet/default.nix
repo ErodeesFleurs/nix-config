@@ -36,7 +36,6 @@ let
   mpv = import ./mpv.nix { inherit config themeLib; };
   niri = import ./niri.nix { inherit config themeLib; };
   gtk = import ./gtk.nix { inherit config lib themeLib; };
-  qt = import ./qt.nix { inherit config themeLib; };
   icons = import ./icons.nix { inherit lib themeLib; };
   delta = import ./delta.nix { inherit config themeLib; };
   discord = import ./discord.nix { inherit config themeLib; };
@@ -72,7 +71,6 @@ let
     mpv
     niri
     gtk
-    qt
     icons
     delta
     discord

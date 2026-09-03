@@ -37,9 +37,11 @@
     enableDemoAgent = true;
   };
 
+  # Qt ≥6.5 内置平台主题：读 Settings portal 的 color-scheme，昼夜自动跟随
   environment.sessionVariables = {
     NIXOS_OZONE_WL = "1";
     QT_IM_MODULE = "fcitx";
+    QT_QPA_PLATFORMTHEME = "xdgdesktopportal";
   };
 
   # PipeWire 音频
