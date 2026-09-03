@@ -79,10 +79,8 @@
         inherit inputs;
       };
 
-      overlays = import ./overlays { inherit inputs fleursLib; };
-
       pkgs = import nixpkgs {
-        inherit system overlays;
+        inherit system;
         # 非自由包白名单（替代全局 allowUnfree；eval 报错的包按名追加）
         config.allowUnfreePredicate =
           pkg:

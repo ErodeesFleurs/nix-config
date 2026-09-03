@@ -17,8 +17,6 @@
         "nix-command"
       ];
       trusted-users = [ "fleurs" ];
-      substituters = [ "https://cache.nixos.org" ];
-      trusted-public-keys = [ ];
 
       # 配置仓库总是 dirty，该警告纯噪音
       warn-dirty = false;
@@ -38,5 +36,11 @@
 
   systemd.tmpfiles.rules = [
     "d /nix/var/nix/builds 0755 root root -"
+    # channels 已禁用（channel.enable=false），清理历史遗留目录，
+    # 消除每次 activation 的 channels 警告（impermanence 下 /persist/root 持久，不会自愈）
+    "r /root/.nix-defexpr/channels - - - - -"
+    "r /home/fleurs/.nix-defexpr/channels - - - - -"
+    "r /nix/var/nix/profiles/per-user/root/channels - - - - -"
+    "r /nix/var/nix/profiles/per-user/root/channels-1-link - - - - -"
   ];
 }

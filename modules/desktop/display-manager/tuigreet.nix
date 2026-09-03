@@ -24,8 +24,6 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    environment.defaultPackages = with pkgs; [ tuigreet ];
-
     services.greetd = {
       enable = true;
       useTextGreeter = true;
