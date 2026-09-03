@@ -73,6 +73,9 @@ in
           DHCP = "yes";
           IPv6PrivacyExtensions = "kernel";
         };
+        # 笔记本有线口常年不插线：不参与 network-online 判定，
+        # 否则 wait-online 每次 switch/开机都在 no-carrier 上等 120s 超时
+        linkConfig.RequiredForOnline = "no";
         dhcpV4Config.RouteMetric = 100;
         ipv6AcceptRAConfig.RouteMetric = 100;
       };
