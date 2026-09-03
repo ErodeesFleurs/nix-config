@@ -31,7 +31,10 @@ themeLib.mkApp {
         map
           (dir: {
             name = "gtk-${dir}-${subtree}";
-            input = themeLib.materialize { source = ./templates/gtk.css; };
+            input = themeLib.materialize {
+              source = ./templates/gtk.css;
+              mode = subtree;
+            };
             output = "${subtree}/${dir}/gtk.css";
           })
           [
