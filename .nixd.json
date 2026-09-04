@@ -1,0 +1,18 @@
+{
+  "eval": {
+    "workers": 3
+  },
+  "options": {
+    "nixos": {
+      "expr": "(builtins.getFlake \"git+file:///home/fleurs/nix-config\").nixosConfigurations.spectre.options"
+    },
+    "home-manager": {
+      "expr": "(builtins.getFlake \"git+file:///home/fleurs/nix-config\").homeConfigurations.\"fleurs@spectre\".options"
+    }
+  },
+  "formatting": {
+    "command": [
+      "nixfmt"
+    ]
+  }
+}

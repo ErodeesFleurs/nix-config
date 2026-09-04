@@ -151,6 +151,12 @@ in
                 "..."
               ];
             };
+            Nix = {
+              language_servers = [
+                "nixd"
+                "!nil"
+              ];
+            };
           };
 
           file_types = {
