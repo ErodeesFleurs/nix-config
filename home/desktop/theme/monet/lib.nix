@@ -29,8 +29,10 @@ let
 
         if [ -f "$SOURCE" ]; then
           $DRY_RUN_CMD mkdir -p "$(dirname "$TARGET")"
-          $DRY_RUN_CMD rm -f "$TARGET"
-          $DRY_RUN_CMD ln -sfn "$SOURCE" "$TARGET"
+          # 原子替换：先建临时链接再 rename，消除 rm+ln 之间文件不存在的窗口
+          # （waybar reload_style_on_change 曾在该窗口读到空样式而整栏透明化）
+          $DRY_RUN_CMD ln -sfn "$SOURCE" "$TARGET.tmp"
+          $DRY_RUN_CMD mv -T "$TARGET.tmp" "$TARGET"
           ${postLink}
         fi
       '';

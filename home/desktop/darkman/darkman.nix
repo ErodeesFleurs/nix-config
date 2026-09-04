@@ -182,8 +182,9 @@ let
       exit 1
     fi
 
-    # ── 翻转 current 软链接 (原子操作) ──
-    ${pkgs.coreutils}/bin/ln -sfn "$target" "${currentSymlink}"
+    # ── 翻转 current 软链接（临时链接 + rename 真原子，无不存在窗口）──
+    ${pkgs.coreutils}/bin/ln -sfn "$target" "${currentSymlink}.tmp"
+    ${pkgs.coreutils}/bin/mv -T "${currentSymlink}.tmp" "${currentSymlink}"
 
     # ── GTK 主题 (gsettings 即时生效；绝对路径：hook 的 PATH 无 glib) ──
     ${pkgs.glib}/bin/gsettings set org.gnome.desktop.interface gtk-theme "$GTK_THEME" || true
