@@ -26,8 +26,9 @@
       fcitx5 = {
         waylandFrontend = true;
         addons = with pkgs; [
+          # Qt6 Wayland 应用已走原生 text-input-v3（QT_IM_MODULE 已移除），
+          # fcitx5-qt 插件无任何加载方，不再安装；X11 应用由 XIM 兜底
           fcitx5-gtk
-          kdePackages.fcitx5-qt
           qt6Packages.fcitx5-chinese-addons
           fcitx5-material-color
           fcitx5-pinyin-moegirl

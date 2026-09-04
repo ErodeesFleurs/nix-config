@@ -45,10 +45,12 @@
     method=ichnaea
   '';
 
-  # Qt ≥6.5 内置平台主题：读 Settings portal 的 color-scheme，昼夜自动跟随
+  # Qt ≥6.5 内置平台主题：读 Settings portal 的 color-scheme，昼夜自动跟随。
+  # 输入法不设 QT_IM_MODULE：Qt6 Wayland 原生 text-input-v3
+  # （Qt → niri → input-method-v2 → fcitx5 waylandFrontend）；
+  # X11 应用由 XMODIFIERS=@im=fcitx 走 XIM 兜底
   environment.sessionVariables = {
     NIXOS_OZONE_WL = "1";
-    QT_IM_MODULE = "fcitx";
     QT_QPA_PLATFORMTHEME = "xdgdesktopportal";
   };
 
