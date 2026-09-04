@@ -31,12 +31,6 @@ in
       description = "Enable Carapace completion integration";
     };
 
-    ssh-auth-sock = lib.mkOption {
-      type = lib.types.str;
-      default = ''$"($env.XDG_RUNTIME_DIR)/ssh-agent"'';
-      description = "SSH agent socket path";
-    };
-
     extra-config = lib.mkOption {
       type = lib.types.lines;
       default = "";
@@ -100,9 +94,6 @@ in
           }
         ''}
 
-        # SSH agent socket
-        $env.SSH_AUTH_SOCK = ${cfg.ssh-auth-sock}
-
         ${lib.optionalString enableMonetTheme ''
           source ${config.home.homeDirectory}/.config/nushell/monet.nu
         ''}
@@ -110,5 +101,9 @@ in
         ${cfg.extra-config}
       '';
     };
+
+    # SSH agent（HM 原生：systemd user service + SSH_AUTH_SOCK 自动导出；
+    # 此前仅在 nushell 里写了 socket 路径，但没有任何进程启动 agent）
+    services.ssh-agent.enable = true;
   };
 }

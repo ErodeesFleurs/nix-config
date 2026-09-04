@@ -20,7 +20,6 @@ in
       [
         # 剪贴板
         wl-clipboard
-        cliphist
 
         # 系统工具
         libnotify

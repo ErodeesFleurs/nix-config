@@ -8,16 +8,6 @@
 
 let
   niriSettings = {
-    spawn-at-startup = [
-      {
-        argv = [
-          "wl-paste"
-          "--watch"
-          "cliphist"
-          "store"
-        ];
-      }
-    ];
 
     prefer-no-csd = true;
 
@@ -150,4 +140,8 @@ in
       include optional=true "~/.config/niri/monet.kdl"
     '';
   };
+
+  # 剪贴板历史（HM 原生：文本 + 图片两个 wl-paste watcher 服务，
+  # 替代 niri spawn-at-startup 手摇的单个文本 watcher）
+  services.cliphist.enable = true;
 }

@@ -183,7 +183,7 @@ let
     fi
 
     # ── 翻转 current 软链接 (原子操作) ──
-    ln -sfn "$target" "${currentSymlink}"
+    ${pkgs.coreutils}/bin/ln -sfn "$target" "${currentSymlink}"
 
     # ── GTK 主题 (gsettings 即时生效；绝对路径：hook 的 PATH 无 glib) ──
     ${pkgs.glib}/bin/gsettings set org.gnome.desktop.interface gtk-theme "$GTK_THEME" || true
@@ -207,14 +207,14 @@ in
 
     # ── 地理坐标 ─────────────────────────────────────
     latitude = lib.mkOption {
-      type = lib.types.str;
-      default = "31.23"; # Shanghai
+      type = lib.types.float;
+      default = 31.23; # Shanghai
       description = "Latitude for sunrise/sunset calculation";
     };
 
     longitude = lib.mkOption {
-      type = lib.types.str;
-      default = "121.47"; # Shanghai
+      type = lib.types.float;
+      default = 121.47; # Shanghai
       description = "Longitude for sunrise/sunset calculation";
     };
 
@@ -332,9 +332,8 @@ in
   # Config
   # ═══════════════════════════════════════════════════
   config = lib.mkIf cfg.enable {
-    # ── 确保必要工具已安装 ──────────────────────────
+    # ── 确保必要工具已安装（darkman 本体由 services.darkman 模块安装）──
     home.packages = [
-      pkgs.darkman
       pkgs.libnotify
     ];
 
@@ -344,19 +343,7 @@ in
       ".local/share/themes/dark".source = "${mkThemes}/dark";
     };
 
-    xdg.configFile = lib.optionalAttrs cfg.monet.enable monetTheme.xdgConfig // {
-      # ── Darkman 配置文件 ─────────────────────────────
-      "darkman/config.yaml".text =
-        let
-          locationConfig = lib.optionalString cfg.useGeoclue "usegeoclue: true\n" + ''
-            lat: ${cfg.latitude}
-            lng: ${cfg.longitude}
-          '';
-        in
-        ''
-          ${locationConfig}
-        '';
-    };
+    xdg.configFile = lib.optionalAttrs cfg.monet.enable monetTheme.xdgConfig;
 
     home.activation = lib.optionalAttrs cfg.monet.enable monetTheme.activation // {
       # ── 初始化 current 软链接 (默认为 light) ────────
@@ -380,31 +367,13 @@ in
 
     };
 
-    # ── Darkman systemd 用户服务 ─────────────────────
-    systemd.user.services.darkman = {
-      Unit = {
-        Description = "Darkman — automatic day/night mode switcher";
-        Documentation = "https://darkman.whynothugo.nl/";
-        After = [ "graphical-session-pre.target" ];
-        PartOf = [ "graphical-session.target" ];
-      };
-
-      Service = {
-        Type = "simple";
-        ExecStart = "${pkgs.darkman}/bin/darkman run";
-        Restart = "on-failure";
-        RestartSec = 10;
-        Environment = "PATH=${
-          lib.makeBinPath [
-            pkgs.coreutils
-            pkgs.procps
-            pkgs.awww
-          ]
-        }";
-      };
-
-      Install = {
-        WantedBy = [ "graphical-session.target" ];
+    # ── Darkman 服务（HM 原生：dbus 单元 + config 变更自动重启）─────
+    services.darkman = {
+      enable = true;
+      settings = {
+        lat = cfg.latitude;
+        lng = cfg.longitude;
+        usegeoclue = cfg.useGeoclue;
       };
     };
 
