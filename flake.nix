@@ -36,7 +36,7 @@
       url = "github:kaylorben/nixcord";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.nixpkgs-nixcord.follows = "nixpkgs";
-      inputs.flake-parts.follows = "flake-parts";
+
       inputs.treefmt-nix.follows = "llm-agents/treefmt-nix";
     };
 
