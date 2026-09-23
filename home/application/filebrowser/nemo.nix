@@ -14,18 +14,19 @@ in
     package = lib.mkOption {
       type = lib.types.package;
       default = pkgs.nemo-with-extensions;
+      apply =
+        package:
+        package.override {
+          extensions = with pkgs; [
+            nemo-python
+            nemo-fileroller
+          ];
+        };
       description = "Nemo file manager package";
     };
   };
 
   config = lib.mkIf cfg.enable {
-    home.packages = [
-      (cfg.package.override {
-        extensions = with pkgs; [
-          nemo-python
-          nemo-fileroller
-        ];
-      })
-    ];
+    home.packages = [ cfg.package ];
   };
 }

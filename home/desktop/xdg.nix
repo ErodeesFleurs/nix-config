@@ -30,8 +30,8 @@
     desktopEntries = {
       nemo = {
         name = "Nemo";
-        exec = "${pkgs.nemo-with-extensions}/bin/nemo";
-        icon = "${pkgs.nemo-with-extensions}/share/icons/hicolor/32x32/apps/nemo.png";
+        exec = "${config.homeModules.nemo.package}/bin/nemo";
+        icon = "${config.homeModules.nemo.package}/share/icons/hicolor/32x32/apps/nemo.png";
       };
     };
 

@@ -31,33 +31,37 @@ let
   '';
 
   switchActions = lib.concatStringsSep "\n" [
-    (mkHookBlock "Waybar — 发送 USR2 信号触发重载" themeLib.reloadScripts.waybar)
+    (lib.optionalString config.programs.waybar.enable (
+      mkHookBlock "Waybar — 发送 USR2 信号触发重载" themeLib.reloadScripts.waybar
+    ))
 
-    (mkHookBlock "Ghostty — 发送 USR2 信号触发主题文件重读" ''
-      ${pkgs.procps}/bin/pkill -SIGUSR2 ghostty || true
-    '')
+    (lib.optionalString config.programs.ghostty.enable (
+      mkHookBlock "Ghostty — 发送 USR2 信号触发主题文件重读" ''
+        ${pkgs.procps}/bin/pkill -SIGUSR2 ghostty 2>/dev/null || true
+      ''
+    ))
 
-    (mkHookBlock "Mako — 重新读取 current symlink 指向的配置" ''
-      if command -v makoctl &>/dev/null; then
-        ${pkgs.mako}/bin/makoctl reload 2>/dev/null || true
-      fi
-    '')
-
-    (mkHookBlock "Btop — 下次打开时读取 current symlink 指向的 Monet theme" "")
+    (lib.optionalString (config.services.mako.enable && config.services.mako.package != null) (
+      mkHookBlock "Mako — 重新读取 current symlink 指向的配置" ''
+        ${config.services.mako.package}/bin/makoctl reload 2>/dev/null || true
+      ''
+    ))
 
     (mkHookBlock "Fcitx5 — 重新读取 classicui addon，候选框主题属于该 addon" themeLib.reloadScripts.fcitx5)
 
-    (mkHookBlock "Wallpaper — 切换壁纸" ''
-      if [ -n "$WALLPAPER" ] && command -v awww &>/dev/null; then
-        ${pkgs.awww}/bin/awww img "$WALLPAPER" || true
-      fi
-    '')
+    (lib.optionalString config.services.awww.enable (
+      mkHookBlock "Wallpaper — 切换壁纸" ''
+        if [ -n "$WALLPAPER" ]; then
+          ${config.services.awww.package}/bin/awww img "$WALLPAPER" 2>/dev/null || true
+        fi
+      ''
+    ))
 
-    (mkHookBlock "通知" ''
-      if command -v notify-send &>/dev/null; then
-        ${pkgs.libnotify}/bin/notify-send "$NOTIFY_MSG" || true
-      fi
-    '')
+    (lib.optionalString config.services.mako.enable (
+      mkHookBlock "通知" ''
+        ${pkgs.libnotify}/bin/notify-send "$NOTIFY_MSG" 2>/dev/null || true
+      ''
+    ))
   ];
 
   # ── 单产物构建：一棵产物含 light/ 与 dark/ 两棵子树 ──

@@ -141,7 +141,6 @@ in
     '';
   };
 
-  # 剪贴板历史（HM 原生：文本 + 图片两个 wl-paste watcher 服务，
-  # 替代 niri spawn-at-startup 手摇的单个文本 watcher）
-  services.cliphist.enable = true;
+  # Mod+V 使用 Vicinae 内置历史；不再启动独立的 cliphist watchers。
+  services.cliphist.enable = false;
 }

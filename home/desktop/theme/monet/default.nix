@@ -22,7 +22,6 @@ let
     inherit
       config
       lib
-      pkgs
       themeLib
       ;
   };
