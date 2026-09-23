@@ -1,0 +1,127 @@
+name: Grouped flake updates
+
+on:
+  schedule:
+    - cron: '23 3 * * 1'
+  workflow_dispatch:
+    inputs:
+      group:
+        description: Input group to update
+        required: true
+        default: all
+        type: choice
+        options: [all, base, desktop, agents]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: grouped-flake-updates
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  update:
+    name: Update ${{ matrix.group }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    permissions:
+      contents: write
+      pull-requests: write
+      # Explicit dispatch is intentional: GITHUB_TOKEN pushes do not start CI,
+      # and bot-created PR runs can require manual approval.
+      actions: write
+    strategy:
+      max-parallel: 1
+      fail-fast: false
+      matrix:
+        group: ${{ fromJSON((github.event_name == 'schedule' || inputs.group == 'all') && '["base","desktop","agents"]' || format('["{0}"]', inputs.group)) }}
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+      - uses: cachix/install-nix-action@13d8dd58da0234aa297dedd986986ccb8e7f3e24 # v31
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+            max-jobs = 1
+            cores = 2
+      - name: Update only the selected inputs
+        id: update
+        env:
+          GROUP: ${{ matrix.group }}
+        run: |
+          case "$GROUP" in
+            base) nix flake update nixpkgs home-manager ;;
+            desktop) nix flake update niri nixcord vicinae ;;
+            agents) nix flake update llm-agents ;;
+            *) echo "Unknown input group: $GROUP" >&2; exit 1 ;;
+          esac
+          # Never include generated files or configuration changes in an update PR.
+          git diff --exit-code -- . ':!flake.lock'
+          changed=$(git diff --name-only -- flake.lock)
+          if [[ -n "$changed" ]]; then
+            echo 'changed=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'changed=false' >> "$GITHUB_OUTPUT"
+          fi
+      - name: Read caches from the system declaration
+        if: steps.update.outputs.changed == 'true'
+        run: |
+          nix eval --json --no-write-lock-file \
+            .#nixosConfigurations.spectre.config.nix.settings > "$RUNNER_TEMP/nix-settings.json"
+          {
+            echo 'NIX_CONFIG<<NIX_CACHE_CONFIGURATION'
+            jq -er '"extra-substituters = " + (.substituters | join(" ")), "extra-trusted-public-keys = " + (."trusted-public-keys" | join(" "))' "$RUNNER_TEMP/nix-settings.json"
+            echo NIX_CACHE_CONFIGURATION
+          } >> "$GITHUB_ENV"
+      - name: Validate the updated lock before opening a PR
+        if: steps.update.outputs.changed == 'true'
+        run: nix flake check --no-write-lock-file --print-build-logs
+      - name: Ensure the validated base is still current
+        if: steps.update.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASE_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          current=$(gh api --method GET "repos/$GITHUB_REPOSITORY/commits" \
+            -f sha="$BASE_BRANCH" -f per_page=1 --jq '.[0].sha')
+          if [[ "$current" != "$(git rev-parse HEAD)" ]]; then
+            echo 'The base branch moved during validation; rerun the update on its new head.' >&2
+            exit 1
+          fi
+      - name: Open or update the lock-only PR
+        if: steps.update.outputs.changed == 'true'
+        id: pr
+        uses: peter-evans/create-pull-request@22a9089034f40e5a961c8808d113e2c98fb63676 # v7
+        with:
+          add-paths: flake.lock
+          base: ${{ github.event.repository.default_branch }}
+          branch: automation/flake-${{ matrix.group }}
+          commit-message: 'chore(deps): update ${{ matrix.group }} flake inputs'
+          title: 'chore(deps): update ${{ matrix.group }} flake inputs'
+          body: |
+            Updates only the selected root input group (and its transitive dependencies):
+            - base: nixpkgs + home-manager
+            - desktop: niri + nixcord + vicinae
+            - agents: llm-agents
+
+            Selected group: **${{ matrix.group }}**. Other root inputs remain pinned.
+
+            `nix flake check` passed before this PR was opened or updated.
+            This job explicitly dispatches **Nix verification** on this branch to run
+            checks again and build all four packages on separate runners. Do not merge
+            until those checks pass; dispatch failure fails the update job.
+
+            [Update run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            No deployment or automatic merge is performed.
+      - name: Explicitly start full verification on the PR branch
+        if: steps.pr.outputs.pull-request-number != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_BRANCH: ${{ steps.pr.outputs.pull-request-branch }}
+        run: gh workflow run verify.yml --repo "$GITHUB_REPOSITORY" --ref "$PR_BRANCH"

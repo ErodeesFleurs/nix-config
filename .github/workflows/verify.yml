@@ -1,0 +1,121 @@
+name: Nix verification
+
+on:
+  pull_request:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nix-verification-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  check:
+    name: Flake check
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    outputs:
+      full-build: ${{ steps.changes.outputs.full-build }}
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Determine whether full builds are required
+        id: changes
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BEFORE: ${{ github.event.before }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          full_build=false
+          if [[ "$EVENT_NAME" == workflow_dispatch ]]; then
+            full_build=true
+          elif [[ "$EVENT_NAME" == pull_request ]]; then
+            changed=$(git diff --name-only "$PR_BASE...$PR_HEAD" -- flake.lock)
+            if [[ -n "$changed" ]]; then
+              full_build=true
+            fi
+          elif [[ -z "$BEFORE" || "$BEFORE" =~ ^0+$ ]] || ! git cat-file -e "$BEFORE^{commit}"; then
+            # New refs and unavailable force-push ancestors need the conservative path.
+            full_build=true
+          else
+            changed=$(git diff --name-only "$BEFORE" HEAD -- flake.lock)
+            if [[ -n "$changed" ]]; then
+              full_build=true
+            fi
+          fi
+          echo "full-build=$full_build" >> "$GITHUB_OUTPUT"
+      - uses: cachix/install-nix-action@13d8dd58da0234aa297dedd986986ccb8e7f3e24 # v31
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+            max-jobs = 1
+            cores = 2
+      - name: Read caches from the system declaration
+        run: |
+          nix eval --json --no-write-lock-file \
+            .#nixosConfigurations.spectre.config.nix.settings > "$RUNNER_TEMP/nix-settings.json"
+          {
+            echo 'NIX_CONFIG<<NIX_CACHE_CONFIGURATION'
+            jq -er '"extra-substituters = " + (.substituters | join(" ")), "extra-trusted-public-keys = " + (."trusted-public-keys" | join(" "))' "$RUNNER_TEMP/nix-settings.json"
+            echo NIX_CACHE_CONFIGURATION
+          } >> "$GITHUB_ENV"
+      - name: Run flake checks
+        run: nix flake check --no-write-lock-file --print-build-logs
+
+  build:
+    name: Build ${{ matrix.package }}
+    needs: check
+    if: needs.check.outputs.full-build == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    strategy:
+      # Each closure gets a fresh disk; do not accumulate all four on one runner.
+      max-parallel: 1
+      fail-fast: false
+      matrix:
+        package: [spectre, spectre-surface, fleurs, fleurs-surface]
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - name: Make room for a system or Home Manager closure
+        run: |
+          # These preinstalled SDKs are unused by Nix builds on this disposable VM.
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache
+          sudo fallocate -l 8G /swapfile-nix-ci
+          sudo chmod 600 /swapfile-nix-ci
+          sudo mkswap /swapfile-nix-ci
+          sudo swapon /swapfile-nix-ci
+          df -h /
+          free -h
+      - uses: cachix/install-nix-action@13d8dd58da0234aa297dedd986986ccb8e7f3e24 # v31
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+            max-jobs = 1
+            cores = 2
+            min-free = 5368709120
+            max-free = 10737418240
+      - name: Read caches from the system declaration
+        run: |
+          nix eval --json --no-write-lock-file \
+            .#nixosConfigurations.spectre.config.nix.settings > "$RUNNER_TEMP/nix-settings.json"
+          {
+            echo 'NIX_CONFIG<<NIX_CACHE_CONFIGURATION'
+            jq -er '"extra-substituters = " + (.substituters | join(" ")), "extra-trusted-public-keys = " + (."trusted-public-keys" | join(" "))' "$RUNNER_TEMP/nix-settings.json"
+            echo NIX_CACHE_CONFIGURATION
+          } >> "$GITHUB_ENV"
+      - name: Build the complete package
+        env:
+          PACKAGE: ${{ matrix.package }}
+        run: nix build ".#packages.x86_64-linux.$PACKAGE" --no-link --no-write-lock-file --print-build-logs
