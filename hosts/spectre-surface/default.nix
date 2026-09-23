@@ -15,6 +15,12 @@
 
   modules.network.wlan.host-name = "spectre-surface";
 
+  # 移动设备保守限制构建并行度，避免与桌面争抢内存及散热预算。
+  nix.settings = {
+    max-jobs = 1;
+    cores = 2;
+  };
+
   # surface 内核跟踪最新稳定版（另一档 longterm 跟踪 LTS）
   hardware.microsoft-surface.kernelVersion = "stable";
 

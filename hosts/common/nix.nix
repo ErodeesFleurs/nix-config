@@ -16,7 +16,20 @@
         "flakes"
         "nix-command"
       ];
-      trusted-users = [ "fleurs" ];
+      # 缓存信任由系统声明，不依赖各用户的 flake 信任记录。
+      # trusted-users 保留 NixOS 默认的 root；使用这些签名缓存不需要特权。
+      substituters = [
+        "https://nix-community.cachix.org"
+        "https://vicinae.cachix.org"
+        "https://fleurs-nur.cachix.org"
+        "https://cache.numtide.com"
+      ];
+      trusted-public-keys = [
+        "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
+        "vicinae.cachix.org-1:1kDrfienkGHPYbkpNj1mWTr7Fm1+zcenzgTizIcI3oc="
+        "fleurs-nur.cachix.org-1:pmeJEXCONKeFWIFOVqG2DHMQYR87VRSmwESRy55Wt7M="
+        "niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g="
+      ];
 
       # 配置仓库总是 dirty，该警告纯噪音
       warn-dirty = false;

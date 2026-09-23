@@ -11,6 +11,12 @@
 
   modules.network.wlan.host-name = "spectre";
 
+  # 同时最多两个构建，每个六线程，给桌面与开发工具保留余量。
+  nix.settings = {
+    max-jobs = 2;
+    cores = 6;
+  };
+
   # IOMMU（虚拟化）
   boot.kernelParams = [
     "amd_iommu=on"

@@ -1,23 +1,8 @@
 {
   description = "Fleurs's NixOS and Home Manager configuration (separated)";
 
-  nixConfig = {
-    extra-substituters = [
-      "https://nix-community.cachix.org"
-      "https://vicinae.cachix.org"
-      "https://fleurs-nur.cachix.org"
-      "https://cache.numtide.com"
-    ];
-    extra-trusted-public-keys = [
-      "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
-      "vicinae.cachix.org-1:1kDrfienkGHPYbkpNj1mWTr7Fm1+zcenzgTizIcI3oc="
-      "fleurs-nur.cachix.org-1:pmeJEXCONKeFWIFOVqG2DHMQYR87VRSmwESRy55Wt7M="
-      "niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g="
-    ];
-  };
-
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable-small";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
 
     # 传递依赖去重锚点（root 不直接使用，仅供下游 follows 归一；
     # flake-parts 官方支持 nixpkgs-lib 跟随 nixpkgs）
@@ -36,6 +21,7 @@
       url = "github:kaylorben/nixcord";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.nixpkgs-nixcord.follows = "nixpkgs";
+      inputs.home-manager.follows = "home-manager";
 
       inputs.treefmt-nix.follows = "llm-agents/treefmt-nix";
     };

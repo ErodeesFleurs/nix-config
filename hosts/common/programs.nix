@@ -6,7 +6,7 @@
     steam = {
       enable = true;
       remotePlay.openFirewall = true;
-      dedicatedServer.openFirewall = true;
+      dedicatedServer.openFirewall = false;
       extest.enable = true;
       gamescopeSession.enable = false;
       protontricks.enable = true;
@@ -58,7 +58,7 @@
     onShutdown = "shutdown";
     qemu = {
       swtpm.enable = true;
-      runAsRoot = true;
+      runAsRoot = false;
       vhostUserPackages = with pkgs; [ virtiofsd ];
     };
   };
