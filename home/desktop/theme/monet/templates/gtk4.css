@@ -1,0 +1,27 @@
+:root {
+  --accent-bg-color: @primary@;
+  --accent-fg-color: @on_primary@;
+  --destructive-bg-color: @error@;
+  --destructive-fg-color: @on_error@;
+  --error-bg-color: @error@;
+  --error-fg-color: @on_error@;
+  --window-bg-color: @surface@;
+  --window-fg-color: @on_surface@;
+  --view-bg-color: @surface_container_lowest@;
+  --view-fg-color: @on_surface@;
+  --headerbar-bg-color: @surface_container@;
+  --headerbar-fg-color: @on_surface@;
+  --headerbar-backdrop-color: @surface_container@;
+  --card-bg-color: @surface_container@;
+  --card-fg-color: @on_surface@;
+  --popover-bg-color: @surface_container@;
+  --popover-fg-color: @on_surface@;
+  --dialog-bg-color: @surface_container_high@;
+  --dialog-fg-color: @on_surface@;
+  --sidebar-bg-color: @surface@;
+  --sidebar-fg-color: @on_surface_variant@;
+  --sidebar-backdrop-color: @surface@;
+  --secondary-sidebar-bg-color: @surface_container_low@;
+  --secondary-sidebar-fg-color: @on_surface_variant@;
+  --secondary-sidebar-backdrop-color: @surface_container_low@;
+}

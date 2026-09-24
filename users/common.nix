@@ -6,6 +6,10 @@
     username = "fleurs";
     homeDirectory = "/home/fleurs";
     stateVersion = "26.05";
+    packages = with pkgs; [
+      papers
+      loupe
+    ];
   };
 
   homeModules = {
@@ -58,7 +62,7 @@
       profile-name = "fleurs";
       force-extensions = true;
     };
-    nemo.enable = true;
+    nautilus.enable = true;
     mpv.enable = true;
     obs.enable = true;
     starbound.enable = true;
@@ -81,7 +85,7 @@
     mimeApps = {
       enable = true;
       defaultApplications = {
-        "application/pdf" = "firefox.desktop";
+        "application/pdf" = "org.gnome.Papers.desktop";
       };
     };
   };

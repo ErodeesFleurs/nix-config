@@ -31,7 +31,7 @@ in
         wineWow64Packages.waylandFull
         winetricks
 
-        # 压缩/归档（GUI 场景由 nemo + gvfs 直接挂载浏览）
+        # 压缩/归档（GUI 场景使用 Nautilus 内置归档功能，GVFS 提供挂载访问）
         ouch
 
         # 媒体处理

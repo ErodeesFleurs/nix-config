@@ -14,9 +14,11 @@
 
     mimeApps = {
       enable = true;
-      # 压缩包由 nemo + gvfs 挂载浏览，无需专用归档工具
+      # Prefer dedicated image/document viewers to browser MIME associations.
       defaultApplicationPackages = [
-        config.homeModules.nemo.package
+        pkgs.loupe
+        pkgs.papers
+        config.homeModules.nautilus.package
         config.programs.ghostty.package
         config.programs.zed-editor.package
         config.programs.firefox.package
@@ -25,14 +27,6 @@
 
     configFile = {
       "mimeapps.list".force = true;
-    };
-
-    desktopEntries = {
-      nemo = {
-        name = "Nemo";
-        exec = "${config.homeModules.nemo.package}/bin/nemo";
-        icon = "${config.homeModules.nemo.package}/share/icons/hicolor/32x32/apps/nemo.png";
-      };
     };
 
     portal = {
@@ -50,7 +44,8 @@
           ];
           "org.freedesktop.impl.portal.Access" = "gtk";
           "org.freedesktop.impl.portal.Notification" = "gtk";
-          "org.freedesktop.impl.portal.FileChooser" = "gtk";
+          # GNOME delegates to Nautilus's GTK4 chooser, sharing its live Monet palette.
+          "org.freedesktop.impl.portal.FileChooser" = "gnome";
           "org.freedesktop.impl.portal.Secret" = "oo7";
         };
       };
