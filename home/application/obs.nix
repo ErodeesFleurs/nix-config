@@ -1,7 +1,6 @@
 {
   config,
   lib,
-  pkgs,
   ...
 }:
 
@@ -14,11 +13,6 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    programs.obs-studio = {
-      enable = true;
-      plugins = with pkgs; [
-        obs-studio-plugins.obs-websocket
-      ];
-    };
+    programs.obs-studio.enable = true;
   };
 }

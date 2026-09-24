@@ -7,8 +7,6 @@
 
 let
   cfg = config.homeModules.helix;
-  # 附加到各语言的 GPT LSP（按开关）
-  gptLs = lib.optionals cfg.language-servers.gpt.enable [ "gpt" ];
 in
 {
   options.homeModules.helix = {
@@ -115,13 +113,6 @@ in
     };
 
     language-servers = {
-      gpt = {
-        enable = lib.mkOption {
-          type = lib.types.bool;
-          default = true;
-          description = "Enable helix-gpt language server for AI assistance";
-        };
-      };
 
       rust = {
         enable-clippy = lib.mkOption {
@@ -210,15 +201,6 @@ in
       languages = lib.mkMerge [
         {
           language-server = lib.mkMerge [
-            (lib.mkIf cfg.language-servers.gpt.enable {
-              gpt = {
-                command = "helix-gpt";
-                args = [
-                  "--handler"
-                  "copilot"
-                ];
-              };
-            })
             (lib.mkIf cfg.language-servers.rust.enable-clippy {
               rust-analyzer.config.check = {
                 command = "clippy";
@@ -259,12 +241,12 @@ in
             }
             {
               name = "rust";
-              language-servers = [ "rust-analyzer" ] ++ gptLs;
+              language-servers = [ "rust-analyzer" ];
               auto-format = true;
             }
             {
               name = "python";
-              language-servers = [ "pylsp" ] ++ gptLs;
+              language-servers = [ "basedpyright" ];
               formatter = {
                 command = "sh";
                 args = [
@@ -276,10 +258,7 @@ in
             }
             {
               name = "lua";
-              language-servers = [
-                "emmylua-ls"
-              ]
-              ++ gptLs;
+              language-servers = [ "emmylua-ls" ];
               formatter = {
                 command = "stylua";
                 args = [ "-" ];

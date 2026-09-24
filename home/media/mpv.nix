@@ -142,7 +142,7 @@ in
 
           # Hardware acceleration
           hwdec = lib.mkIf cfg.hardware-acceleration cfg.hwdec-method;
-          vo = lib.mkIf cfg.hardware-acceleration "gpu";
+          vo = lib.mkIf cfg.hardware-acceleration "gpu-next";
 
           # Playback
           save-position-on-quit = cfg.save-position;
