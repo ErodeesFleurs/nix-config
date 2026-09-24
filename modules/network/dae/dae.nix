@@ -196,7 +196,7 @@ in
       package = inputs.daeuniverse.packages.${pkgs.stdenv.hostPlatform.system}.dae-unstable;
 
       openFirewall = {
-        enable = true;
+        enable = false;
         port = cfg.tproxy-port;
       };
       assets = with pkgs; [
@@ -220,7 +220,7 @@ in
       package = pkgs.daed;
 
       openFirewall = {
-        enable = true;
+        enable = false;
         port = cfg.tproxy-port;
       };
 

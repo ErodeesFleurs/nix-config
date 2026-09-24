@@ -7,9 +7,7 @@
     enable32Bit = true;
     extraPackages = with pkgs; [
       vulkan-loader
-      vulkan-tools
       libva
-      libva-utils
     ];
     extraPackages32 = [ pkgs.pkgsi686Linux.vulkan-loader ];
   };
@@ -18,6 +16,7 @@
   environment.systemPackages = with pkgs; [
     mesa-demos
     vulkan-tools
+    libva-utils
   ];
 
   # 打印（gutenprint 通用驱动；无三星打印机，splix 已移除）

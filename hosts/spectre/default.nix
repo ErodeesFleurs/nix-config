@@ -52,7 +52,6 @@
 
   # VDPAU 视频加速
   hardware.graphics.extraPackages = with pkgs; [
-    vdpauinfo
     libvdpau-va-gl
   ];
   environment.sessionVariables.VDPAU_DRIVER = lib.mkDefault "auto";
@@ -77,7 +76,10 @@
     ];
   };
   # /etc/subuid、/etc/subgid 由 users.users.fleurs.subUidRanges/subGidRanges 自动生成
-  environment.systemPackages = with pkgs; [ podman-compose ];
+  environment.systemPackages = with pkgs; [
+    podman-compose
+    vdpauinfo
+  ];
 
   # AppImage
   programs.appimage = {
