@@ -9,9 +9,9 @@
     # legacy 命令（nix search/run/shell）复用 flake.lock 中的 nixpkgs，
     # 避免每次重新拉取 registry
     registry.nixpkgs.flake = inputs.nixpkgs;
-    nixPath = [ "nixpkgs=flake:nixpkgs" ];
 
     settings = {
+      nix-path = [ "nixpkgs=flake:nixpkgs" ];
       experimental-features = [
         "flakes"
         "nix-command"
