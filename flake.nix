@@ -20,10 +20,7 @@
     nixcord = {
       url = "github:kaylorben/nixcord";
       inputs.nixpkgs.follows = "nixpkgs";
-      inputs.nixpkgs-nixcord.follows = "nixpkgs";
       inputs.home-manager.follows = "home-manager";
-
-      inputs.treefmt-nix.follows = "llm-agents/treefmt-nix";
     };
 
     vicinae = {
