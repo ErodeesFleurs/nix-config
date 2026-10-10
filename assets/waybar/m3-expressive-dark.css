@@ -238,6 +238,7 @@ menu separator {
 
 #clock,
 #custom-darkman,
+#custom-surface-keyboard,
 #idle_inhibitor,
 #tray,
 #network,
@@ -294,6 +295,7 @@ menu separator {
 #workspaces button:hover,
 #clock:hover,
 #custom-darkman:hover,
+#custom-surface-keyboard:hover,
 #idle_inhibitor:hover,
 #network:hover,
 #wireplumber:hover,
@@ -328,7 +330,8 @@ window#waybar.empty #window {
     color: @m3_on_secondary_container;
 }
 
-#custom-darkman.dark {
+#custom-darkman.dark,
+#custom-surface-keyboard.active {
     background-color: @m3_primary_container;
     border-color: transparent;
     color: @m3_on_primary_container;

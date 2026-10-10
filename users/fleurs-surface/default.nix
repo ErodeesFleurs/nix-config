@@ -13,11 +13,12 @@ let
       exec ${pkgs.systemd}/bin/systemctl --user start surface-keyboard.service
     fi
   '';
+  # Nerd Font mdi-keyboard 图标；中文开关提示保留在 tooltip，active/inactive 用于主题着色。
   keyboardStatus = pkgs.writeShellScript "surface-keyboard-status" ''
     if ${pkgs.systemd}/bin/systemctl --user is-active --quiet surface-keyboard.service; then
-      echo '{"text":"键盘","tooltip":"关闭屏幕键盘","class":"active"}'
+      echo '{"text":"󰌌","tooltip":"关闭屏幕键盘","class":"active"}'
     else
-      echo '{"text":"键盘","tooltip":"打开屏幕键盘","class":"inactive"}'
+      echo '{"text":"󰌌","tooltip":"打开屏幕键盘","class":"inactive"}'
     fi
   '';
 in
@@ -54,6 +55,7 @@ in
   };
 
   programs.waybar.settings.main = {
+    # assets/waybar 的 Monet body 与浅/深色样式统一提供胶囊外观及 active 状态强调色。
     modules-right = lib.mkBefore [ "custom/surface-keyboard" ];
     "custom/surface-keyboard" = {
       exec = "${keyboardStatus}";
