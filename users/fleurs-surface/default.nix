@@ -31,6 +31,8 @@ in
     go-musicfox
   ];
 
+  homeModules.krita.enable = true;
+
   xdg.mimeApps.defaultApplications = {
     "text/html" = "firefox.desktop";
     "x-scheme-handler/http" = "firefox.desktop";
