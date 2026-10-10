@@ -33,6 +33,12 @@ in
 
   homeModules.krita.enable = true;
 
+  # 沿用 Surface 已有的 Firefox profile；避免主题配置写入未使用的 XDG profile。
+  programs.firefox = {
+    configPath = ".mozilla/firefox";
+    profiles.${config.homeModules.firefox.profile-name}.path = "ftj1tpra.default";
+  };
+
   xdg.mimeApps.defaultApplications = {
     "text/html" = "firefox.desktop";
     "x-scheme-handler/http" = "firefox.desktop";

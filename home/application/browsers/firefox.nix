@@ -71,8 +71,9 @@ in
         settings =
           lib.optionalAttrs cfg.enable-monet {
             "toolkit.legacyUserProfileCustomizations.stylesheets" = true;
-            "browser.theme.content-theme" = 0;
-            "browser.theme.toolbar-theme" = 0;
+            # 0 = dark, 1 = light, 2 = system; keep Monet's media queries adaptive.
+            "browser.theme.content-theme" = 2;
+            "browser.theme.toolbar-theme" = 2;
           }
           // cfg.extra-settings;
       };

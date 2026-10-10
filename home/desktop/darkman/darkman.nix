@@ -190,12 +190,16 @@ let
     ${pkgs.coreutils}/bin/ln -sfn "$target" "${currentSymlink}.tmp"
     ${pkgs.coreutils}/bin/mv -T "${currentSymlink}.tmp" "${currentSymlink}"
 
-    # ── GTK 主题 (gsettings 即时生效；绝对路径：hook 的 PATH 无 glib) ──
-    ${pkgs.glib}/bin/gsettings set org.gnome.desktop.interface gtk-theme "$GTK_THEME" || true
-    ${pkgs.glib}/bin/gsettings set org.gnome.desktop.interface icon-theme "$ICON_THEME" || true
-    ${pkgs.glib}/bin/gsettings set org.gnome.desktop.interface color-scheme "$COLOR_SCHEME" || true
-    ${pkgs.glib}/bin/gsettings set org.gnome.desktop.interface cursor-theme "$CURSOR_THEME" || true
-    ${pkgs.glib}/bin/gsettings set org.gnome.desktop.interface cursor-size "$CURSOR_SIZE" || true
+    # ── GTK 主题：只为这五次调用提供 Nixpkgs 的 schema 路径，不依赖 session 环境 ──
+    # 必需设置失败时让 hook 返回失败；下方可选应用重载仍保持 best-effort。
+    (
+      export GSETTINGS_SCHEMA_DIR=${shellArg (pkgs.glib.getSchemaPath pkgs.gsettings-desktop-schemas)}
+      ${pkgs.glib}/bin/gsettings set org.gnome.desktop.interface gtk-theme "$GTK_THEME"
+      ${pkgs.glib}/bin/gsettings set org.gnome.desktop.interface icon-theme "$ICON_THEME"
+      ${pkgs.glib}/bin/gsettings set org.gnome.desktop.interface color-scheme "$COLOR_SCHEME"
+      ${pkgs.glib}/bin/gsettings set org.gnome.desktop.interface cursor-theme "$CURSOR_THEME"
+      ${pkgs.glib}/bin/gsettings set org.gnome.desktop.interface cursor-size "$CURSOR_SIZE"
+    )
 
     ${switchActions}
 
@@ -381,6 +385,10 @@ in
         usegeoclue = cfg.useGeoclue;
       };
     };
+
+    # darkman 启动时会立即执行当前模式的 hook；hook 更新也应触发一次重启，
+    # 避免 apply 后模式未变化时继续保留旧的 GTK 设置。昼夜切换不重启服务。
+    systemd.user.services.darkman.Unit.X-Restart-Triggers = [ "${mkHookScript}" ];
 
     # ── Darkman hook 脚本 ────────────────────────────
     xdg.dataFile = {
