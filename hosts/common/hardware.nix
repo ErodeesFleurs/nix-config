@@ -25,9 +25,16 @@
     drivers = with pkgs; [ gutenprint ];
   };
 
-  # Logitech 无线设备
-  hardware.logitech.wireless.enable = true;
-  programs.solaar.enable = true;
+  # Logitech：OpenLogi 模块提供设备访问规则和随图形会话启动的后台服务。
+  # 不与 Solaar 同时运行，避免争用 HID++；不再安装旧 ltunify 管理工具。
+  programs.openlogi.enable = true;
+
+  # 上游 0.8.13 仅为主界面设置图形库 RPATH；Actions Ring 子进程也需要它们。
+  systemd.user.services.openlogi-agent.environment.LD_LIBRARY_PATH = lib.makeLibraryPath [
+    pkgs.wayland
+    pkgs.vulkan-loader
+    pkgs.libGL
+  ];
 
   # 电源管理：ppd 全权负责；不与 powertop --auto-tune 并存
   # （auto-tune 开机全局写 sysfs 且无模式感知，会覆盖 ppd performance 档）

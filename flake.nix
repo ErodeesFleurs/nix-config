@@ -44,6 +44,12 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    openlogi = {
+      url = "github:AprilNEA/OpenLogi";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.rust-overlay.inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     niri = {
       url = "github:sodiboo/niri-flake";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -126,6 +132,7 @@
             inputs.daeuniverse.nixosModules.daed
             inputs.niri.nixosModules.niri
             inputs.agenix.nixosModules.default
+            inputs.openlogi.nixosModules.default
             ./modules
             hostDir
           ];
