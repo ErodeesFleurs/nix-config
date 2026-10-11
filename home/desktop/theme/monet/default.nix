@@ -29,6 +29,7 @@ let
   yazi = import ./yazi.nix { inherit config themeLib; };
   helix = import ./helix.nix { inherit config themeLib; };
   zed = import ./zed.nix { inherit config themeLib; };
+  openlogi = import ./openlogi.nix { inherit config themeLib; };
   fastfetch = import ./fastfetch.nix { inherit config themeLib; };
   starship = import ./starship.nix { inherit config themeLib; };
   nushell = import ./nushell.nix { inherit config themeLib; };
@@ -64,6 +65,7 @@ let
     yazi
     helix
     zed
+    openlogi
     fastfetch
     starship
     nushell

@@ -1,5 +1,19 @@
 # 通用硬件支持（主机特定项：NVIDIA、VDPAU 在各 host 中设置）
-{ lib, pkgs, ... }:
+{
+  lib,
+  pkgs,
+  inputs,
+  ...
+}:
+
+let
+  openlogi = inputs.openlogi.packages.${pkgs.stdenv.hostPlatform.system}.openlogi;
+  monetSource = pkgs.applyPatches {
+    name = "openlogi-monet-source";
+    src = openlogi.src;
+    patches = [ ../../patches/openlogi/monet.patch ];
+  };
+in
 
 {
   hardware.graphics = {
@@ -27,7 +41,19 @@
 
   # Logitech：OpenLogi 模块提供设备访问规则和随图形会话启动的后台服务。
   # 不与 Solaar 同时运行，避免争用 HID++；不再安装旧 ltunify 管理工具。
-  programs.openlogi.enable = true;
+  programs.openlogi = {
+    enable = true;
+    # 上游只嵌入内置主题；补丁加载 Monet 文件，并同步主界面及 Actions Ring。
+    package = openlogi.overrideAttrs (old: {
+      src = monetSource;
+      # 补丁仅引用已经锁定的依赖：复用上游 vendor，更新工作区依赖清单。
+      cargoDeps = old.cargoDeps.overrideAttrs (vendor: {
+        buildCommand = vendor.buildCommand + ''
+          ln -sfn ${monetSource}/Cargo.lock "$out/Cargo.lock"
+        '';
+      });
+    });
+  };
 
   # 上游 0.8.13 仅为主界面设置图形库 RPATH；Actions Ring 子进程也需要它们。
   systemd.user.services.openlogi-agent.environment.LD_LIBRARY_PATH = lib.makeLibraryPath [

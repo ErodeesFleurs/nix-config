@@ -65,6 +65,7 @@
     nautilus.enable = true;
     mpv.enable = true;
     obs.enable = true;
+    openlogi.enable = true;
     starbound.enable = false;
     mycard.enable = true;
     discord = {

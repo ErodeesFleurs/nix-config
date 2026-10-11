@@ -1,0 +1,2447 @@
+diff -ruN a/Cargo.lock b/Cargo.lock
+--- a/Cargo.lock	1970-01-01 08:00:01.000000000 +0800
++++ b/Cargo.lock	2026-10-11 15:41:50.885537424 +0800
+@@ -5933,8 +5933,15 @@
+ name = "openlogi-ui"
+ version = "0.8.13"
+ dependencies = [
++ "anyhow",
++ "gpui-component",
+  "gpui-pre",
++ "notify",
+  "openlogi-core",
++ "serde",
++ "serde_json",
++ "tokio",
++ "tracing",
+ ]
+ 
+ [[package]]
+diff -ruN a/Cargo.toml b/Cargo.toml
+--- a/Cargo.toml	1970-01-01 08:00:01.000000000 +0800
++++ b/Cargo.toml	2026-10-11 15:41:50.886251785 +0800
+@@ -58,6 +58,7 @@
+ futures-lite = "2"
+ serde = { version = "1", features = ["derive"] }
+ serde_json = "1"
++notify = "7"
+ toml = "0.8"
+ ureq = { version = "3", default-features = false, features = ["rustls", "platform-verifier", "json"] }
+ sha2 = "0.10"
+diff -ruN a/crates/openlogi-desktop/src/app/detail.rs b/crates/openlogi-desktop/src/app/detail.rs
+--- a/crates/openlogi-desktop/src/app/detail.rs	1970-01-01 08:00:01.000000000 +0800
++++ b/crates/openlogi-desktop/src/app/detail.rs	2026-10-11 15:41:50.887145949 +0800
+@@ -204,21 +204,21 @@
+                 .cursor_pointer()
+                 .text_body()
+                 .text_color(if selected {
+-                    pal.text_primary
++                    pal.selected_foreground
+                 } else {
+                     pal.text_muted
+                 })
+-                .when(selected, |row| row.bg(crate::ui::theme::accent_tint()))
++                .when(selected, |row| row.bg(pal.selected))
+                 .hover(move |row| {
+                     row.bg(if selected {
+-                        crate::ui::theme::accent_tint_hover()
++                        pal.selected_hover
+                     } else {
+                         pal.control_hover
+                     })
+                 })
+                 .focus_visible(move |row| {
+                     row.bg(if selected {
+-                        crate::ui::theme::accent_tint_hover()
++                        pal.selected_hover
+                     } else {
+                         pal.control_hover
+                     })
+diff -ruN a/crates/openlogi-desktop/src/app/home/views.rs b/crates/openlogi-desktop/src/app/home/views.rs
+--- a/crates/openlogi-desktop/src/app/home/views.rs	1970-01-01 08:00:01.000000000 +0800
++++ b/crates/openlogi-desktop/src/app/home/views.rs	2026-10-11 15:45:19.786718474 +0800
+@@ -3,7 +3,7 @@
+ use gpui::{
+     AnyElement, Context, ElementId, InteractiveElement, IntoElement, ParentElement, Rems,
+     SharedString, StatefulInteractiveElement as _, Styled, div, prelude::FluentBuilder as _, px,
+-    rems, rgb,
++    rems,
+ };
+ use gpui_base::Button as BaseButton;
+ use gpui_component::{
+@@ -227,8 +227,8 @@
+         .aria_description(device_accessibility_description(record))
+         .aria_selected(active)
+         .cursor_pointer()
+-        .hover(move |card| card.border_color(rgb(theme::ACCENT_BLUE)).shadow_sm())
+-        .focus_visible(move |card| card.border_color(rgb(theme::ACCENT_BLUE)).shadow_sm())
++        .hover(move |card| card.border_color(pal.accent).shadow_sm())
++        .focus_visible(move |card| card.border_color(pal.accent).shadow_sm())
+         .on_click(move |_, _, cx| {
+             view.update(cx, |this, cx| {
+                 this.open_device(record_key.clone(), cx);
+@@ -262,7 +262,7 @@
+         .py_2()
+         .rounded(pal.card_radius)
+         .border_1()
+-        .border_color(device_ring(enabled))
++        .border_color(device_ring(enabled, pal))
+         .bg(pal.panel)
+         .shadow_xs()
+         .child(
+@@ -328,8 +328,8 @@
+         .aria_description(device_accessibility_description(record))
+         .aria_selected(active)
+         .cursor_pointer()
+-        .hover(move |row| row.border_color(rgb(theme::ACCENT_BLUE)).shadow_sm())
+-        .focus_visible(move |row| row.border_color(rgb(theme::ACCENT_BLUE)).shadow_sm())
++        .hover(move |row| row.border_color(pal.accent).shadow_sm())
++        .focus_visible(move |row| row.border_color(pal.accent).shadow_sm())
+         .on_click(move |_, _, cx| {
+             view.update(cx, |this, cx| {
+                 this.open_device(record_key.clone(), cx);
+diff -ruN a/crates/openlogi-desktop/src/app/home.rs b/crates/openlogi-desktop/src/app/home.rs
+--- a/crates/openlogi-desktop/src/app/home.rs	1970-01-01 08:00:01.000000000 +0800
++++ b/crates/openlogi-desktop/src/app/home.rs	2026-10-11 15:45:19.760719239 +0800
+@@ -13,7 +13,7 @@
+ use gpui::{
+     Anchor, AnyElement, App, AppContext as _, Context, Div, ElementId, Hsla, InteractiveElement,
+     IntoElement, ParentElement, SharedString, StatefulInteractiveElement as _, Styled, Window,
+-    canvas, div, fill, img, point, prelude::FluentBuilder as _, px, rgb, svg,
++    canvas, div, fill, img, point, prelude::FluentBuilder as _, px, svg,
+ };
+ use gpui_base::Button as BaseButton;
+ use gpui_component::{
+@@ -175,7 +175,7 @@
+         .p_4()
+         .rounded(pal.card_radius)
+         .border_1()
+-        .border_color(device_ring(enabled))
++        .border_color(device_ring(enabled, pal))
+         .bg(pal.panel)
+         .shadow_xs()
+         .child(
+@@ -262,9 +262,9 @@
+         )
+ }
+ 
+-/// Transport glyph in the card corner, colored by the transport itself —
+-/// Bluetooth blue, receiver green, cable muted; the connectivity words ride
+-/// its hover tip and the dimmed render already marks an offline card.
++/// Transport glyph in the card corner: Bluetooth uses the active accent,
++/// receivers use the connected status hue, and cables stay muted. Connectivity
++/// words ride its hover tip and the dimmed render marks an offline card.
+ fn transport_glance(record: &DeviceRecord, pal: Palette) -> impl IntoElement {
+     let path = if matches!(record.kind, DeviceKind::Camera) {
+         "action-icons/usb.svg"
+@@ -272,10 +272,8 @@
+         connection_icon_path(record.route.as_ref(), record.model_info.as_ref())
+     };
+     let color: Hsla = match path {
+-        "action-icons/bluetooth.svg" => rgb(theme::ACCENT_BLUE).into(),
+-        "action-icons/bolt.svg" | "action-icons/unifying.svg" => {
+-            rgb(theme::STATUS_CONNECTED).into()
+-        }
++        "action-icons/bluetooth.svg" => pal.accent,
++        "action-icons/bolt.svg" | "action-icons/unifying.svg" => pal.success,
+         _ => pal.text_muted,
+     };
+     let hint: SharedString = format!(
+@@ -309,11 +307,11 @@
+         .tooltip(move |window, cx| Tooltip::new(hint.clone()).build(window, cx))
+ }
+ 
+-fn device_ring(enabled: bool) -> Hsla {
++fn device_ring(enabled: bool, pal: Palette) -> Hsla {
+     if enabled {
+         gpui::transparent_black()
+     } else {
+-        rgb(theme::STATUS_DISABLED).into()
++        pal.danger
+     }
+ }
+ 
+diff -ruN a/crates/openlogi-desktop/src/app/status.rs b/crates/openlogi-desktop/src/app/status.rs
+--- a/crates/openlogi-desktop/src/app/status.rs	1970-01-01 08:00:01.000000000 +0800
++++ b/crates/openlogi-desktop/src/app/status.rs	2026-10-11 15:45:19.795718209 +0800
+@@ -2,7 +2,7 @@
+ //! pre-connection / unreachable / outdated-build frames rendered in place of
+ //! the real UI, and an attention bar shown only when action is required.
+ 
+-use gpui::{App, Div, IntoElement, ParentElement, SharedString, Styled, div, px, rgb};
++use gpui::{App, Div, IntoElement, ParentElement, SharedString, Styled, div, px};
+ use gpui_component::{
+     Icon, IconName, Sizable as _,
+     button::{Button, ButtonVariants as _},
+@@ -47,7 +47,7 @@
+         .child(
+             Icon::new(IconName::TriangleAlert)
+                 .size_8()
+-                .text_color(rgb(theme::STATUS_CONNECTING)),
++                .text_color(pal.warning),
+         )
+         .child(div().text_title().child(headline))
+         .child(
+@@ -164,7 +164,7 @@
+             div()
+                 .size_1p5()
+                 .rounded_full()
+-                .bg(rgb(theme::STATUS_CONNECTING)),
++                .bg(pal.warning),
+         )
+         .child(div().child(tr!("permissions.accessibility_not_granted_click_to_grant")))
+         .on_click(|_, _, cx| super::request_accessibility(cx))
+diff -ruN a/crates/openlogi-desktop/src/app.rs b/crates/openlogi-desktop/src/app.rs
+--- a/crates/openlogi-desktop/src/app.rs	1970-01-01 08:00:01.000000000 +0800
++++ b/crates/openlogi-desktop/src/app.rs	2026-10-11 15:45:19.748719592 +0800
+@@ -1,7 +1,7 @@
+ use gpui::{
+     App, AppContext as _, Context, Entity, FocusHandle, Focusable, InteractiveElement, IntoElement,
+     MouseButton, NavigationDirection, ParentElement, Render, Styled, Subscription, Window, div,
+-    prelude::FluentBuilder as _, rgb,
++    prelude::FluentBuilder as _,
+ };
+ use gpui_base::Button as BaseButton;
+ use gpui_component::{
+@@ -411,7 +411,7 @@
+             .child(
+                 Icon::new(IconName::TriangleAlert)
+                     .size_8()
+-                    .text_color(rgb(theme::STATUS_CONNECTING)),
++                    .text_color(pal.warning),
+             )
+             .child(
+                 div()
+diff -ruN a/crates/openlogi-desktop/src/features/action_ring/editor.rs b/crates/openlogi-desktop/src/features/action_ring/editor.rs
+--- a/crates/openlogi-desktop/src/features/action_ring/editor.rs	1970-01-01 08:00:01.000000000 +0800
++++ b/crates/openlogi-desktop/src/features/action_ring/editor.rs	2026-10-11 15:41:50.888190977 +0800
+@@ -2,7 +2,7 @@
+ 
+ use gpui::{
+     Entity, InteractiveElement, IntoElement, ParentElement, Role, ScrollHandle,
+-    StatefulInteractiveElement as _, Styled, div, prelude::FluentBuilder as _, px, rgb, svg,
++    StatefulInteractiveElement as _, Styled, div, prelude::FluentBuilder as _, px, svg,
+ };
+ use gpui_component::{
+     Icon, IconName, Selectable as _, button::Button, h_flex, input::InputState,
+@@ -18,7 +18,7 @@
+ use crate::state::AppState;
+ use crate::ui::action::localized_action_label;
+ use crate::ui::components::{MenuRow, control_input};
+-use crate::ui::theme::{self, Palette, Typography as _};
++use crate::ui::theme::{Palette, Typography as _};
+ 
+ pub(super) fn action_library(
+     slot: ActionRingSlot,
+@@ -157,7 +157,7 @@
+         .size(px(32.0))
+         .rounded(px(16.0))
+         .selected(selected)
+-        .icon(Icon::empty().path(path).text_color(pal.text_muted))
++        .icon(Icon::empty().path(path).text_color(if selected { pal.selected_foreground } else { pal.text_muted }))
+         .tooltip(label)
+ }
+ 
+@@ -256,15 +256,14 @@
+                                     .path(icon_path)
+                                     .size_4()
+                                     .flex_none()
+-                                    .text_color(pal.text_muted),
++                                    .text_color(if selected { pal.selected_foreground } else { pal.text_muted }),
+                             )
+                             .child(label),
+                     )
+                     .when(selected, |row| {
+                         row.child(
+                             Icon::new(IconName::Check)
+-                                .size_3()
+-                                .text_color(rgb(theme::ACCENT_BLUE)),
++                                .size_3().text_color(pal.selected_foreground),
+                         )
+                     })
+                     .on_click(move |_, _, cx| {
+diff -ruN a/crates/openlogi-desktop/src/features/action_ring.rs b/crates/openlogi-desktop/src/features/action_ring.rs
+--- a/crates/openlogi-desktop/src/features/action_ring.rs	1970-01-01 08:00:01.000000000 +0800
++++ b/crates/openlogi-desktop/src/features/action_ring.rs	2026-10-11 15:41:50.888408787 +0800
+@@ -6,7 +6,7 @@
+ use gpui::{
+     App, AppContext as _, Context, Entity, FocusHandle, Focusable, InteractiveElement, IntoElement,
+     ParentElement, Render, ScrollHandle, SharedString, StatefulInteractiveElement as _, Styled,
+-    Subscription, Window, div, prelude::FluentBuilder as _, px, rgb, svg,
++    Subscription, Window, div, prelude::FluentBuilder as _, px, svg,
+ };
+ use gpui_base::Button as BaseButton;
+ use gpui_component::{
+@@ -306,17 +306,17 @@
+         .rounded_full()
+         .border_2()
+         .border_color(if selected {
+-            rgb(theme::ACCENT_BLUE).into()
++            pal.accent
+         } else {
+             pal.border
+         })
+         .bg(if selected {
+-            theme::accent_tint()
++            pal.selected
+         } else {
+             pal.control
+         })
+         .text_color(if selected {
+-            pal.text_primary
++            pal.selected_foreground
+         } else {
+             pal.text_muted
+         })
+@@ -325,7 +325,7 @@
+         .tooltip(move |window, cx| Tooltip::new(label.clone()).build(window, cx))
+         .when_some(icon_path, |button, path| {
+             button.child(svg().path(path).size(px(20.0)).text_color(if selected {
+-                pal.text_primary
++                pal.selected_foreground
+             } else {
+                 pal.text_muted
+             }))
+@@ -335,16 +335,16 @@
+         })
+         .hover(move |button| {
+             button.bg(if selected {
+-                theme::accent_tint_hover()
++                pal.selected_hover
+             } else {
+                 pal.control_hover
+             })
+         })
+         .focus_visible(move |button| {
+             button
+-                .border_color(rgb(theme::ACCENT_BLUE))
++                .border_color(pal.accent)
+                 .bg(if selected {
+-                    theme::accent_tint_hover()
++                    pal.selected_hover
+                 } else {
+                     pal.control_hover
+                 })
+diff -ruN a/crates/openlogi-desktop/src/features/binding_editor.rs b/crates/openlogi-desktop/src/features/binding_editor.rs
+--- a/crates/openlogi-desktop/src/features/binding_editor.rs	1970-01-01 08:00:01.000000000 +0800
++++ b/crates/openlogi-desktop/src/features/binding_editor.rs	2026-10-11 15:41:50.888669467 +0800
+@@ -4,7 +4,7 @@
+ 
+ use gpui::{
+     App, InteractiveElement, IntoElement, ParentElement, Role, StatefulInteractiveElement as _,
+-    Styled, Window, div, prelude::FluentBuilder as _, px, rgb, svg,
++    Styled, Window, div, prelude::FluentBuilder as _, px, svg,
+ };
+ use gpui_component::{Icon, IconName, Selectable as _, h_flex, v_flex};
+ use openlogi_core::binding::{Action, Category, GestureDirection};
+@@ -12,7 +12,7 @@
+ use crate::ui::action::localized_action_label;
+ use crate::ui::components::MenuRow;
+ use crate::ui::section::section_label;
+-use crate::ui::theme::{ACCENT_BLUE, Palette, Typography as _};
++use crate::ui::theme::{Palette, Typography as _};
+ 
+ /// Height cap shared by compact inspector and editor lists.
+ pub(crate) const EDITOR_LIST_MAX_H: f32 = 360.;
+@@ -176,15 +176,14 @@
+                                         .path(icon_path)
+                                         .size_4()
+                                         .flex_none()
+-                                        .text_color(pal.text_muted),
++                                        .text_color(if selected { pal.selected_foreground } else { pal.text_muted }),
+                                 )
+                                 .child(div().child(label)),
+                         )
+                         .when(selected, |row| {
+                             row.child(
+                                 Icon::new(IconName::Check)
+-                                    .size_3()
+-                                    .text_color(rgb(ACCENT_BLUE)),
++                                    .size_3().text_color(pal.selected_foreground),
+                             )
+                         })
+                         .on_click(move |_event, window, cx| (on_pick)(action.clone(), window, cx))
+diff -ruN a/crates/openlogi-desktop/src/features/camera/controls/rows.rs b/crates/openlogi-desktop/src/features/camera/controls/rows.rs
+--- a/crates/openlogi-desktop/src/features/camera/controls/rows.rs	1970-01-01 08:00:01.000000000 +0800
++++ b/crates/openlogi-desktop/src/features/camera/controls/rows.rs	2026-10-11 15:41:50.888913796 +0800
+@@ -2,11 +2,11 @@
+ 
+ use crate::state::AppState;
+ use crate::ui::components::ProfileTab;
+-use crate::ui::theme::{self, ACCENT_BLUE, Palette, Typography as _};
++use crate::ui::theme::{self, Palette, Typography as _};
+ use gpui::{
+     ClickEvent, Context, ElementId, InteractiveElement, MouseButton, MouseDownEvent, ParentElement,
+     Role, SharedString, StatefulInteractiveElement as _, Styled, Toggled, div,
+-    prelude::FluentBuilder as _, px, rgb,
++    prelude::FluentBuilder as _, px,
+ };
+ use gpui_base::Button as BaseButton;
+ use gpui_component::{IconName, Selectable as _, h_flex, slider::Slider};
+@@ -149,7 +149,7 @@
+                 .text_color(if dimmed {
+                     pal.text_muted
+                 } else {
+-                    rgb(ACCENT_BLUE).into()
++                    pal.accent
+                 })
+                 .accessibility_label(tr!("camera.set_value_label", label => slider.label.clone()))
+                 .child(format!("{value}"))
+@@ -165,7 +165,7 @@
+         && let Some(toggle) = slider.control.auto_toggle()
+         && let Some(auto_ix) = panel.autos.iter().position(|a| a.toggle == toggle)
+     {
+-        let accent = rgb(ACCENT_BLUE);
++        let accent = pal.accent;
+         auto_cell = auto_cell.child(
+             BaseButton::new((ElementId::from("camera-control-auto"), toggle.name()))
+                 .role(Role::CheckBox)
+@@ -176,11 +176,11 @@
+                 .py_0p5()
+                 .rounded_full()
+                 .border_1()
+-                .border_color(if on { accent.into() } else { pal.border })
++                .border_color(if on { accent } else { pal.border })
+                 .text_caption()
+-                .text_color(if on { pal.text_primary } else { pal.text_muted })
++                .text_color(if on { pal.selected_foreground } else { pal.text_muted })
+                 .bg(if on {
+-                    theme::accent_tint()
++                    pal.selected
+                 } else {
+                     pal.control
+                 })
+@@ -215,7 +215,7 @@
+     .filter(|(value, _, _)| slider.range.supports(*value))
+     {
+         let active = value == current;
+-        let accent = rgb(ACCENT_BLUE);
++        let accent = pal.accent;
+         let accessibility_label = label.clone();
+         choices = choices.child(
+             BaseButton::new(("camera-frequency", id))
+@@ -232,15 +232,15 @@
+                 .py_0p5()
+                 .rounded_full()
+                 .border_1()
+-                .border_color(if active { accent.into() } else { pal.border })
++                .border_color(if active { accent } else { pal.border })
+                 .text_caption()
+                 .text_color(if active {
+-                    pal.text_primary
++                    pal.selected_foreground
+                 } else {
+                     pal.text_muted
+                 })
+                 .bg(if active {
+-                    theme::accent_tint()
++                    pal.selected
+                 } else {
+                     pal.control
+                 })
+@@ -282,7 +282,7 @@
+ ) -> gpui::Stateful<gpui::Div> {
+     let slider = &panel.sliders[ix];
+     let on = slider.value(cx) != 0;
+-    let accent = rgb(ACCENT_BLUE);
++    let accent = pal.accent;
+     h_flex()
+         .id(("camera-control-row", ix))
+         .w_full()
+@@ -308,11 +308,11 @@
+                 .py_0p5()
+                 .rounded_full()
+                 .border_1()
+-                .border_color(if on { accent.into() } else { pal.border })
++                .border_color(if on { accent } else { pal.border })
+                 .text_caption()
+-                .text_color(if on { pal.text_primary } else { pal.text_muted })
++                .text_color(if on { pal.selected_foreground } else { pal.text_muted })
+                 .bg(if on {
+-                    theme::accent_tint()
++                    pal.selected
+                 } else {
+                     pal.control
+                 })
+@@ -364,7 +364,7 @@
+ 
+ fn chip_hover_fill(selected: bool, pal: Palette) -> gpui::Hsla {
+     if selected {
+-        theme::accent_tint_hover()
++        pal.selected_hover
+     } else {
+         pal.control_hover
+     }
+diff -ruN a/crates/openlogi-desktop/src/features/keyboard/function_row.rs b/crates/openlogi-desktop/src/features/keyboard/function_row.rs
+--- a/crates/openlogi-desktop/src/features/keyboard/function_row.rs	1970-01-01 08:00:01.000000000 +0800
++++ b/crates/openlogi-desktop/src/features/keyboard/function_row.rs	2026-10-11 15:41:50.889271814 +0800
+@@ -30,8 +30,8 @@
+ use gpui::{
+     AnyElement, App, AppContext as _, Bounds, Context, Entity, FontWeight, Hsla,
+     InteractiveElement, IntoElement, ParentElement, PathBuilder, Render, RenderOnce, Role,
+-    SharedString, StatefulInteractiveElement as _, Styled, Subscription, Window, canvas, div, hsla,
+-    point, prelude::FluentBuilder as _, px, rgb, svg,
++    SharedString, StatefulInteractiveElement as _, Styled, Subscription, Window, canvas, div,
++    point, prelude::FluentBuilder as _, px, svg,
+ };
+ use gpui_component::tooltip::Tooltip;
+ use gpui_component::{Selectable as _, h_flex, input::InputState, v_flex};
+@@ -51,7 +51,7 @@
+ use crate::state::{AppState, StateEvent, StateEvents};
+ use crate::ui::action::localized_action_label;
+ use crate::ui::components::MenuRow;
+-use crate::ui::theme::{self, ACCENT_BLUE, Palette, Typography as _};
++use crate::ui::theme::{self, Palette, Typography as _};
+ use gpui::ease_in_out;
+ use gpui::{Animation, AnimationExt, img};
+ 
+@@ -463,6 +463,7 @@
+                 selected,
+                 hovered,
+                 (img_w, img_h),
++                pal,
+             ))
+             .children({
+                 let count = self.slots.len();
+@@ -488,7 +489,7 @@
+                     .h(px(img_h))
+                     .children(self.slots.into_iter().map(|slot| {
+                     let highlighted = key_is_highlighted(slot.idx, selected, hovered);
+-                    key_click_target(slot, highlighted, (img_w, img_h), &view_clone)
++                    key_click_target(slot, highlighted, (img_w, img_h), &view_clone, pal)
+                 })),
+             )
+     }
+@@ -536,19 +537,19 @@
+             .rounded_md()
+             .border_1()
+             .border_color(if highlighted {
+-                rgb(ACCENT_BLUE).into()
++                pal.accent
+             } else {
+                 pal.border
+             })
+             .bg(if highlighted {
+-                theme::accent_tint()
++                pal.selected
+             } else {
+                 pal.control
+             })
+             .cursor_pointer()
+             .hover(move |s| {
+                 s.bg(if highlighted {
+-                    theme::accent_tint_hover()
++                    pal.selected_hover
+                 } else {
+                     pal.control_hover
+                 })
+@@ -561,7 +562,7 @@
+                     .text_caption()
+                     .font_weight(FontWeight::SEMIBOLD)
+                     .text_color(if highlighted {
+-                        rgb(ACCENT_BLUE).into()
++                        pal.selected_foreground
+                     } else {
+                         pal.text_primary
+                     })
+@@ -576,7 +577,7 @@
+                     .when_some(binding_icon, |row, icon| {
+                         row.child(svg().path(icon).size(px(9.)).flex_none().text_color(
+                             if highlighted {
+-                                rgb(ACCENT_BLUE).into()
++                                pal.selected_foreground
+                             } else {
+                                 pal.text_muted
+                             },
+@@ -590,7 +591,7 @@
+                             .whitespace_nowrap()
+                             .text_caption()
+                             .text_color(if highlighted {
+-                                rgb(ACCENT_BLUE).into()
++                                pal.selected_foreground
+                             } else {
+                                 pal.text_muted
+                             })
+@@ -614,6 +615,7 @@
+     highlighted: bool,
+     (img_w, img_h): (f32, f32),
+     view: &Entity<FunctionRowView>,
++    pal: Palette,
+ ) -> impl IntoElement {
+     let idx = slot.idx;
+     let x_frac = slot.x_frac;
+@@ -648,13 +650,13 @@
+                             .h(px(KEY_HOTSPOT_DOT))
+                             .rounded_full()
+                             .border_1()
+-                            .border_color(gpui::Hsla::from(rgb(ACCENT_BLUE)))
+-                            .bg(gpui::Hsla::from(rgb(ACCENT_BLUE))),
++                            .border_color(pal.accent)
++                            .bg(pal.accent),
+                     )
+                     .rounded_full()
+                     .border_1()
+-                    .border_color(theme::accent_tint_hover())
+-                    .bg(theme::accent_tint()),
++                    .border_color(pal.selected_hover)
++                    .bg(pal.selected),
+             )
+         })
+         .on_hover(move |hovered, _window, cx| {
+@@ -678,6 +680,7 @@
+     selected: Option<usize>,
+     hovered: Option<usize>,
+     (img_w, img_h): (f32, f32),
++    pal: Palette,
+ ) -> impl IntoElement {
+     let guides: Vec<(usize, f32, f32)> =
+         slots.iter().map(|s| (s.idx, s.x_frac, s.y_frac)).collect();
+@@ -685,7 +688,7 @@
+         move |_bounds, _, _| (guides, selected, hovered),
+         move |bounds, payload, window, _app| {
+             let (guides, selected, hovered) = payload;
+-            paint_keyboard_leaders(bounds, guides, selected, hovered, (img_w, img_h), window);
++            paint_keyboard_leaders(bounds, guides, selected, hovered, (img_w, img_h), window, pal);
+         },
+     )
+     .absolute()
+@@ -701,6 +704,7 @@
+     hovered: Option<usize>,
+     (img_w, img_h): (f32, f32),
+     window: &mut Window,
++    pal: Palette,
+ ) {
+     let count = guides.len();
+     for (idx, x_frac, y_frac) in guides {
+@@ -719,9 +723,9 @@
+         path.line_to(end);
+         if let Ok(path) = path.build() {
+             if highlighted {
+-                window.paint_path(path, rgb(ACCENT_BLUE));
++                window.paint_path(path, pal.accent);
+             } else {
+-                window.paint_path(path, hsla(0., 0., 0.55, 0.35));
++                window.paint_path(path, pal.text_muted.opacity(0.35));
+             }
+         }
+     }
+@@ -845,15 +849,14 @@
+                                         .path("action-icons/keyboard.svg")
+                                         .size_4()
+                                         .flex_none()
+-                                        .text_color(pal.text_muted),
++                                        .text_color(if current.is_none() { pal.selected_foreground } else { pal.text_muted }),
+                                 )
+                                 .child(div().child(tr!("keyboard.native_function"))),
+                         )
+                         .when(current.is_none(), |row| {
+                             row.child(
+                                 gpui_component::Icon::new(gpui_component::IconName::Check)
+-                                    .size_3()
+-                                    .text_color(rgb(ACCENT_BLUE)),
++                                    .size_3().text_color(pal.selected_foreground),
+                             )
+                         })
+                         .on_click(move |_ev, _window, cx| {
+@@ -963,15 +966,14 @@
+                                         .path(*icon_path)
+                                         .size_4()
+                                         .flex_none()
+-                                        .text_color(pal.text_muted),
++                                        .text_color(if selected { pal.selected_foreground } else { pal.text_muted }),
+                                 )
+                                 .child(div().child((*label).to_string())),
+                         )
+                         .when(selected, |s| {
+                             s.child(
+                                 gpui_component::Icon::new(gpui_component::IconName::Check)
+-                                    .size_3()
+-                                    .text_color(rgb(ACCENT_BLUE)),
++                                    .size_3().text_color(pal.selected_foreground),
+                             )
+                         })
+                         .on_click(move |_ev, _window, cx| {
+diff -ruN a/crates/openlogi-desktop/src/features/lighting/keyboard_rgb.rs b/crates/openlogi-desktop/src/features/lighting/keyboard_rgb.rs
+--- a/crates/openlogi-desktop/src/features/lighting/keyboard_rgb.rs	1970-01-01 08:00:01.000000000 +0800
++++ b/crates/openlogi-desktop/src/features/lighting/keyboard_rgb.rs	2026-10-11 15:41:50.889762018 +0800
+@@ -152,13 +152,13 @@
+         .rounded(pal.control_radius)
+         .border_2()
+         .border_color(if selected {
+-            theme::accent()
++            pal.accent
+         } else {
+             pal.border
+         })
+         .bg(rgb(color.packed()))
+         .cursor_pointer()
+-        .focus_visible(|style| style.border_color(theme::accent()))
++        .focus_visible(|style| style.border_color(pal.accent))
+         .on_click(move |_event, _window, cx| {
+             AppState::apply(cx, |state| {
+                 let mut next = state.lighting();
+diff -ruN a/crates/openlogi-desktop/src/features/lighting/standalone.rs b/crates/openlogi-desktop/src/features/lighting/standalone.rs
+--- a/crates/openlogi-desktop/src/features/lighting/standalone.rs	1970-01-01 08:00:01.000000000 +0800
++++ b/crates/openlogi-desktop/src/features/lighting/standalone.rs	2026-10-11 15:45:19.800718062 +0800
+@@ -5,10 +5,10 @@
+ use crate::ui::components::Toggle;
+ 
+ use super::visual::LightView;
+-use crate::ui::theme::{self, ACCENT_BLUE, Palette, Typography as _};
++use crate::ui::theme::{self, Palette, Typography as _};
+ use gpui::{
+     BoxShadow, Context, Hsla, IntoElement, ParentElement, Render, Styled, Subscription, Window,
+-    div, hsla, point, prelude::FluentBuilder as _, px, rgb,
++    div, hsla, point, prelude::FluentBuilder as _, px,
+ };
+ use gpui_component::{Icon, IconName, Selectable as _, h_flex, slider::Slider, v_flex};
+ use openlogi_core::{
+@@ -342,18 +342,18 @@
+ fn light_status(view: LightView, pal: Palette) -> impl IntoElement {
+     let LightView { online, enabled } = view;
+     let (label, color) = if !online {
+-        (tr!("device.offline"), theme::STATUS_OFFLINE)
++        (tr!("device.offline"), pal.text_muted)
+     } else if enabled {
+-        (tr!("common.on"), theme::STATUS_CONNECTED)
++        (tr!("common.on"), pal.success)
+     } else {
+-        (tr!("common.off"), theme::STATUS_OFFLINE)
++        (tr!("common.off"), pal.text_muted)
+     };
+     h_flex()
+         .gap_1p5()
+         .items_center()
+         .text_caption()
+         .text_color(pal.text_muted)
+-        .child(div().size_1p5().rounded_full().bg(rgb(color)))
++        .child(div().size_1p5().rounded_full().bg(color))
+         .child(label)
+ }
+ 
+@@ -379,7 +379,7 @@
+                 .child(
+                     div()
+                         .text_body()
+-                        .text_color(rgb(ACCENT_BLUE))
++                        .text_color(pal.accent)
+                         .font_weight(gpui::FontWeight::MEDIUM)
+                         .child(value),
+                 ),
+@@ -422,11 +422,11 @@
+         ),
+         LightCommandStatus::Failed(error) => (
+             format!("{}: {error}", tr!("common.unavailable")),
+-            Hsla::from(rgb(theme::STATUS_OFFLINE)),
++            pal.text_muted,
+         ),
+         LightCommandStatus::Offline => (
+             tr!("device.offline").to_string(),
+-            Hsla::from(rgb(theme::STATUS_OFFLINE)),
++            pal.text_muted,
+         ),
+     };
+     h_flex()
+diff -ruN a/crates/openlogi-desktop/src/features/mouse/inspector.rs b/crates/openlogi-desktop/src/features/mouse/inspector.rs
+--- a/crates/openlogi-desktop/src/features/mouse/inspector.rs	1970-01-01 08:00:01.000000000 +0800
++++ b/crates/openlogi-desktop/src/features/mouse/inspector.rs	2026-10-11 15:41:50.890426321 +0800
+@@ -24,7 +24,7 @@
+ use crate::state::AppState;
+ use crate::ui::action::localized_action_label;
+ use crate::ui::components::{MenuRow, control_button, control_input};
+-use crate::ui::theme::{self, ACCENT_BLUE, Palette, Typography as _};
++use crate::ui::theme::{self, Palette, Typography as _};
+ 
+ pub(super) const INSPECTOR_W: f32 = 328.;
+ 
+@@ -407,7 +407,7 @@
+                                             div()
+                                                 .truncate()
+                                                 .text_caption()
+-                                                .text_color(pal.text_muted)
++                                                .text_color(if selected { pal.selected_foreground } else { pal.text_muted })
+                                                 .child(localized_action_label(&action)),
+                                         ),
+                                 ),
+@@ -415,8 +415,7 @@
+                         .when(selected, |row| {
+                             row.child(
+                                 Icon::new(IconName::Check)
+-                                    .size_3()
+-                                    .text_color(rgb(ACCENT_BLUE)),
++                                    .size_3().text_color(pal.selected_foreground),
+                             )
+                         })
+                         .on_click(move |_, _, cx| {
+@@ -501,15 +500,14 @@
+                                             svg()
+                                                 .path(preset.icon())
+                                                 .size_4()
+-                                                .text_color(pal.text_muted),
++                                                .text_color(if selected { pal.selected_foreground } else { pal.text_muted }),
+                                         )
+                                         .child(div().child(tr!(preset.translation_key()))),
+                                 )
+                                 .when(selected, |row| {
+                                     row.child(
+                                         Icon::new(IconName::Check)
+-                                            .size_3()
+-                                            .text_color(rgb(ACCENT_BLUE)),
++                                            .size_3().text_color(pal.selected_foreground),
+                                     )
+                                 })
+                                 .on_click(move |_, _, cx| {
+@@ -613,7 +611,7 @@
+         .p_3()
+         .cursor_pointer()
+         .hover(move |card| card.bg(pal.control_hover))
+-        .focus_visible(move |card| card.bg(pal.control_hover).border_color(rgb(ACCENT_BLUE)))
++        .focus_visible(move |card| card.bg(pal.control_hover).border_color(pal.accent))
+         .child(
+             div()
+                 .text_caption()
+diff -ruN a/crates/openlogi-desktop/src/features/mouse/leader_lines.rs b/crates/openlogi-desktop/src/features/mouse/leader_lines.rs
+--- a/crates/openlogi-desktop/src/features/mouse/leader_lines.rs	1970-01-01 08:00:01.000000000 +0800
++++ b/crates/openlogi-desktop/src/features/mouse/leader_lines.rs	2026-10-11 15:41:50.890663497 +0800
+@@ -1,13 +1,13 @@
+ //! Canvas-painted leader lines from each hotspot to its side-label anchor.
+ //!
+ //! Each polyline is hotspot-centre → short horizontal stub → diagonal to the
+-//! label anchor. The control being interacted with gets a blue, thicker line;
++//! label anchor. The control being interacted with gets an accent, thicker line;
+ //! the other controls keep muted lines so their mapping remains visible.
+ 
+-use gpui::{Bounds, PathBuilder, Pixels, Point, Window, hsla, point, px, rgb};
++use gpui::{Bounds, PathBuilder, Pixels, Point, Window, point, px};
+ 
+ use super::hotspots::{Hotspot, MouseControlId};
+-use crate::ui::theme::ACCENT_BLUE;
++use crate::ui::theme::Palette;
+ 
+ /// Length of the horizontal stub before turning toward the label.
+ /// Kept small enough to fit inside the gap between mouse and card so
+@@ -54,6 +54,7 @@
+     labels: &[Label],
+     highlighted: Option<MouseControlId>,
+     window: &mut Window,
++    pal: Palette,
+ ) {
+     for label in labels {
+         let Some(hotspot) = hotspots.iter().find(|h| h.id == label.id) else {
+@@ -66,6 +67,7 @@
+             *label,
+             highlighted == Some(label.id),
+             window,
++            pal,
+         );
+     }
+ }
+@@ -77,6 +79,7 @@
+     label: Label,
+     highlight: bool,
+     window: &mut Window,
++    pal: Palette,
+ ) {
+     let Geometry {
+         mouse_origin: mouse_origin_local,
+@@ -121,11 +124,9 @@
+ 
+     if let Ok(built) = path.build() {
+         if highlight {
+-            window.paint_path(built, rgb(ACCENT_BLUE));
++            window.paint_path(built, pal.accent);
+         } else {
+-            // Muted gray — readable against the dark background without
+-            // competing with the highlighted line.
+-            window.paint_path(built, hsla(0., 0., 0.55, 0.35));
++            window.paint_path(built, pal.text_muted.opacity(0.35));
+         }
+     }
+ }
+diff -ruN a/crates/openlogi-desktop/src/features/mouse/view/labels.rs b/crates/openlogi-desktop/src/features/mouse/view/labels.rs
+--- a/crates/openlogi-desktop/src/features/mouse/view/labels.rs	1970-01-01 08:00:01.000000000 +0800
++++ b/crates/openlogi-desktop/src/features/mouse/view/labels.rs	2026-10-11 15:41:50.890798111 +0800
+@@ -6,10 +6,10 @@
+ use super::super::thumbwheel::ThumbwheelPreset;
+ use crate::features::binding_editor::{GESTURE_BUTTON_ICON, action_icon_path};
+ use crate::ui::action::localized_action_label;
+-use crate::ui::theme::{self, ACCENT_BLUE, Typography as _};
++use crate::ui::theme::{self, Typography as _};
+ use gpui::{
+     App, ElementId, Entity, Hsla, InteractiveElement, IntoElement, ParentElement, RenderOnce,
+-    StatefulInteractiveElement as _, Styled, Window, div, prelude::FluentBuilder as _, px, rgb,
++    StatefulInteractiveElement as _, Styled, Window, div, prelude::FluentBuilder as _, px,
+     svg,
+ };
+ use gpui_base::Button as BaseButton;
+@@ -64,7 +64,7 @@
+ impl BindingLabel {
+     /// The card's value row: the leading action icon, the binding text, and
+     /// the trailing chevron, all tinted with `color`.
+-    fn row(self, color: Hsla, pal: theme::Palette) -> gpui::Div {
++    fn row(self, color: Hsla) -> gpui::Div {
+         h_flex()
+             .items_center()
+             .gap_2()
+@@ -89,7 +89,7 @@
+             .child(
+                 Icon::new(IconName::ChevronRight)
+                     .size_3()
+-                    .text_color(pal.text_muted),
++                    .text_color(color),
+             )
+     }
+ }
+@@ -113,13 +113,11 @@
+         let click_view = view.clone();
+         let pal = theme::palette(cx);
+         let binding_color = if highlighted {
+-            rgb(ACCENT_BLUE).into()
++            pal.selected_foreground
+         } else {
+             pal.text_primary
+         };
+-        // Always show the action the button actually performs. Default and
+-        // customised bindings use the same neutral value colour; only the
+-        // actively highlighted control takes the accent.
++        // Always show the action the button actually performs.
+         let binding_description = self.binding.text.clone();
+         let button_name = tr!(self.label.id.translation_key());
+         BaseButton::new(self.id)
+@@ -138,44 +136,44 @@
+             .rounded(pal.control_radius)
+             .border_1()
+             .border_color(if highlighted {
+-                rgb(ACCENT_BLUE).into()
++                pal.accent
+             } else {
+                 pal.border
+             })
+             .bg(if highlighted {
+-                theme::accent_tint()
++                pal.selected
+             } else {
+                 pal.control
+             })
+             .cursor_pointer()
+             .hover(move |s| {
+                 s.bg(if highlighted {
+-                    theme::accent_tint_hover()
++                    pal.selected_hover
+                 } else {
+                     pal.control_hover
+                 })
+             })
+             .focus_visible(move |s| {
+                 s.bg(if highlighted {
+-                    theme::accent_tint_hover()
++                    pal.selected_hover
+                 } else {
+                     pal.control_hover
+                 })
+-                .border_color(rgb(ACCENT_BLUE))
++                .border_color(pal.accent)
+             })
+             // Button name — the caption (xs / muted), the same size as the
+             // inspector title and category headers it shares the binding flow with.
+             .child(
+                 div()
+                     .text_caption()
+-                    .text_color(pal.text_muted)
++                    .text_color(if highlighted { pal.selected_foreground } else { pal.text_muted })
+                     .child(button_name),
+             )
+             // Current binding — the value (sm), the same size as the action rows
+             // it edits.
+             .child(
+                 self.binding
+-                    .row(binding_color, pal)
++                    .row(binding_color)
+                     .debug_selector(move || format!("label-value-row-{btn:?}")),
+             )
+             .on_click(move |_event, _window, cx| {
+diff -ruN a/crates/openlogi-desktop/src/features/mouse/view.rs b/crates/openlogi-desktop/src/features/mouse/view.rs
+--- a/crates/openlogi-desktop/src/features/mouse/view.rs	1970-01-01 08:00:01.000000000 +0800
++++ b/crates/openlogi-desktop/src/features/mouse/view.rs	2026-10-11 15:41:50.890979973 +0800
+@@ -5,7 +5,7 @@
+     AnyElement, App, AppContext as _, Context, ElementId, Entity, FocusHandle, Focusable, Hsla,
+     InteractiveElement, IntoElement, ParentElement, Render, RenderOnce,
+     StatefulInteractiveElement as _, Styled, Subscription, Window, canvas, div, hsla, img,
+-    prelude::FluentBuilder as _, px, rgb,
++    prelude::FluentBuilder as _, px,
+ };
+ use gpui_base::Button as BaseButton;
+ use gpui_component::{
+@@ -28,7 +28,7 @@
+ use crate::features::profiles::{friendly_app_name, profile_canvas_status};
+ use crate::services::assets::{GlowGeometry, ResolvedAsset};
+ use crate::state::{AppState, DeviceKey, DeviceRecord, StateEvent};
+-use crate::ui::theme::{self, ACCENT_BLUE};
++use crate::ui::theme::{self, Palette};
+ 
+ const SIDE_GAP: f32 = 24.;
+ const LABEL_W: f32 = 156.;
+@@ -350,7 +350,7 @@
+ 
+         let hotspots_outer = hotspots.clone();
+         let labels_outer = labels.clone();
+-        let leader_canvas = leader_canvas(hotspots, labels, highlight, mouse_left, mouse_w);
++        let leader_canvas = leader_canvas(hotspots, labels, highlight, mouse_left, mouse_w, theme::palette(cx));
+         let breathing_art = breathing_art(asset, mouse_left, mouse_w, mouse_h, glow);
+         let model = ModelRect {
+             left: mouse_left,
+@@ -547,6 +547,7 @@
+     highlight: Option<MouseControlId>,
+     mouse_left: f32,
+     mouse_w: f32,
++    pal: Palette,
+ ) -> impl IntoElement {
+     canvas(
+         move |_bounds, _, _| (hotspots, labels, highlight),
+@@ -563,6 +564,7 @@
+                 &labels,
+                 highlight,
+                 window,
++                pal,
+             );
+         },
+     )
+@@ -727,7 +729,8 @@
+ }
+ 
+ impl RenderOnce for HotspotTrigger {
+-    fn render(self, _window: &mut Window, _cx: &mut App) -> impl IntoElement {
++    fn render(self, _window: &mut Window, cx: &mut App) -> impl IntoElement {
++        let pal = theme::palette(cx);
+         let highlighted = self.hovered || self.selected;
+         let selected = self.selected;
+         let view = self.view;
+@@ -754,12 +757,12 @@
+                     .rounded_full()
+                     .border_1()
+                     .border_color(if highlighted {
+-                        gpui::Hsla::from(rgb(ACCENT_BLUE))
++                        pal.accent
+                     } else {
+                         hsla(0., 0., 0.95, 0.85)
+                     })
+                     .bg(if highlighted {
+-                        gpui::Hsla::from(rgb(ACCENT_BLUE))
++                        pal.accent
+                     } else {
+                         hsla(0., 0., 0.18, 0.85)
+                     }),
+@@ -768,7 +771,7 @@
+                 style
+                     .rounded_full()
+                     .border_2()
+-                    .border_color(rgb(ACCENT_BLUE))
++                    .border_color(pal.accent)
+             })
+             .on_click(move |_event, _window, cx| {
+                 click_view.update(cx, |this, cx| {
+diff -ruN a/crates/openlogi-desktop/src/features/pointer/dpi.rs b/crates/openlogi-desktop/src/features/pointer/dpi.rs
+--- a/crates/openlogi-desktop/src/features/pointer/dpi.rs	1970-01-01 08:00:01.000000000 +0800
++++ b/crates/openlogi-desktop/src/features/pointer/dpi.rs	2026-10-11 15:41:50.891219231 +0800
+@@ -160,7 +160,7 @@
+                     .map_or(*value, |state| state.normalize_active_dpi(*value));
+                 let active = !already_highlighted && normalized == snapshot.dpi;
+                 already_highlighted |= active;
+-                preset_chip(idx, *value, active, &snapshot.presets)
++                preset_chip(idx, *value, active, &snapshot.presets, pal)
+             })
+             .collect();
+ 
+@@ -320,7 +320,7 @@
+ 
+ /// One DPI preset rendered as a chip. Clicking the chip writes that DPI to
+ /// the device and updates `AppState.dpi`; the small × removes the preset.
+-fn preset_chip(idx: usize, value: Dpi, active: bool, presets: &[Dpi]) -> impl IntoElement {
++fn preset_chip(idx: usize, value: Dpi, active: bool, presets: &[Dpi], pal: Palette) -> impl IntoElement {
+     let presets_for_remove: Vec<Dpi> = presets.to_vec();
+     PresetChip::new(("dpi-preset-chip", idx))
+         .selected(active)
+@@ -333,6 +333,7 @@
+                 .items_center()
+                 .label(format!("{value}"))
+                 .selected(active)
++                .text_color(if active { pal.selected_foreground } else { pal.text_primary })
+                 .on_click(move |_event, _window, cx| {
+                     // Only apply once the supported DPI list is known, so the
+                     // click writes a snapped, device-valid value — and can't be
+@@ -350,6 +351,7 @@
+                 .xsmall()
+                 .ghost()
+                 .icon(IconName::Close)
++                .text_color(if active { pal.selected_foreground } else { pal.text_muted })
+                 .on_click(move |_event, _window, cx| {
+                     let mut next = presets_for_remove.clone();
+                     if idx < next.len() {
+diff -ruN a/crates/openlogi-desktop/src/features/pointer/smartshift.rs b/crates/openlogi-desktop/src/features/pointer/smartshift.rs
+--- a/crates/openlogi-desktop/src/features/pointer/smartshift.rs	1970-01-01 08:00:01.000000000 +0800
++++ b/crates/openlogi-desktop/src/features/pointer/smartshift.rs	2026-10-11 15:41:50.891492968 +0800
+@@ -15,7 +15,7 @@
+ use gpui::prelude::FluentBuilder as _;
+ use gpui::{
+     AnyElement, App, Context, IntoElement, ParentElement, Render, SharedString, Styled,
+-    Subscription, Window, div, px, rgb,
++    Subscription, Window, div, px,
+ };
+ use gpui_component::{
+     Disableable as _, Selectable as _, button::Button, h_flex, slider::Slider, v_flex,
+@@ -35,7 +35,7 @@
+ use crate::ui::components::Toggle;
+ use crate::ui::section::section_label;
+ use crate::ui::status::{retry_line, status_line};
+-use crate::ui::theme::{self, ACCENT_BLUE, Palette, Typography as _};
++use crate::ui::theme::{self, Palette, Typography as _};
+ 
+ /// Friendly slider range for the `autoDisengage` threshold. The wire field is
+ /// `0x01`–`0xFE` (0.25 turn/s steps); the slider exposes the usable band
+@@ -172,7 +172,7 @@
+             );
+ 
+         let value_color = if sensitivity_enabled {
+-            rgb(ACCENT_BLUE).into()
++            pal.accent
+         } else {
+             pal.text_muted
+         };
+@@ -240,7 +240,7 @@
+                     .child(
+                         div()
+                             .text_body()
+-                            .text_color(rgb(ACCENT_BLUE))
++                            .text_color(pal.accent)
+                             .child(format!("{display}")),
+                     ),
+             )
+diff -ruN a/crates/openlogi-desktop/src/features/profiles/picker.rs b/crates/openlogi-desktop/src/features/profiles/picker.rs
+--- a/crates/openlogi-desktop/src/features/profiles/picker.rs	1970-01-01 08:00:01.000000000 +0800
++++ b/crates/openlogi-desktop/src/features/profiles/picker.rs	2026-10-11 15:41:50.891691885 +0800
+@@ -23 +23 @@
+-use crate::ui::theme::{self, Palette, SelectableStyle as _, Typography as _};
++use crate::ui::theme::{Palette, SelectableStyle as _, Typography as _};
+@@ -234,24 +234,22 @@
+         .py_1p5()
+         .rounded(pal.control_radius)
+         .text_body()
+-        // Muted while collapsed so the section control reads apart from the
+-        // application rows; primary once open, over the accent fill.
+         .text_color(if expanded {
+-            pal.text_primary
++            pal.selected_foreground
+         } else {
+             pal.text_muted
+         })
+-        .selected_fill(expanded)
++        .selected_fill(expanded, pal)
+         .hover(move |button| {
+             button.bg(if expanded {
+-                theme::accent_tint_hover()
++                pal.selected_hover
+             } else {
+                 pal.control_hover
+             })
+         })
+         .focus_visible(move |button| {
+             button.bg(if expanded {
+-                theme::accent_tint_hover()
++                pal.selected_hover
+             } else {
+                 pal.control_hover
+             })
+diff -ruN a/crates/openlogi-desktop/src/features/profiles/shell.rs b/crates/openlogi-desktop/src/features/profiles/shell.rs
+--- a/crates/openlogi-desktop/src/features/profiles/shell.rs	1970-01-01 08:00:01.000000000 +0800
++++ b/crates/openlogi-desktop/src/features/profiles/shell.rs	2026-10-11 15:41:50.891862204 +0800
+@@ -173,18 +173,18 @@
+         .rounded(pal.control_radius)
+         .cursor_pointer()
+         .text_body()
+-        .text_color(pal.text_primary)
+-        .selected_fill(selected)
++        .text_color(if selected { pal.selected_foreground } else { pal.text_primary })
++        .selected_fill(selected, pal)
+         .hover(move |tab| {
+             tab.bg(if selected {
+-                theme::accent_tint_hover()
++                pal.selected_hover
+             } else {
+                 pal.control_hover
+             })
+         })
+         .focus_visible(move |tab| {
+             tab.bg(if selected {
+-                theme::accent_tint_hover()
++                pal.selected_hover
+             } else {
+                 pal.control_hover
+             })
+diff -ruN a/crates/openlogi-desktop/src/main.rs b/crates/openlogi-desktop/src/main.rs
+--- a/crates/openlogi-desktop/src/main.rs	1970-01-01 08:00:01.000000000 +0800
++++ b/crates/openlogi-desktop/src/main.rs	2026-10-11 15:41:50.892012664 +0800
+@@ -126,6 +126,7 @@
+     app.run(move |cx| {
+         gpui_component::init(cx);
+         theme::register_builtin_themes(cx);
++        openlogi_ui::monet::install(cx, |cx| theme::apply_from_settings(None, cx));
+         app::menu::install(cx);
+ 
+         // Seed the Add Device window's initial state. Its buttons only send
+diff -ruN a/crates/openlogi-desktop/src/ui/battery.rs b/crates/openlogi-desktop/src/ui/battery.rs
+--- a/crates/openlogi-desktop/src/ui/battery.rs	1970-01-01 08:00:01.000000000 +0800
++++ b/crates/openlogi-desktop/src/ui/battery.rs	2026-10-11 15:45:19.810717767 +0800
+@@ -6,7 +6,7 @@
+ 
+ use gpui::{
+     App, BorderStyle, Bounds, Corners, FontWeight, Hsla, IntoElement, ParentElement, PathBuilder,
+-    RenderOnce, Styled, Window, canvas, point, prelude::FluentBuilder as _, px, quad, rgb, size,
++    RenderOnce, Styled, Window, canvas, point, prelude::FluentBuilder as _, px, quad, size,
+ };
+ use gpui_component::h_flex;
+ use openlogi_core::device::{BatteryInfo, BatteryLevel, BatteryStatus};
+@@ -252,9 +252,9 @@
+ 
+ fn tone_color(tone: BatteryTone, pal: Palette) -> Hsla {
+     match tone {
+-        BatteryTone::Charging | BatteryTone::Full => rgb(theme::STATUS_CONNECTED).into(),
+-        BatteryTone::Low => rgb(theme::STATUS_CONNECTING).into(),
+-        BatteryTone::Critical | BatteryTone::Error => rgb(theme::STATUS_DISABLED).into(),
++        BatteryTone::Charging | BatteryTone::Full => pal.success,
++        BatteryTone::Low => pal.warning,
++        BatteryTone::Critical | BatteryTone::Error => pal.danger,
+         BatteryTone::Normal => pal.text_primary,
+     }
+ }
+diff -ruN a/crates/openlogi-desktop/src/ui/components.rs b/crates/openlogi-desktop/src/ui/components.rs
+--- a/crates/openlogi-desktop/src/ui/components.rs	1970-01-01 08:00:01.000000000 +0800
++++ b/crates/openlogi-desktop/src/ui/components.rs	2026-10-11 15:41:50.892150337 +0800
+@@ -7,7 +7,7 @@
+ use gpui::{
+     AnyElement, App, ClickEvent, ElementId, Entity, InteractiveElement, Interactivity, IntoElement,
+     ParentElement, Pixels, RenderOnce, Role, SharedString, Stateful, StatefulInteractiveElement,
+-    Styled, Window, div, prelude::FluentBuilder as _, px, rgb,
++    Styled, Window, div, prelude::FluentBuilder as _, px,
+ };
+ use gpui_base::Button as BaseButton;
+ use gpui_component::{
+@@ -19,7 +19,7 @@
+     v_flex,
+ };
+ 
+-use super::theme::{self, ACCENT_BLUE, SelectableStyle as _, Typography as _};
++use super::theme::{self, SelectableStyle as _, Typography as _};
+ 
+ /// A gpui-component button at the house control height.
+ ///
+@@ -150,7 +150,8 @@
+ }
+ 
+ impl RenderOnce for Toggle {
+-    fn render(self, _window: &mut Window, _cx: &mut App) -> impl IntoElement {
++    fn render(self, _window: &mut Window, cx: &mut App) -> impl IntoElement {
++        let pal = theme::palette(cx);
+         let label = self.label.unwrap_or_else(|| {
+             if self.selected {
+                 tr!("common.on")
+@@ -163,7 +164,7 @@
+             .disabled(self.disabled)
+             .with_size(self.size)
+             .label(label)
+-            .color(rgb(ACCENT_BLUE));
++            .color(pal.accent);
+         if let Some(handler) = self.on_change {
+             toggle = toggle.on_click(move |selected, window, cx| handler(selected, window, cx));
+         }
+@@ -318,18 +319,18 @@
+             .py_1p5()
+             .rounded(pal.control_radius)
+             .text_body()
+-            .text_color(pal.text_primary)
+-            .selected_fill(selected)
++            .text_color(if selected { pal.selected_foreground } else { pal.text_primary })
++            .selected_fill(selected, pal)
+             .hover(move |style| {
+                 style.bg(if selected {
+-                    theme::accent_tint_hover()
++                    pal.selected_hover
+                 } else {
+                     pal.control_hover
+                 })
+             })
+             .focus_visible(move |style| {
+                 style.bg(if selected {
+-                    theme::accent_tint_hover()
++                    pal.selected_hover
+                 } else {
+                     pal.control_hover
+                 })
+@@ -422,7 +423,7 @@
+ impl RenderOnce for ProfileTab {
+     fn render(self, _window: &mut Window, cx: &mut App) -> impl IntoElement {
+         let pal = theme::palette(cx);
+-        let accent = rgb(ACCENT_BLUE);
++        let accent = pal.accent;
+         let has_delete = self.delete.is_some();
+         let label = self.label;
+         self.base
+@@ -438,24 +439,24 @@
+             .rounded_full()
+             .border_1()
+             .border_color(if self.selected {
+-                accent.into()
++                accent
+             } else {
+                 pal.border
+             })
+             .text_caption()
+             .text_color(if self.selected {
+-                pal.text_primary
++                pal.selected_foreground
+             } else {
+                 pal.text_muted
+             })
+             .bg(if self.selected {
+-                theme::accent_tint()
++                pal.selected
+             } else {
+                 pal.control
+             })
+             .hover(move |style| {
+                 style.bg(if self.selected {
+-                    theme::accent_tint_hover()
++                    pal.selected_hover
+                 } else {
+                     pal.control_hover
+                 })
+@@ -463,7 +464,7 @@
+             .focus_visible(move |style| {
+                 style
+                     .bg(if self.selected {
+-                        theme::accent_tint_hover()
++                        pal.selected_hover
+                     } else {
+                         pal.control_hover
+                     })
+@@ -483,9 +484,9 @@
+                         )
+                         .px_0p5()
+                         .rounded_full()
+-                        .text_color(pal.text_muted)
+-                        .hover(|style| style.text_color(pal.text_primary))
+-                        .focus_visible(|style| style.text_color(pal.text_primary))
++                        .text_color(if self.selected { pal.selected_foreground } else { pal.text_muted })
++                        .hover(move |style| style.text_color(if self.selected { pal.selected_foreground } else { pal.text_primary }))
++                        .focus_visible(move |style| style.text_color(if self.selected { pal.selected_foreground } else { pal.text_primary }))
+                         .child(Icon::new(IconName::Close).size_3())
+                         .on_click(move |event, window, cx| {
+                             cx.stop_propagation();
+@@ -543,10 +544,11 @@
+             .rounded(pal.control_radius)
+             .selected_border(selected, pal)
+             .bg(pal.control)
+-            .selected_fill(selected)
++            .selected_fill(selected, pal)
++            .text_color(if selected { pal.selected_foreground } else { pal.text_primary })
+             .hover(move |style| {
+                 style.bg(if selected {
+-                    theme::accent_tint_hover()
++                    pal.selected_hover
+                 } else {
+                     pal.control_hover
+                 })
+diff -ruN a/crates/openlogi-desktop/src/ui/gallery.rs b/crates/openlogi-desktop/src/ui/gallery.rs
+--- a/crates/openlogi-desktop/src/ui/gallery.rs	1970-01-01 08:00:01.000000000 +0800
++++ b/crates/openlogi-desktop/src/ui/gallery.rs	2026-10-11 15:41:50.892386036 +0800
+@@ -345,6 +345,7 @@
+                         .ghost()
+                         .xsmall()
+                         .label("800 DPI")
++                        .text_color(if self.preset_selected { pal.selected_foreground } else { pal.text_primary })
+                         .on_click(cx.listener(|this, _, _, cx| {
+                             this.preset_selected = !this.preset_selected;
+                             cx.notify();
+@@ -354,7 +355,7 @@
+                     BaseButton::new("gallery-preset-remove")
+                         .accessibility_label("Remove preset")
+                         .px_1()
+-                        .text_color(pal.text_muted)
++                        .text_color(if self.preset_selected { pal.selected_foreground } else { pal.text_muted })
+                         .child(Icon::new(IconName::Close).size_3()),
+                 ),
+             pal,
+@@ -446,7 +447,7 @@
+                         .rounded(pal.card_radius)
+                         .border_1()
+                         .border_color(if selected {
+-                            theme::accent()
++                            pal.accent
+                         } else {
+                             pal.border
+                         })
+@@ -526,13 +527,13 @@
+         .rounded(pal.control_radius)
+         .border_1()
+         .border_color(if selected {
+-            theme::accent()
++            pal.accent
+         } else {
+             pal.border
+         })
+         .bg(pal.control)
+         .hover(move |style| style.bg(pal.control_hover))
+-        .focus_visible(move |style| style.border_color(theme::accent()))
++        .focus_visible(move |style| style.border_color(pal.accent))
+         .gap_1()
+         // A preview strip above the label: the stacked shape the settings
+         // pickers rely on.
+diff -ruN a/crates/openlogi-desktop/src/ui/theme.rs b/crates/openlogi-desktop/src/ui/theme.rs
+--- a/crates/openlogi-desktop/src/ui/theme.rs	1970-01-01 08:00:01.000000000 +0800
++++ b/crates/openlogi-desktop/src/ui/theme.rs	2026-10-11 15:45:19.733720034 +0800
+@@ -1,40 +1,20 @@
+ //! OpenLogi UI theme and shared sizes.
+ //!
+-//! Two layers:
+-//!
+-//! - **Brand / status** colours are fixed `u32` constants. They're saturated
+-//!   enough to read on both light and dark backgrounds, so they don't change
+-//!   with the OS appearance (the OpenLogi accent blue, the connectivity dots).
+-//! - **Surface / text** colours flip with the appearance and live in
+-//!   [`Palette`], chosen by [`palette`] from the active gpui-component theme
+-//!   mode. The bespoke surfaces (window, cards, mouse model)
+-//!   read these so they track the same light/dark switch as gpui-component's
+-//!   own widgets — which is what keeps a popover from rendering white under
+-//!   an otherwise dark UI (see `main.rs`'s appearance wiring).
++//! Bespoke surfaces and controls derive all presentation roles from the active
++//! GPUI theme, just like framework widgets. Monet snapshots update both mode
++//! variants together without changing device preferences.
+ 
+ #[cfg(test)]
+ use gpui::rgb;
+-use gpui::{App, FontWeight, Hsla, Pixels, Rems, Rgba, Styled, Window, hsla, px, relative, rems};
++use gpui::{App, FontWeight, Hsla, Pixels, Rems, Rgba, Styled, Window, px, relative, rems};
+ use gpui_component::{ActiveTheme as _, Theme, ThemeMode, ThemeRegistry};
+ use openlogi_core::config::{Appearance, UiScale};
++use openlogi_ui::monet;
+ 
+ use crate::state::AppState;
+ 
+ use super::spacing::DynamicSpacing;
+ 
+-// The brand accent lives in `openlogi-ui` so the overlay paints the same blue
+-// this app does — it cannot depend on this crate, and a local copy is how the
+-// ring ended up with a blue of its own. Re-exported so screens keep reading it
+-// off `theme::`, beside the status hues and the appearance-derived [`Palette`].
+-pub use openlogi_ui::color::{ACCENT_BLUE, accent};
+-
+-/// Status colours for the connectivity readouts. Fixed like the accent, but the
+-/// overlay draws no status, so they stay with the app that does.
+-pub const STATUS_CONNECTED: u32 = 0x0022_c55e;
+-pub const STATUS_CONNECTING: u32 = 0x00ea_b308;
+-pub const STATUS_OFFLINE: u32 = 0x006b_7280;
+-/// Ring color for a device the user disabled ("Manage this device" off).
+-pub const STATUS_DISABLED: u32 = 0x00ef_4444;
+ 
+ /// Sizes that several components need to agree on.
+ pub const HEADER_H: f32 = 64.;
+@@ -132,6 +112,20 @@
+     pub text_primary: Hsla,
+     /// De-emphasised labels / metadata.
+     pub text_muted: Hsla,
++    /// Positive connectivity and charging state.
++    pub success: Hsla,
++    /// Pending connectivity or required permission.
++    pub warning: Hsla,
++    /// Disabled, critical or failed state.
++    pub danger: Hsla,
++    /// Primary action and focus outline.
++    pub accent: Hsla,
++    /// Selected control/container surface.
++    pub selected: Hsla,
++    /// Foreground paired with the selected surface.
++    pub selected_foreground: Hsla,
++    /// Selected hover treatment.
++    pub selected_hover: Hsla,
+     /// Corner radius for the bespoke card / panel surfaces. Derived from the
+     /// active gpui-component theme radius (`cx.theme().radius`) so the
+     /// hand-painted cards follow the Appearance → radius slider — which the old
+@@ -229,6 +223,13 @@
+         border: t.border,
+         text_primary: t.foreground,
+         text_muted: t.muted_foreground,
++        success: t.success,
++        warning: t.warning,
++        danger: t.danger,
++        accent: t.primary,
++        selected: t.accent,
++        selected_foreground: t.accent_foreground,
++        selected_hover: t.accent.opacity(0.85),
+         card_radius: t.radius * 1.5,
+         control_radius: t.radius,
+     }
+@@ -329,7 +330,8 @@
+     let (light, dark) = {
+         let registry = ThemeRegistry::global(cx);
+         let pick = |name: Option<&str>, fallback: &str| {
+-            name.and_then(|n| registry.themes().get(n).cloned())
++            name.and_then(|name| monet::config(name, cx).or_else(|| registry.themes().get(name).cloned()))
++                .or_else(|| monet::config(if fallback == OPENLOGI_LIGHT { monet::LIGHT } else { monet::DARK }, cx))
+                 .or_else(|| registry.themes().get(fallback).cloned())
+         };
+         (
+@@ -348,7 +350,7 @@
+     }
+ 
+     let mode = match appearance {
+-        Appearance::System => ThemeMode::from(os_appearance),
++        Appearance::System => monet::appearance(cx).unwrap_or_else(|| ThemeMode::from(os_appearance)),
+         Appearance::Light => ThemeMode::Light,
+         Appearance::Dark => ThemeMode::Dark,
+     };
+@@ -363,41 +365,21 @@
+     cx.refresh_windows();
+ }
+ 
+-/// Faint accent fill marking a *selected* row / chip — tinted, not painted, so
+-/// it reads on both palettes while the label stays in `text_primary` (a blue
+-/// label fails AA contrast on the light surface). Hand-matched to [`accent`]
+-/// (hue 0.6 / sat 0.9 / light 0.6); the `accent_tint_matches_accent` test pins
+-/// that it stays derived from the brand colour.
+-#[must_use]
+-pub fn accent_tint() -> Hsla {
+-    hsla(0.6, 0.9, 0.6, 0.12)
+-}
+-
+-/// [`accent_tint`] deepened for hover on an already-selected row.
+-#[must_use]
+-pub fn accent_tint_hover() -> Hsla {
+-    hsla(0.6, 0.9, 0.6, 0.18)
+-}
+-
+-/// Chaining helpers expressing the single "selected" decision — accent border
+-/// plus a faint accent fill — instead of every pill / chip / row hand-rolling
+-/// the `if selected { accent } else { border }` ternary (which had drifted into
+-/// three inconsistent dialects, one of them blue-on-white). Blanket-implemented
+-/// for every [`Styled`] element, the way gpui-component extends styling.
++/// Shared semantic selection treatment for bespoke controls.
+ pub trait SelectableStyle: Styled + Sized {
+     /// A 1px accent border when `selected`, the neutral hairline otherwise.
+     #[must_use]
+     fn selected_border(self, selected: bool, pal: Palette) -> Self {
+         self.border_1()
+-            .border_color(if selected { accent() } else { pal.border })
++            .border_color(if selected { pal.accent } else { pal.border })
+     }
+ 
+-    /// A faint accent fill when `selected`; leaves the background untouched
+-    /// otherwise so the caller's resting fill shows through.
++    /// A selected container and its paired foreground; leaves the resting
++    /// background untouched when unselected.
+     #[must_use]
+-    fn selected_fill(self, selected: bool) -> Self {
++    fn selected_fill(self, selected: bool, pal: Palette) -> Self {
+         if selected {
+-            self.bg(accent_tint())
++            self.bg(pal.selected).text_color(pal.selected_foreground)
+         } else {
+             self
+         }
+@@ -574,31 +556,4 @@
+         color.into()
+     }
+ 
+-    /// `accent_tint` is hand-written `hsla` (gpui's `rgb→hsla` isn't `const`),
+-    /// so pin that it stays derived from `ACCENT_BLUE` rather than drifting into
+-    /// an arbitrary blue — selected chips must match the accent borders and text
+-    /// they sit beside.
+-    #[test]
+-    fn accent_tint_matches_accent() {
+-        let a = accent();
+-        let t = accent_tint();
+-        assert!((a.h - t.h).abs() < 0.02, "hue {} vs {}", a.h, t.h);
+-        assert!((a.s - t.s).abs() < 0.05, "sat {} vs {}", a.s, t.s);
+-        assert!((a.l - t.l).abs() < 0.05, "light {} vs {}", a.l, t.l);
+-    }
+-
+-    /// `accent_tint_hover` is also a hand-written `hsla`; pin that it stays
+-    /// derived from `ACCENT_BLUE` and sits deeper than the resting `accent_tint`.
+-    #[test]
+-    fn accent_tint_hover_matches_accent() {
+-        let a = accent();
+-        let th = accent_tint_hover();
+-        assert!((a.h - th.h).abs() < 0.02, "hue {} vs {}", a.h, th.h);
+-        assert!((a.s - th.s).abs() < 0.05, "sat {} vs {}", a.s, th.s);
+-        assert!((a.l - th.l).abs() < 0.05, "light {} vs {}", a.l, th.l);
+-        assert!(
+-            th.a > accent_tint().a,
+-            "hover tint should sit deeper than the resting tint"
+-        );
+-    }
+ }
+diff -ruN a/crates/openlogi-desktop/src/windows/add_device.rs b/crates/openlogi-desktop/src/windows/add_device.rs
+--- a/crates/openlogi-desktop/src/windows/add_device.rs	1970-01-01 08:00:01.000000000 +0800
++++ b/crates/openlogi-desktop/src/windows/add_device.rs	2026-10-11 15:45:19.829717208 +0800
+@@ -480,6 +480,13 @@
+             border: gpui::hsla(0., 0., 0., 1.),
+             text_primary,
+             text_muted: gpui::hsla(0., 0., 0., 1.),
++            accent: text_primary,
++            selected: text_primary,
++            selected_foreground: text_primary,
++            selected_hover: text_primary,
++            success: text_primary,
++            warning: text_primary,
++            danger: text_primary,
+             card_radius: gpui::px(8.),
+             control_radius: gpui::px(4.),
+         };
+diff -ruN a/crates/openlogi-desktop/src/windows/settings/appearance.rs b/crates/openlogi-desktop/src/windows/settings/appearance.rs
+--- a/crates/openlogi-desktop/src/windows/settings/appearance.rs	1970-01-01 08:00:01.000000000 +0800
++++ b/crates/openlogi-desktop/src/windows/settings/appearance.rs	2026-10-11 15:41:50.892952149 +0800
+@@ -184,8 +184,8 @@
+         .border_2()
+         .border_color(if selected { accent } else { pal.border })
+         .map(|this| match preview {
+-            ModePreview::Light => this.child(mini_window(false)),
+-            ModePreview::Dark => this.child(mini_window(true)),
++            ModePreview::Light => this.child(mini_window(false, pal)),
++            ModePreview::Dark => this.child(mini_window(true, pal)),
+             // A single window split down the middle: light left, dark right.
+             ModePreview::Auto => this.child(
+                 h_flex()
+@@ -195,7 +195,7 @@
+                             .w(px(50.))
+                             .h_full()
+                             .overflow_hidden()
+-                            .child(mini_window(false)),
++                            .child(mini_window(false, pal)),
+                     )
+                     .child(
+                         div()
+@@ -204,7 +204,7 @@
+                             .flex()
+                             .justify_end()
+                             .overflow_hidden()
+-                            .child(mini_window(true)),
++                            .child(mini_window(true, pal)),
+                     ),
+             ),
+         });
+@@ -285,24 +285,23 @@
+ }
+ 
+ /// A miniature window-on-desktop at a fixed 100×60, used inside a mode card.
+-/// Painted with fixed scheme colours (representing light vs dark) so the
+-/// thumbnails read the same under any active theme.
+-fn mini_window(dark: bool) -> impl IntoElement {
+-    let (wallpaper, window, bar, line) = if dark {
++/// Fixed light/dark scheme surfaces keep the previews recognizable; the
++/// highlighted content follows the active accent.
++fn mini_window(dark: bool, pal: Palette) -> impl IntoElement {
++    let (wallpaper, window, bar) = if dark {
+         (
+             rgb(0x26_262b),
+             rgb(0x1b_1b1e),
+             rgb(0x3a_3a42),
+-            rgb(0x3b_82f6),
+         )
+     } else {
+         (
+             rgb(0xdf_e4ec),
+             rgb(0xff_ffff),
+             rgb(0xcc_d2db),
+-            rgb(0x3b_82f6),
+         )
+     };
++    let line = pal.accent;
+     let dot = |c: u32| div().size(px(3.)).rounded_full().bg(rgb(c));
+     div()
+         .w(px(100.))
+@@ -436,7 +435,8 @@
+             })
+             .filter(|cfg| query.is_empty() || cfg.name.to_lowercase().contains(&query))
+             .map(|cfg| {
+-                let colors = resolved_colors(cfg);
++                let current = openlogi_ui::monet::config(cfg.name.as_ref(), cx);
++                let colors = resolved_colors(current.as_ref().unwrap_or(cfg));
+                 let swatch = Swatch {
+                     bg: colors.background,
+                     primary: colors.primary,
+diff -ruN a/crates/openlogi-desktop/src/windows/settings/permissions.rs b/crates/openlogi-desktop/src/windows/settings/permissions.rs
+--- a/crates/openlogi-desktop/src/windows/settings/permissions.rs	1970-01-01 08:00:01.000000000 +0800
++++ b/crates/openlogi-desktop/src/windows/settings/permissions.rs	2026-10-11 15:45:19.822717414 +0800
+@@ -6,7 +6,7 @@
+ #[cfg(any(target_os = "macos", target_os = "linux"))]
+ use super::{
+     ParentElement, PermissionStatus, SettingField, SettingGroup, SettingItem, SharedString, Styled,
+-    div, h_flex, px, rgb, theme,
++    div, h_flex, px, theme,
+ };
+ use crate::ui::theme::Typography as _;
+ #[cfg(target_os = "macos")]
+@@ -168,21 +168,21 @@
+ #[cfg(any(target_os = "macos", target_os = "linux"))]
+ fn status_badge(status: PermissionStatus, pal: Palette) -> gpui::Div {
+     let (label, color) = match status {
+-        PermissionStatus::Granted => (tr!("permissions.granted"), theme::STATUS_CONNECTED),
+-        PermissionStatus::Denied => (tr!("permissions.not_granted"), theme::STATUS_CONNECTING),
+-        PermissionStatus::Unknown => (tr!("permissions.unknown"), theme::STATUS_OFFLINE),
++        PermissionStatus::Granted => (tr!("permissions.granted"), pal.success),
++        PermissionStatus::Denied => (tr!("permissions.not_granted"), pal.warning),
++        PermissionStatus::Unknown => (tr!("permissions.unknown"), pal.text_muted),
+     };
+     badge(label, color, pal)
+ }
+ 
+ #[cfg(any(target_os = "macos", target_os = "linux"))]
+-fn badge(label: SharedString, color: u32, pal: Palette) -> gpui::Div {
++fn badge(label: SharedString, color: gpui::Hsla, pal: Palette) -> gpui::Div {
+     h_flex()
+         .items_center()
+         .gap_1()
+         .text_caption()
+         .text_color(pal.text_primary)
+-        .child(div().size(px(6.)).rounded_full().bg(rgb(color)))
++        .child(div().size(px(6.)).rounded_full().bg(color))
+         .child(label)
+ }
+ 
+@@ -200,7 +200,7 @@
+     let never_requested = matches!(status, PermissionStatus::Unknown)
+         && matches!(permission, Permission::Bluetooth | Permission::Camera);
+     let status_el = if never_requested {
+-        badge(tr!("permissions.not_requested"), theme::STATUS_OFFLINE, pal)
++        badge(tr!("permissions.not_requested"), pal.text_muted, pal)
+     } else {
+         status_badge(status, pal)
+     };
+diff -ruN a/crates/openlogi-overlay/src/main.rs b/crates/openlogi-overlay/src/main.rs
+--- a/crates/openlogi-overlay/src/main.rs	1970-01-01 08:00:01.000000000 +0800
++++ b/crates/openlogi-overlay/src/main.rs	2026-10-11 15:41:50.893080025 +0800
+@@ -54,6 +54,7 @@
+     let mut app = gpui_platform::application().with_assets(openlogi_ui::action_icons::ActionIcons);
+     app = app.with_quit_mode(gpui::QuitMode::Explicit);
+     app.run(move |cx| {
++        openlogi_ui::color::init(cx);
+         let live_session = Arc::new(ClickAwaySession::new());
+         spawn_click_away_dismissal(cx, Arc::clone(&live_session));
+         cx.spawn(async move |cx| {
+@@ -87,7 +88,11 @@
+                     let commands = commands.clone();
+                     let timeout_commands = commands.clone();
+                     let session_id = invocation.session_id;
+-                    match cx.open_window(placement.window_options(), |_, cx| {
++                    match cx.open_window(placement.window_options(), |window, cx| {
++                        openlogi_ui::color::apply(Some(window), cx);
++                        window.observe_window_appearance(|window, cx| {
++                            openlogi_ui::color::apply(Some(window), cx);
++                        }).detach();
+                         cx.new(|_| RingView::new(invocation, commands, &live_session))
+                     }) {
+                         Ok(handle) => {
+diff -ruN a/crates/openlogi-overlay/src/ring.rs b/crates/openlogi-overlay/src/ring.rs
+--- a/crates/openlogi-overlay/src/ring.rs	1970-01-01 08:00:01.000000000 +0800
++++ b/crates/openlogi-overlay/src/ring.rs	2026-10-11 15:41:50.893243165 +0800
+@@ -7,7 +7,7 @@
+ #[cfg(any(not(target_os = "windows"), test))]
+ use gpui::{Bounds, Pixels, Point, Size, point};
+ use gpui::{
+-    Context, Hsla, InteractiveElement, IntoElement, ParentElement, Render, SharedString,
++    Context, InteractiveElement, IntoElement, ParentElement, Render, SharedString,
+     StatefulInteractiveElement as _, Styled, Window, WindowBackgroundAppearance, WindowKind,
+     WindowOptions, div, prelude::FluentBuilder as _, px, svg,
+ };
+@@ -25,32 +25,6 @@
+ pub(crate) const SLOT_SIZE: f32 = 54.0;
+ pub(crate) const RADIUS: f32 = 122.0;
+ 
+-/// The ring's own neutral scale. It floats over whatever is on the desktop, so
+-/// unlike the settings app it cannot take its surfaces from the OS appearance —
+-/// it commits to a dark panel and rides its own contrast. Only the accent is
+-/// shared (`openlogi_ui::color`); these greys are local by nature.
+-const PANEL: Hsla = neutral(0.06, 0.82);
+-const SLOT_RESTING: Hsla = neutral(0.16, 0.98);
+-const CANCEL_RESTING: Hsla = neutral(0.20, 0.98);
+-const GLYPH: Hsla = neutral(0.98, 1.0);
+-const LABEL: Hsla = neutral(0.94, 1.0);
+-const CANCEL_GLYPH: Hsla = neutral(0.82, 1.0);
+-
+-const fn neutral(lightness: f32, alpha: f32) -> Hsla {
+-    Hsla {
+-        h: 0.0,
+-        s: 0.0,
+-        l: lightness,
+-        a: alpha,
+-    }
+-}
+-
+-/// The accent deepened for the dark panel: the brand lightness sits too close to
+-/// the white glyph a selected slot carries, so the fill drops to `0.48` and the
+-/// ring around it rises to `0.78`. Both keep the brand hue and saturation.
+-const SELECTED_FILL_L: f32 = 0.48;
+-const SELECTED_BORDER_L: f32 = 0.78;
+-
+ pub(crate) struct RingView {
+     invocation: ActionRingInvocation,
+     commands: mpsc::UnboundedSender<OverlayCommand>,
+@@ -91,11 +65,17 @@
+     fn slot_element(
+         &self,
+         slot: ActionRingSlot,
++        pal: &color::Palette,
+         cx: &mut Context<Self>,
+     ) -> Option<gpui::AnyElement> {
+         let presentation = self.invocation.slots.get(&slot)?;
+         let icon_path = presentation.icon.asset_path();
+         let selected = self.hovered == Some(slot);
++        let glyph = if selected {
++            pal.selected_foreground
++        } else {
++            pal.text_primary
++        };
+         let (left, top) = slot.placement(WINDOW_SIZE, RADIUS, SLOT_SIZE);
+         let session_id = self.invocation.session_id;
+         let activate = self.commands.clone();
+@@ -111,18 +91,17 @@
+                 .justify_center()
+                 .rounded_full()
+                 .bg(if selected {
+-                    color::accent_at_lightness(SELECTED_FILL_L)
++                    pal.selected
+                 } else {
+-                    SLOT_RESTING
++                    pal.control
+                 })
+                 .when(selected, |slot| {
+-                    slot.border_2()
+-                        .border_color(color::accent_at_lightness(SELECTED_BORDER_L))
++                    slot.border_2().border_color(pal.accent)
+                 })
+                 .shadow_md()
+-                .text_color(GLYPH)
++                .text_color(glyph)
+                 .cursor_pointer()
+-                .child(svg().path(icon_path).size(px(22.0)).text_color(GLYPH))
++                .child(svg().path(icon_path).size(px(22.0)).text_color(glyph))
+                 .on_hover(cx.listener(move |this, hovered, _, cx| {
+                     if *hovered && this.hovered != Some(slot) {
+                         this.hovered = Some(slot);
+@@ -147,6 +126,7 @@
+ 
+ impl Render for RingView {
+     fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
++        let pal = color::palette(cx);
+         let session_id = self.invocation.session_id;
+         let root_commands = self.commands.clone();
+         let center_commands = self.commands.clone();
+@@ -166,7 +146,7 @@
+         });
+         let slots = ActionRingSlot::ALL
+             .into_iter()
+-            .filter_map(|slot| self.slot_element(slot, cx))
++            .filter_map(|slot| self.slot_element(slot, &pal, cx))
+             .collect::<Vec<_>>();
+ 
+         div()
+@@ -180,7 +160,7 @@
+                     .top(px(18.0))
+                     .size(px(WINDOW_SIZE - 36.0))
+                     .rounded_full()
+-                    .bg(PANEL)
++                    .bg(pal.panel)
+                     .shadow_lg(),
+             )
+             .children(slots)
+@@ -195,10 +175,16 @@
+                     .items_center()
+                     .justify_center()
+                     .rounded_full()
+-                    .bg(CANCEL_RESTING)
+-                    .text_color(CANCEL_GLYPH)
++                    .bg(pal.control_hover)
++                    .text_color(pal.text_primary)
+                     .cursor_pointer()
+-                    .child(svg().path(RING_CANCEL_ICON).size(px(20.0)).flex_none())
++                    .child(
++                        svg()
++                            .path(RING_CANCEL_ICON)
++                            .size(px(20.0))
++                            .flex_none()
++                            .text_color(pal.text_primary),
++                    )
+                     .on_click(move |_, window, cx| {
+                         cx.stop_propagation();
+                         let _ = center_commands.send(OverlayCommand::Cancel { session_id });
+@@ -214,7 +200,7 @@
+                         .w(px(160.0))
+                         .text_center()
+                         .text_sm()
+-                        .text_color(LABEL)
++                        .text_color(pal.text_primary)
+                         .child(label),
+                 )
+             })
+diff -ruN a/crates/openlogi-ui/Cargo.toml b/crates/openlogi-ui/Cargo.toml
+--- a/crates/openlogi-ui/Cargo.toml	1970-01-01 08:00:01.000000000 +0800
++++ b/crates/openlogi-ui/Cargo.toml	2026-10-11 15:41:50.893358019 +0800
+@@ -12,10 +12,18 @@
+ 
+ [dependencies]
+ openlogi-core = { path = "../openlogi-core" }
+-# `gpui` only — deliberately neither `gpui-component` nor its icon set. Every
+-# dependency added here lands in the overlay helper too, so the widget kit and
+-# the artwork only the app draws both stay on the app's side.
++# Theme infrastructure is shared; application-specific widgets remain in desktop.
+ gpui = { workspace = true }
++gpui-component = { workspace = true }
++anyhow = { workspace = true }
++notify = { workspace = true }
++serde = { workspace = true }
++serde_json = { workspace = true }
++tokio = { workspace = true }
++tracing = { workspace = true }
++
++[dev-dependencies]
++gpui = { workspace = true, features = ["test-support"] }
+ 
+ [lints]
+ workspace = true
+diff -ruN a/crates/openlogi-ui/src/color.rs b/crates/openlogi-ui/src/color.rs
+--- a/crates/openlogi-ui/src/color.rs	1970-01-01 08:00:01.000000000 +0800
++++ b/crates/openlogi-ui/src/color.rs	2026-10-11 15:41:50.893542681 +0800
+@@ -1,73 +1,77 @@
+-//! The brand accent — the one colour both GPUI processes paint with.
+-//!
+-//! It does *not* flip with the OS appearance: it is saturated enough to read on
+-//! the settings app's light card surfaces and on the overlay's near-black ring
+-//! panel alike, so a single constant serves both. That is why it lives here
+-//! rather than in either binary — the overlay cannot depend on
+-//! `openlogi-desktop`, and a local copy is how the ring ended up drawing a blue
+-//! of its own, five degrees of hue off the brand.
+-//!
+-//! Everything else stays with its owner: the settings app's status hues and its
+-//! appearance-derived surface and text colours are resolved from the active
+-//! `gpui-component` theme, which this crate deliberately does not depend on, and
+-//! the overlay never draws them.
+-
+-use gpui::{Hsla, rgb};
+-
+-/// Primary action / selection blue. The brand colour, identical in both
+-/// appearances.
+-pub const ACCENT_BLUE: u32 = 0x003b_82f6;
++//! Semantic colors from the active GPUI theme, shared with the Actions Ring.
+ 
+-/// [`ACCENT_BLUE`] as an [`Hsla`], so callers stop re-`rgb()`-ing the constant.
+-#[must_use]
+-pub fn accent() -> Hsla {
+-    rgb(ACCENT_BLUE).into()
++use gpui::{App, Hsla, Window};
++use gpui_component::{ActiveTheme as _, Theme, ThemeMode};
++
++use crate::monet;
++
++/// A value snapshot of the ring's semantic presentation roles.
++#[derive(Clone, Copy)]
++pub struct Palette {
++    /// Floating panel surface.
++    pub panel: Hsla,
++    /// Main foreground on neutral surfaces.
++    pub text_primary: Hsla,
++    /// Supporting foreground.
++    pub text_muted: Hsla,
++    /// Resting slot surface.
++    pub control: Hsla,
++    /// Hover/cancel control surface.
++    pub control_hover: Hsla,
++    /// Neutral outline.
++    pub border: Hsla,
++    /// Selection outline and primary action color.
++    pub accent: Hsla,
++    /// Foreground on primary actions.
++    pub accent_foreground: Hsla,
++    /// Selected slot surface.
++    pub selected: Hsla,
++    /// Foreground paired with the selected surface.
++    pub selected_foreground: Hsla,
++    /// Pressed/hover selected surface.
++    pub selected_hover: Hsla,
+ }
+ 
+-/// The accent at a different lightness, keeping its hue and saturation.
+-///
+-/// The overlay draws its ring on a near-black panel, where the brand lightness
+-/// sits too close to the white glyph the slot carries; the settings app never
+-/// needs to move it. Shifting only `l` is what keeps that a *shade of the
+-/// accent* rather than a second blue — the drift this module exists to prevent.
++/// Resolve semantic colors without allocation or I/O.
+ #[must_use]
+-pub fn accent_at_lightness(lightness: f32) -> Hsla {
+-    Hsla {
+-        l: lightness,
+-        ..accent()
++pub fn palette(cx: &App) -> Palette {
++    let theme = cx.theme();
++    Palette {
++        panel: theme.group_box,
++        text_primary: theme.group_box_foreground,
++        text_muted: theme.muted_foreground,
++        control: theme.secondary,
++        control_hover: theme.secondary_hover,
++        border: theme.border,
++        accent: theme.primary,
++        accent_foreground: theme.primary_foreground,
++        selected: theme.accent,
++        selected_foreground: theme.accent_foreground,
++        selected_hover: theme.accent.opacity(0.85),
+     }
+ }
+ 
+-#[cfg(test)]
+-mod tests {
+-    use super::*;
+-
+-    /// The overlay derives both its selected-slot fill and that slot's border
+-    /// from [`accent_at_lightness`]. Pin that the derivation carries the brand
+-    /// hue and saturation through, so an edit there cannot quietly reintroduce
+-    /// the second accent this module replaced.
+-    #[test]
+-    fn accent_shades_keep_the_brand_hue_and_saturation() {
+-        let brand = accent();
+-        for lightness in [0.48, 0.78] {
+-            let shade = accent_at_lightness(lightness);
+-            assert!(
+-                (shade.h - brand.h).abs() < f32::EPSILON,
+-                "hue drifted at l={lightness}: {} vs {}",
+-                shade.h,
+-                brand.h
+-            );
+-            assert!(
+-                (shade.s - brand.s).abs() < f32::EPSILON,
+-                "saturation drifted at l={lightness}: {} vs {}",
+-                shade.s,
+-                brand.s
+-            );
+-            assert!(
+-                (shade.l - lightness).abs() < f32::EPSILON,
+-                "lightness not applied: {}",
+-                shade.l
+-            );
+-        }
++/// Bootstrap the standalone overlay's theme infrastructure and live loader.
++pub fn init(cx: &mut App) {
++    gpui_component::init(cx);
++    monet::install(cx, |cx| apply(None, cx));
++    apply(None, cx);
++}
++
++/// Apply the atomically published system mode and both Monet variants to the
++/// standalone ring. Before the first valid file, use Kit's OS-aware defaults.
++/// Window observers use the passed appearance to avoid re-entering the Linux
++/// platform client's RefCell from its portal callback.
++pub fn apply(window: Option<&mut Window>, cx: &mut App) {
++    let light = monet::config(monet::LIGHT, cx);
++    let dark = monet::config(monet::DARK, cx);
++    let mode = monet::appearance(cx).unwrap_or_else(|| {
++        ThemeMode::from(window.as_ref().map_or_else(|| cx.window_appearance(), |window| window.appearance()))
++    });
++    {
++        let theme = Theme::global_mut(cx);
++        if let Some(light) = light { theme.light_theme = light; }
++        if let Some(dark) = dark { theme.dark_theme = dark; }
+     }
++    Theme::change(mode, window, cx);
+ }
+diff -ruN a/crates/openlogi-ui/src/lib.rs b/crates/openlogi-ui/src/lib.rs
+--- a/crates/openlogi-ui/src/lib.rs	1970-01-01 08:00:01.000000000 +0800
++++ b/crates/openlogi-ui/src/lib.rs	2026-10-11 15:41:50.893667678 +0800
+@@ -1,10 +1,10 @@
+ //! Presentation code shared by OpenLogi's two GPUI processes: the settings app
+ //! (`openlogi-desktop`) and the Actions Ring overlay helper (`openlogi-overlay`).
+ //!
+-//! Only what both genuinely link belongs here. The overlay is a pure IPC client
+-//! with no settings UI, and this crate is what keeps that true: it depends on
+-//! `gpui` but not on `gpui-component`, so nothing the settings app pulls in can
+-//! reach the overlay through the back door.
++//! Shared theme infrastructure also belongs here: the ring uses the same GPUI
++//! semantic tokens and live Monet snapshot as the settings app, without linking
++//! the desktop's widgets or app state.
+ 
+ pub mod action_icons;
+ pub mod color;
++pub mod monet;
+diff -ruN a/crates/openlogi-ui/src/monet.rs b/crates/openlogi-ui/src/monet.rs
+--- a/crates/openlogi-ui/src/monet.rs	1970-01-01 08:00:00.000000000 +0800
++++ b/crates/openlogi-ui/src/monet.rs	2026-10-11 15:45:36.746221040 +0800
+@@ -0,0 +1,372 @@
++//! Live, last-good Monet snapshots shared by both GPUI processes.
++
++use std::{
++    collections::BTreeSet,
++    path::{Path, PathBuf},
++    rc::Rc,
++    sync::{Arc, RwLock, mpsc},
++    time::Duration,
++};
++
++use anyhow::{Context as _, Result, bail};
++use gpui::{App, Global};
++use gpui_component::{ThemeConfig, ThemeMode, ThemeRegistry, ThemeSet};
++use notify::{EventKind, RecursiveMode, Watcher as _};
++use serde::Deserialize;
++
++/// Name of the generated light variant.
++pub const LIGHT: &str = "Monet MD3 Light";
++/// Name of the generated dark variant.
++pub const DARK: &str = "Monet MD3 Dark";
++
++#[derive(Debug, Deserialize)]
++struct Document {
++    appearance: ThemeMode,
++    #[serde(flatten)]
++    themes: ThemeSet,
++}
++
++struct Snapshot {
++    appearance: ThemeMode,
++    light: Rc<ThemeConfig>,
++    dark: Rc<ThemeConfig>,
++}
++impl Global for Snapshot {}
++
++/// Look up the current generated variant, independently of the registry's immutable entries.
++/// Kit's `load_themes_from_str` inserts only unseen names; retaining live configs here
++/// prevents wallpaper updates from silently continuing to use the first palette.
++#[must_use]
++pub fn config(name: &str, cx: &App) -> Option<Rc<ThemeConfig>> {
++    let snapshot = cx.try_global::<Snapshot>()?;
++    match name {
++        LIGHT => Some(Rc::clone(&snapshot.light)),
++        DARK => Some(Rc::clone(&snapshot.dark)),
++        _ => None,
++    }
++}
++
++/// The system mode published atomically with the palette, if a valid file has loaded.
++#[must_use]
++pub fn appearance(cx: &App) -> Option<ThemeMode> {
++    cx.try_global::<Snapshot>().map(|snapshot| snapshot.appearance)
++}
++
++fn theme_path() -> Option<PathBuf> {
++    std::env::var_os("XDG_CONFIG_HOME")
++        .filter(|path| !path.is_empty())
++        .map(PathBuf::from)
++        .or_else(|| std::env::var_os("HOME").map(|home| PathBuf::from(home).join(".config")))
++        .map(|config| config.join("openlogi/monet.json"))
++}
++
++fn parse_document(content: &[u8]) -> Result<Document> {
++    let document: Document = serde_json::from_slice(content)?;
++    for (name, mode) in [(LIGHT, ThemeMode::Light), (DARK, ThemeMode::Dark)] {
++        if !document
++            .themes
++            .themes
++            .iter()
++            .any(|theme| theme.name == name && theme.mode == mode)
++        {
++            bail!("Monet theme must contain {name} in {mode:?} mode");
++        }
++    }
++    Ok(document)
++}
++
++fn read_document(path: &Path) -> Result<Document> {
++    parse_document(&std::fs::read(path)?)
++        .with_context(|| format!("invalid Monet theme: {}", path.display()))
++}
++
++fn publish(document: Document, cx: &mut App) {
++    // Keep both names in the normal Appearance picker without replacing bundled themes.
++    // The live lookup above takes precedence over these initial registry entries.
++    // Touching the registry triggers Kit's observer, which re-applies its stored
++    // configs. Register only once, otherwise that observer can overwrite the
++    // live snapshot with the first palette on each subsequent wallpaper change.
++    let registered = [LIGHT, DARK]
++        .iter()
++        .all(|name| ThemeRegistry::global(cx).themes().contains_key(*name));
++    if !registered {
++        if let Ok(json) = serde_json::to_string(&document.themes) {
++            if let Err(error) = ThemeRegistry::global_mut(cx).load_themes_from_str(&json) {
++                tracing::warn!(%error, "could not register Monet themes");
++            }
++        }
++    }
++    let mut light = None;
++    let mut dark = None;
++    for theme in document.themes.themes {
++        if theme.name == LIGHT && theme.mode == ThemeMode::Light {
++            light = Some(Rc::new(theme));
++        } else if theme.name == DARK && theme.mode == ThemeMode::Dark {
++            dark = Some(Rc::new(theme));
++        }
++    }
++    if let (Some(light), Some(dark)) = (light, dark) {
++        cx.set_global(Snapshot {
++            appearance: document.appearance,
++            light,
++            dark,
++        });
++    }
++}
++
++struct WatchScope {
++    directories: BTreeSet<PathBuf>,
++    affected: BTreeSet<PathBuf>,
++}
++
++fn include_resolution_path(path: &Path, affected: &mut BTreeSet<PathBuf>) {
++    for ancestor in path.ancestors() {
++        if ancestor.parent().is_some() {
++            affected.insert(ancestor.to_path_buf());
++        }
++    }
++}
++
++fn watch_scope(path: &Path) -> WatchScope {
++    let mut affected = BTreeSet::new();
++    let mut paths = vec![path.to_path_buf()];
++    if let Some(home) = std::env::var_os("HOME") {
++        paths.push(PathBuf::from(home).join(".local/share/themes/current/openlogi/monet.json"));
++    }
++    // Track exact directory entries along both lexical and resolved paths. A
++    // watched ancestor is not a subtree interest: unrelated siblings in HOME,
++    // .config, .local or the theme directory must never trigger a reload.
++    for path in &paths {
++        include_resolution_path(path, &mut affected);
++        for ancestor in path.ancestors() {
++            if let Ok(resolved) = ancestor.canonicalize() {
++                include_resolution_path(&resolved, &mut affected);
++            } else if let (Some(parent), Some(name)) = (ancestor.parent(), ancestor.file_name()) {
++                if let Ok(parent) = parent.canonicalize() {
++                    include_resolution_path(&parent.join(name), &mut affected);
++                }
++            }
++        }
++    }
++    let directories = affected
++        .iter()
++        .filter_map(|path| path.canonicalize().ok())
++        .filter(|path| path.is_dir())
++        .collect();
++    WatchScope { directories, affected }
++}
++
++fn event_affects_theme(event: &notify::Event, affected: &BTreeSet<PathBuf>) -> bool {
++    event.need_rescan()
++        || (matches!(
++            event.kind,
++            EventKind::Any | EventKind::Create(_) | EventKind::Modify(_) | EventKind::Remove(_)
++        ) && event.paths.iter().any(|path| affected.contains(path)))
++}
++
++fn read_changed_document(path: &Path, previous: &mut Option<Vec<u8>>) -> Result<Option<Document>> {
++    let content = std::fs::read(path)?;
++    if previous.as_deref() == Some(content.as_slice()) {
++        return Ok(None);
++    }
++    let document = parse_document(&content)
++        .with_context(|| format!("invalid Monet theme: {}", path.display()))?;
++    *previous = Some(content);
++    Ok(Some(document))
++}
++
++/// Load at startup and install a native directory watcher. `changed` applies the
++/// snapshot to the consumer's normal appearance owner; it never mutates settings.
++/// I/O, parsing and debounce happen on one sleeping worker, not in a render or
++/// the GPUI thread. Failed/partial replacements retain the previous valid pair.
++pub fn install(cx: &mut App, changed: fn(&mut App)) {
++    let Some(path) = theme_path() else {
++        return;
++    };
++    match read_document(&path) {
++        Ok(document) => publish(document, cx),
++        Err(error) => tracing::debug!(%error, "Monet theme not available at startup"),
++    }
++    let (snapshots, mut receiver) = tokio::sync::mpsc::channel(1);
++    let worker = std::thread::Builder::new()
++        .name("openlogi-monet".into())
++        .spawn(move || {
++            let (events, pending) = mpsc::sync_channel(1);
++            let affected = Arc::new(RwLock::new(BTreeSet::new()));
++            let callback_affected = Arc::clone(&affected);
++            let mut watcher = match notify::recommended_watcher(
++                move |event: notify::Result<notify::Event>| match event {
++                    Ok(event) => {
++                        let interested = event_affects_theme(
++                            &event,
++                            &callback_affected.read().unwrap_or_else(|error| error.into_inner()),
++                        );
++                        if interested {
++                            let _ = events.try_send(());
++                        }
++                    }
++                    Err(error) => {
++                        tracing::warn!(%error, "Monet watcher error");
++                        let _ = events.try_send(());
++                    }
++                },
++            ) {
++                Ok(watcher) => watcher,
++                Err(error) => {
++                    tracing::warn!(%error, "could not start Monet watcher");
++                    return;
++                }
++            };
++            let mut watched: BTreeSet<PathBuf> = BTreeSet::new();
++            let mut previous = None;
++            loop {
++                // Re-arm after every event, even if paths compare equal: an atomic
++                // directory replacement can invalidate the watch at the same name.
++                for directory in &watched {
++                    let _ = watcher.unwatch(directory);
++                }
++                let scope = watch_scope(&path);
++                *affected.write().unwrap_or_else(|error| error.into_inner()) = scope.affected;
++                watched = scope.directories;
++                for directory in &watched {
++                    if let Err(error) = watcher.watch(directory, RecursiveMode::NonRecursive) {
++                        tracing::warn!(%error, path = %directory.display(), "could not watch Monet directory");
++                    }
++                }
++                // Registration precedes the read, closing the startup/re-arm race.
++                match read_changed_document(&path, &mut previous) {
++                    Ok(Some(document)) => {
++                        if snapshots.blocking_send(document).is_err() {
++                            break;
++                        }
++                    }
++                    Ok(None) => {}
++                    Err(error) => tracing::debug!(%error, "retaining last-good Monet theme"),
++                }
++                if pending.recv().is_err() {
++                    break;
++                }
++                // One bounded burst delay, not polling; writes arriving during this
++                // read are queued and cause another reconciliation.
++                std::thread::sleep(Duration::from_millis(75));
++                while pending.try_recv().is_ok() {}
++            }
++        });
++    if let Err(error) = worker {
++        tracing::warn!(%error, "could not spawn Monet watcher");
++    }
++    cx.spawn(async move |cx| {
++        while let Some(document) = receiver.recv().await {
++            cx.update(|cx| {
++                publish(document, cx);
++                changed(cx);
++                cx.refresh_windows();
++            });
++        }
++    })
++    .detach();
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++    #[gpui::test]
++    fn live_reload_updates_consumed_colors_and_system_mode(cx: &mut gpui::TestAppContext) {
++        use gpui_component::Theme;
++
++        let initial = br##"{
++            "appearance": "light",
++            "themes": [
++                {"name":"Monet MD3 Light","mode":"light","colors":{
++                    "primary.background":"#3456ab","accent.background":"#cdd8ef","accent.foreground":"#123456"
++                }},
++                {"name":"Monet MD3 Dark","mode":"dark","colors":{
++                    "primary.background":"#abc8ef","accent.background":"#234567","accent.foreground":"#cdefab"
++                }}
++            ]
++        }"##;
++        let replacement = br##"{
++            "appearance": "dark",
++            "themes": [
++                {"name":"Monet MD3 Light","mode":"light","colors":{
++                    "primary.background":"#456712","accent.background":"#d8efcd","accent.foreground":"#345612"
++                }},
++                {"name":"Monet MD3 Dark","mode":"dark","colors":{
++                    "primary.background":"#c8efab","accent.background":"#456723","accent.foreground":"#efabcd"
++                }}
++            ]
++        }"##;
++        cx.update(|cx| {
++            gpui_component::init(cx);
++            publish(parse_document(initial).unwrap(), cx);
++            crate::color::apply(None, cx);
++            assert_eq!(Theme::global(cx).mode, ThemeMode::Light);
++            let first = crate::color::palette(cx);
++            assert_eq!(first.accent, gpui::Hsla::from(gpui::rgb(0x3456ab)));
++            assert_eq!(first.selected, gpui::Hsla::from(gpui::rgb(0xcdd8ef)));
++            assert_eq!(first.selected_foreground, gpui::Hsla::from(gpui::rgb(0x123456)));
++
++            publish(parse_document(replacement).unwrap(), cx);
++            crate::color::apply(None, cx);
++            assert_eq!(Theme::global(cx).mode, ThemeMode::Dark);
++            let dark = crate::color::palette(cx);
++            assert_eq!(dark.accent, gpui::Hsla::from(gpui::rgb(0xc8efab)));
++            assert_eq!(dark.selected, gpui::Hsla::from(gpui::rgb(0x456723)));
++            assert_eq!(dark.selected_foreground, gpui::Hsla::from(gpui::rgb(0xefabcd)));
++
++            // The explicit light slot must also consume the replacement, not
++            // the initial config still retained in Kit's insert-only registry.
++            Theme::change(ThemeMode::Light, None, cx);
++            let light = crate::color::palette(cx);
++            assert_eq!(light.accent, gpui::Hsla::from(gpui::rgb(0x456712)));
++            assert_eq!(light.selected, gpui::Hsla::from(gpui::rgb(0xd8efcd)));
++            assert_eq!(light.selected_foreground, gpui::Hsla::from(gpui::rgb(0x345612)));
++        });
++    }
++
++    #[test]
++    fn watcher_ignores_siblings_but_tracks_replaced_resolution_entries() {
++        let mut affected = BTreeSet::new();
++        include_resolution_path(Path::new("/home/test/.config/openlogi/monet.json"), &mut affected);
++        include_resolution_path(Path::new("/home/test/.local/share/themes/current/openlogi/monet.json"), &mut affected);
++        include_resolution_path(Path::new("/home/test/.local/share/themes/light/openlogi/monet.json"), &mut affected);
++        for path in [
++            "/home/test/download.txt",
++            "/home/test/.config/zed/settings.json",
++            "/home/test/.config/openlogi/config.toml",
++            "/home/test/.local/share/themes/current-backup",
++            "/home/test/.local/share/themes/light/openlogi/other.json",
++        ] {
++            let event = notify::Event::new(EventKind::Create(notify::event::CreateKind::Any))
++                .add_path(PathBuf::from(path));
++            assert!(!event_affects_theme(&event, &affected), "unrelated sibling: {path}");
++        }
++        for path in [
++            "/home/test/.config/openlogi",
++            "/home/test/.config/openlogi/monet.json",
++            "/home/test/.local/share/themes/current",
++            "/home/test/.local/share/themes/light/openlogi",
++            "/home/test/.local/share/themes/light/openlogi/monet.json",
++        ] {
++            let event = notify::Event::new(EventKind::Modify(notify::event::ModifyKind::Name(notify::event::RenameMode::Both)))
++                .add_path(PathBuf::from("/home/test/unrelated-tmp"))
++                .add_path(PathBuf::from(path));
++            assert!(event_affects_theme(&event, &affected), "resolution entry: {path}");
++        }
++        let rescan = notify::Event::new(EventKind::Other).set_flag(notify::event::Flag::Rescan);
++        assert!(event_affects_theme(&rescan, &affected));
++    }
++
++
++    #[test]
++    fn rejects_incomplete_or_mislabeled_pairs() {
++        for content in [
++            br#"{"appearance":"dark","themes":[]}"#.as_slice(),
++            br#"{"appearance":"light","themes":[{"name":"Monet MD3 Light","mode":"dark"},{"name":"Monet MD3 Dark","mode":"dark"}]}"#.as_slice(),
++            br#"{"themes":[{"name":"Monet MD3 Light","mode":"light"},{"name":"Monet MD3 Dark","mode":"dark"}]}"#.as_slice(),
++            br#"{"appearance":"dark","themes": ["#.as_slice(),
++        ] {
++            parse_document(content).unwrap_err();
++        }
++    }
++}
