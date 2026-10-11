@@ -125,6 +125,8 @@ in
       cfg.fonts.serif.package
       cfg.cursor.package
       cfg.icons.package
+      # darkman 使用 Adwaita-dark；GTK3 缺少此命名主题时会回退到浅色 Adwaita。
+      pkgs.gnome-themes-extra
     ];
 
     fonts.fontconfig.enable = true;
