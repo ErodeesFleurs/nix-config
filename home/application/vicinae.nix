@@ -46,7 +46,9 @@ in
         };
       };
       settings = lib.recursiveUpdate {
-        theme.name = "monet";
+        # 0.29 使用分模式主题配置；上游模块通过 VICINAE_OVERRIDES 保留用户可写设置。
+        theme.light.name = "monet-light";
+        theme.dark.name = "monet-dark";
       } cfg.settings;
 
       package = pkgs.vicinae;
