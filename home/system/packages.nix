@@ -123,7 +123,6 @@ in
         # 通讯
         qq
         wechat
-        feishu
         telegram-desktop
       ]
       ++ [

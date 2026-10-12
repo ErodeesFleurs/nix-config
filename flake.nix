@@ -104,7 +104,6 @@
             # IM / 工具
             "qq"
             "wechat"
-            "feishu"
             "baidupcs-go"
             # 输入法词库（CC BY-NC-SA）
             "fcitx5-pinyin-moegirl"
