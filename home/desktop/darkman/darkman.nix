@@ -16,12 +16,9 @@ let
   themeBase = "${homeDir}/.local/share/themes";
   currentSymlink = "${themeBase}/current";
 
-  m3LightWaybarCss = builtins.readFile ../../../assets/waybar/m3-expressive-light.css;
-  m3DarkWaybarCss = builtins.readFile ../../../assets/waybar/m3-expressive-dark.css;
-  m3WaybarBodyCssPath = ../../../assets/waybar/m3-expressive-body.css;
   monetTheme = import ../theme/monet {
+    # 与所有应用共享同一套 Material 色板，不让状态栏独立生成主题。
     inherit config lib pkgs;
-    waybarBodyCssPath = m3WaybarBodyCssPath;
   };
   themeLib = import ../theme/monet/lib.nix { inherit config lib pkgs; };
 
@@ -31,8 +28,8 @@ let
   '';
 
   switchActions = lib.concatStringsSep "\n" [
-    (lib.optionalString config.programs.waybar.enable (
-      mkHookBlock "Waybar — 发送 USR2 信号触发重载" themeLib.reloadScripts.waybar
+    (lib.optionalString config.programs.quickshell.enable (
+      mkHookBlock "Quickshell — current 翻转后重新读取色板" themeLib.reloadScripts.quickshell
     ))
 
     (lib.optionalString config.programs.ghostty.enable (
@@ -69,14 +66,14 @@ let
     light = {
       inherit (cfg.light)
         wallpaper
-        waybarCss
+        quickshellPalette
         iconTheme
         ;
     };
     dark = {
       inherit (cfg.dark)
         wallpaper
-        waybarCss
+        quickshellPalette
         iconTheme
         ;
     };
@@ -127,15 +124,13 @@ let
       else
         # 非 monet / 无壁纸：静态样式写入两棵子树
         ''
-          mkdir -p "$out/light/waybar" "$out/dark/waybar"
-
-          cat > "$out/light/waybar/style.css" << 'WAYBAREOF'
-          ${variants.light.waybarCss}
-          WAYBAREOF
-
-          cat > "$out/dark/waybar/style.css" << 'WAYBAREOF'
-          ${variants.dark.waybarCss}
-          WAYBAREOF
+          mkdir -p "$out/light/quickshell" "$out/dark/quickshell"
+          cat > "$out/light/quickshell/palette.json" << 'PALETTEEOF'
+          ${builtins.toJSON (variants.light.quickshellPalette // { mode = "light"; })}
+          PALETTEEOF
+          cat > "$out/dark/quickshell/palette.json" << 'PALETTEEOF'
+          ${builtins.toJSON (variants.dark.quickshellPalette // { mode = "dark"; })}
+          PALETTEEOF
         ''
     }
 
@@ -235,10 +230,23 @@ in
 
     # ── 日间主题配置 ────────────────────────────────
     light = {
-      waybarCss = lib.mkOption {
-        type = lib.types.lines;
-        default = m3LightWaybarCss;
-        description = "Waybar CSS for light mode";
+      quickshellPalette = lib.mkOption {
+        type = lib.types.attrsOf lib.types.str;
+        default = {
+          surface = "#fffbfe";
+          surfaceContainer = "#f3edf7";
+          surfaceContainerHigh = "#ece6f0";
+          onSurface = "#1d1b20";
+          onSurfaceVariant = "#49454f";
+          outline = "#79747e";
+          primary = "#005db8";
+          onPrimary = "#ffffff";
+          primaryContainer = "#d6e3ff";
+          onPrimaryContainer = "#001b3f";
+          error = "#ba1a1a";
+          onError = "#ffffff";
+        };
+        description = "Static light Material palette for Quickshell when wallpaper-derived Monet is disabled.";
       };
 
       gtkTheme = lib.mkOption {
@@ -275,10 +283,23 @@ in
 
     # ── 夜间主题配置 ────────────────────────────────
     dark = {
-      waybarCss = lib.mkOption {
-        type = lib.types.lines;
-        default = m3DarkWaybarCss;
-        description = "Waybar CSS for dark mode";
+      quickshellPalette = lib.mkOption {
+        type = lib.types.attrsOf lib.types.str;
+        default = {
+          surface = "#111318";
+          surfaceContainer = "#1d2027";
+          surfaceContainerHigh = "#29313b";
+          onSurface = "#e6e1e5";
+          onSurfaceVariant = "#cac4d0";
+          outline = "#938f99";
+          primary = "#a8c7fa";
+          onPrimary = "#00315f";
+          primaryContainer = "#1f3b63";
+          onPrimaryContainer = "#d6e3ff";
+          error = "#ffb4ab";
+          onError = "#690005";
+        };
+        description = "Static dark Material palette for Quickshell when wallpaper-derived Monet is disabled.";
       };
 
       gtkTheme = lib.mkOption {

@@ -2,12 +2,11 @@
   config,
   lib,
   pkgs,
-  waybarBodyCssPath,
 }:
 
 let
   themeLib = import ./lib.nix { inherit config lib pkgs; };
-  waybar = import ./waybar.nix { inherit themeLib waybarBodyCssPath; };
+  quickshell = import ./quickshell.nix { inherit config themeLib; };
   mako = import ./mako.nix {
     inherit
       config
@@ -56,7 +55,7 @@ let
   };
 
   apps = [
-    waybar
+    quickshell
     mako
     btop
     ghostty

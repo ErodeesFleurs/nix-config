@@ -29,8 +29,7 @@ let
 
         if [ -f "$SOURCE" ]; then
           $DRY_RUN_CMD mkdir -p "$(dirname "$TARGET")"
-          # 原子替换：先建临时链接再 rename，消除 rm+ln 之间文件不存在的窗口
-          # （waybar reload_style_on_change 曾在该窗口读到空样式而整栏透明化）
+          # 原子替换：避免应用重载时读到不存在或不完整的主题文件。
           $DRY_RUN_CMD ln -sfn "$SOURCE" "$TARGET.tmp"
           $DRY_RUN_CMD mv -T "$TARGET.tmp" "$TARGET"
           ${postLink}
@@ -66,9 +65,15 @@ let
 
   # 主题切换时的运行时重载脚本（darkman hook 与各应用 activation postLink 共用）
   reloadScripts = {
-    # Waybar — USR2 触发样式重载
-    waybar = ''
-      ${pkgs.procps}/bin/pkill -SIGUSR2 waybar 2>/dev/null || true
+    # current 的父目录软链接翻转不会可靠触发 Qt 文件监视器。
+    # darkman 没有 WAYLAND_DISPLAY；按 unit PID 定位，避免选错其他会话/预览实例。
+    quickshell = ''
+      if ${pkgs.systemd}/bin/systemctl --user is-active --quiet quickshell.service; then
+        ${lib.getExe config.programs.quickshell.package} ipc \
+          --pid "$(${pkgs.systemd}/bin/systemctl --user show quickshell.service --property MainPID --value)" \
+          call appearance reload \
+          || echo "WARNING: Quickshell palette reload failed" >&2
+      fi
     '';
 
     # Fcitx5 — 重载 classicui addon（候选框主题属于该 addon）

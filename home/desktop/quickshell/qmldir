@@ -1,0 +1,9 @@
+singleton Settings 1.0 Settings.qml
+singleton Theme 1.0 Theme.qml
+singleton DesktopState 1.0 DesktopState.qml
+Bar 1.0 Bar.qml
+ControlCenter 1.0 ControlCenter.qml
+ActionButton 1.0 ActionButton.qml
+DeviceSlider 1.0 DeviceSlider.qml
+PanelSection 1.0 PanelSection.qml
+TrayButton 1.0 TrayButton.qml

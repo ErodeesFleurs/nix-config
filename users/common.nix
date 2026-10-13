@@ -38,7 +38,7 @@
 
     desktop = {
       awww.enable = true;
-      waybar.enable = true;
+      quickshell.enable = true;
       darkman = {
         enable = true;
         # geoclue 自动定位（替代硬编码经纬度）

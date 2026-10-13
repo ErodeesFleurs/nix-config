@@ -1,0 +1,15 @@
+{
+  "mode": "@mode@",
+  "surface": "@surface@",
+  "surfaceContainer": "@surface_container@",
+  "surfaceContainerHigh": "@surface_container_high@",
+  "onSurface": "@on_surface@",
+  "onSurfaceVariant": "@on_surface_variant@",
+  "primary": "@primary@",
+  "onPrimary": "@on_primary@",
+  "primaryContainer": "@primary_container@",
+  "onPrimaryContainer": "@on_primary_container@",
+  "outline": "@outline@",
+  "error": "@error@",
+  "onError": "@on_error@"
+}
