@@ -11,12 +11,11 @@ RowLayout {
     spacing: 2
     implicitHeight: Settings.touch ? 44 : 32
 
-    QsMenuAnchor {
+    TrayMenu {
         id: menuAnchor
-        menu: root.trayItem.menu
-        anchor.item: activateButton
-        anchor.edges: Edges.Bottom | Edges.Left
-        anchor.gravity: Edges.Bottom | Edges.Right
+        handle: root.trayItem.menu
+        parent: activateButton
+        y: activateButton.height + 4
     }
     ActionButton {
         id: activateButton
@@ -54,21 +53,15 @@ RowLayout {
                 sourceSize.height: height * Screen.devicePixelRatio
                 fillMode: Image.PreserveAspectFit
                 visible: false
-                layer.enabled: true
             }
-            Rectangle {
-                id: ink
-                anchors.fill: parent
-                color: Theme.foreground
-                visible: false
-                layer.enabled: true
-            }
-            // Use alpha, not luminance: dark symbolic SVGs must stay readable.
+            // Flatten RGB to white before tinting, without thresholding edge alpha.
             MultiEffect {
                 anchors.fill: parent
-                source: ink
-                maskEnabled: true
-                maskSource: glyphImage
+                source: glyphImage
+                contrast: -1
+                brightness: 0.5
+                colorization: 1
+                colorizationColor: Theme.foreground
             }
         }
     }

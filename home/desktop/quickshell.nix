@@ -20,10 +20,12 @@ let
   # QML then applies the live Monet foreground without recoloring backgrounds.
   trayIcons = lib.mapAttrs (
     name: source:
-    "${pkgs.runCommand "quickshell-${name}-symbolic.png" { nativeBuildInputs = [ pkgs.imagemagick ]; } ''
-      magick ${source} -channel A -fx 'a * max(0,min(1,(min(r,min(g,b))-0.8)*5))' \
-        -channel RGB -fill white -colorize 100 +channel -resize 128x128 "$out"
-    ''}"
+    "${pkgs.runCommand "quickshell-${name}-symbolic.png" { nativeBuildInputs = [ pkgs.imagemagick ]; }
+      ''
+        magick ${source} -channel A -fx 'a * max(0,min(1,(min(r,min(g,b))-0.8)*5))' \
+          -channel RGB -fill white -colorize 100 +channel -resize 128x128 "$out"
+      ''
+    }"
   ) trayArtwork;
   status = pkgs.writeShellApplication {
     name = "quickshell-status";
@@ -88,7 +90,7 @@ let
 in
 {
   options.homeModules.desktop.quickshell = {
-    enable = lib.mkEnableOption "shared Niri Quickshell bar with a scrollable full application tray (right-click or long-press for menus) and control center";
+    enable = lib.mkEnableOption "shared Niri Quickshell bar with a scrollable full application tray, live Monet-themed menus (right-click or long-press), and control center";
     touch = lib.mkOption {
       type = lib.types.bool;
       default = false;
