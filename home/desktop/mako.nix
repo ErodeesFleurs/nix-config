@@ -15,22 +15,24 @@ in
     settings = lib.mkOption {
       type = lib.types.attrs;
       default = {
-        width = 360;
-        height = 145;
+        font = "sans-serif 11";
+        width = 380;
+        height = 200;
         anchor = "top-right";
         outer-margin = "15,15";
-        margin = 12;
-        padding = "20,20";
+        margin = 10;
+        padding = "14,16";
         border-size = 1;
-        border-radius = 24;
+        border-radius = 18;
         icons = 1;
         icon-location = "left";
-        max-icon-size = 64;
+        max-icon-size = 40;
         markup = 1;
         format = "<b>%s</b>\\n%b";
         text-alignment = "left";
         history = 1;
         max-history = 20;
+        max-visible = 4;
         default-timeout = 6000;
         layer = "top";
         on-button-left = "invoke-default-action";
@@ -44,8 +46,16 @@ in
           default-timeout = 0;
           ignore-timeout = 1;
         };
+        "hidden" = {
+          format = "还有 %h 条通知";
+          padding = "10,16";
+          icons = 0;
+        };
       };
-      description = "Mako settings table (single source of truth).";
+      description = ''
+        Notification layout, urgency and overflow settings, shared by the
+        fallback Mako config and generated Monet themes.
+      '';
     };
   };
 

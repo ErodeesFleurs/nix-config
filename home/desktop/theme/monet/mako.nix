@@ -38,10 +38,19 @@ let
 
   colorOverrides = {
     global = {
+      # Hidden overflow placeholders have unknown urgency, so urgency rules alone
+      # leave them with mako's built-in blue background.
+      background-color = "@surface_container_high@";
+      text-color = "@on_surface@";
       border-color = "@outline_variant@";
-      progress-color = "source @primary@";
+      progress-color = "source @primary_container@";
     };
 
+    "hidden" = {
+      background-color = "@surface_container@";
+      text-color = "@on_surface_variant@";
+      border-color = "@outline_variant@";
+    };
     "urgency=low" = {
       background-color = "@surface_container_low@";
       text-color = "@on_surface_variant@";
@@ -58,6 +67,7 @@ let
       background-color = "@error_container@";
       text-color = "@on_error_container@";
       border-color = "@error@";
+      progress-color = "over @error@26";
     };
   };
 
