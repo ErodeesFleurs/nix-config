@@ -67,6 +67,9 @@ tooltip.background {
 }
 
 button {
+  /* Native GTK3 gradients otherwise cover Monet's background with a pale fill. */
+  background-image: none;
+  text-shadow: none;
   border-radius: 999px;
   border-color: transparent;
   background-color: @surface_container_high@;
@@ -85,6 +88,27 @@ button.suggested-action,
 button.default {
   background-color: @primary@;
   color: @on_primary@;
+}
+
+button:active,
+button:checked:hover,
+button:checked:active,
+button.suggested-action:hover,
+button.suggested-action:active,
+button.default:hover,
+button.default:active {
+  background-color: @primary_container@;
+  color: @on_primary_container@;
+}
+
+/* A disabled default action must not inherit white text from its enabled state. */
+button:disabled,
+button:checked:disabled,
+button.suggested-action:disabled,
+button.default:disabled {
+  background-color: @surface_container@;
+  color: @on_surface_variant@;
+  border-color: @outline_variant@;
 }
 
 entry,
