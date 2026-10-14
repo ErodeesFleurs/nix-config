@@ -5,6 +5,7 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Services.Pipewire
 import Quickshell.Services.Mpris
+import Quickshell.Services.UPower
 
 Singleton {
     id: root
@@ -18,6 +19,8 @@ Singleton {
     property bool _statusReceived: false
     property var _pendingWorkspace: null
     property int _pendingBrightness: -1
+    property string powerProfileError: ""
+    property string _powerProfileStderr: ""
 
     readonly property bool statusAvailable: statusProcess.running && _statusReceived
     readonly property var cpuUsage: statusAvailable && typeof _status.cpuUsage === "number" ? _status.cpuUsage : null
@@ -52,6 +55,84 @@ Singleton {
     readonly property real batteryPercent: batteryAvailable ? _status.batteryPercent : 0
     readonly property bool batteryCharging: batteryAvailable && _status.batteryCharging === true
     readonly property string batteryTime: batteryAvailable ? _status.batteryTime : ""
+
+    // Never use the native singleton's default balanced value as proof of a service.
+    // The existing status sampler probes availability; native D-Bus notifications
+    // remain authoritative for selection, supported modes, degradation and holds.
+    readonly property bool powerProfilesAvailable: statusAvailable && _status.powerProfilesAvailable === true
+    readonly property bool powerProfilePending: powerProfileAction.running
+    readonly property string powerProfilesError: statusAvailable ? (_status.powerProfilesError || "") : "Status helper unavailable"
+    readonly property string powerProfile: powerProfilesAvailable ? powerProfileName(PowerProfiles.profile) : ""
+    readonly property bool hasPerformanceProfile: powerProfilesAvailable && PowerProfiles.hasPerformanceProfile
+    readonly property string powerProfileDegradation: {
+        if (!powerProfilesAvailable)
+            return "";
+        switch (PowerProfiles.degradationReason) {
+        case PerformanceDegradationReason.LapDetected:
+            return "性能受限：检测到设备放在膝上";
+        case PerformanceDegradationReason.HighTemperature:
+            return "性能受限：设备温度过高";
+        default:
+            return "";
+        }
+    }
+    readonly property string powerProfileHolds: {
+        if (!powerProfilesAvailable)
+            return "";
+        const holds = PowerProfiles.holds;
+        const descriptions = [];
+        for (let i = 0; i < holds.length; ++i) {
+            const hold = holds[i];
+            descriptions.push(powerProfileLabel(powerProfileName(hold.profile)) + " · "
+                              + hold.applicationId + (hold.reason ? "：" + hold.reason : ""));
+        }
+        return descriptions.join("\n");
+    }
+
+    function powerProfileName(profile) {
+        switch (profile) {
+        case PowerProfile.PowerSaver: return "power-saver";
+        case PowerProfile.Balanced: return "balanced";
+        case PowerProfile.Performance: return "performance";
+        default: return "";
+        }
+    }
+
+    function powerProfileLabel(profile) {
+        switch (profile) {
+        case "power-saver": return "省电";
+        case "balanced": return "均衡";
+        case "performance": return "性能";
+        default: return "不可用";
+        }
+    }
+
+    function setPowerProfile(profile) {
+        if (!powerProfilesAvailable || powerProfilePending
+                || !["power-saver", "balanced", "performance"].includes(profile)
+                || (profile === "performance" && !hasPerformanceProfile))
+            return;
+        powerProfileError = "";
+        _powerProfileStderr = "";
+        // The CLI reports policy/service failures; never optimistically assign
+        // PowerProfiles.profile or mark the requested mode as the active one.
+        powerProfileAction.exec(Settings.commands.powerprofiles.concat(["set", profile]));
+    }
+
+    Process {
+        id: powerProfileAction
+        onExited: (code, status) => {
+            if (code !== 0)
+                root.powerProfileError = root._powerProfileStderr
+                        || "切换电源模式失败 (" + code + ", " + status + ")";
+        }
+        stderr: SplitParser {
+            onRead: data => {
+                if (data.trim())
+                    root._powerProfileStderr += (root._powerProfileStderr ? "\n" : "") + data.trim();
+            }
+        }
+    }
 
     // Prefer a playing player; otherwise retain the first available paused player.
     readonly property var player: {
@@ -232,8 +313,10 @@ Singleton {
         command: {
             if (!Settings.ready)
                 return [];
-            const args = Settings.keyboardEnabled ? ["--keyboard-unit", Settings.keyboardUnit,
-                "--systemctl-command", JSON.stringify(Settings.commands.systemctl)] : [];
+            const args = ["--powerprofiles-command", JSON.stringify(Settings.commands.powerprofiles)];
+            if (Settings.keyboardEnabled)
+                args.push("--keyboard-unit", Settings.keyboardUnit,
+                          "--systemctl-command", JSON.stringify(Settings.commands.systemctl));
             return Settings.commands.status.concat(args);
         }
         running: Settings.ready

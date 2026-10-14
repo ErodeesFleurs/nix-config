@@ -188,6 +188,7 @@ class Sampler:
                   "brightnessAvailable": False, "brightnessPercent": 0,
                   "brightnessDevice": "", "keyboardActive": False}
         result.update(batteryAvailable=False, batteryPercent=0, batteryCharging=False, batteryTime="")
+        result.update(powerProfilesAvailable=False, powerProfilesError="")
         errors = []
         try:
             current = cpu_counters()
@@ -236,6 +237,16 @@ class Sampler:
             result.update(battery_status())
         except (OSError, ValueError) as error:
             errors.append(f"Battery: {error}")
+        # Native QML supplies live profiles/capabilities, but has no service-availability API.
+        # Probe only the machine-readable active profile, with the shared three-second bound.
+        if self.args.powerprofiles_command:
+            try:
+                profile = command_output(self.args.powerprofiles_command + ["get"])
+                if profile not in ("power-saver", "balanced", "performance"):
+                    raise ValueError(f"unexpected power profile: {profile}")
+                result["powerProfilesAvailable"] = True
+            except (OSError, ValueError, RuntimeError, subprocess.TimeoutExpired) as error:
+                result["powerProfilesError"] = str(error)
         if self.args.keyboard_unit:
             try:
                 state = command_output(self.args.systemctl_command +
@@ -254,6 +265,7 @@ def main():
     parser.add_argument("--iw-command", type=json.loads, default=["iw"], help="JSON argv array")
     parser.add_argument("--keyboard-unit", default="")
     parser.add_argument("--systemctl-command", type=json.loads, default=["systemctl"], help="JSON argv array")
+    parser.add_argument("--powerprofiles-command", type=json.loads, default=[], help="JSON argv array")
     args = parser.parse_args()
     signal.signal(signal.SIGPIPE, signal.SIG_DFL)
     sampler = Sampler(args)

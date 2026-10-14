@@ -64,6 +64,7 @@ let
         keyboardToggle = cfg.keyboard.toggleCommand;
         status = [ (lib.getExe status) ];
         brightness = [ "${pkgs.brightnessctl}/bin/brightnessctl" ];
+        powerprofiles = [ "${pkgs.power-profiles-daemon}/bin/powerprofilesctl" ];
         systemctl = [ "${pkgs.systemd}/bin/systemctl" ];
         lock = [
           "${pkgs.systemd}/bin/loginctl"
@@ -90,7 +91,7 @@ let
 in
 {
   options.homeModules.desktop.quickshell = {
-    enable = lib.mkEnableOption "shared Niri Quickshell bar with a scrollable full application tray, live Monet-themed menus (right-click or long-press), and control center";
+    enable = lib.mkEnableOption "shared Niri Quickshell bar with a scrollable full application tray, live Monet-themed menus (right-click or long-press), and control center with live power-profiles-daemon modes, independently of idle inhibition";
     touch = lib.mkOption {
       type = lib.types.bool;
       default = false;

@@ -6,6 +6,7 @@ import Quickshell.Services.SystemTray
 
 PopupWindow {
     id: root
+    objectName: "controlCenter"
     required property var barWindow
     anchor.window: barWindow
     anchor.rect.x: Math.max(8, barWindow.width - implicitWidth - 8)
@@ -42,6 +43,7 @@ PopupWindow {
         }
         Flickable {
             id: scroll
+            objectName: "controlCenterScroll"
             anchors.fill: parent
             anchors.margins: 16
             contentWidth: width
@@ -228,6 +230,93 @@ PopupWindow {
                             enabled: DesktopState.playerAvailable && DesktopState.mediaVolumeAvailable
                             onClicked: DesktopState.changeMediaVolume(5)
                         }
+                    }
+                }
+                PanelSection {
+                    objectName: "powerProfilesPanel"
+                    Layout.fillWidth: true
+                    // System performance profiles do not control desktop idle inhibition.
+                    title: "POWER"
+                    Text {
+                        objectName: "powerProfileStatus"
+                        text: DesktopState.powerProfilesAvailable
+                              ? "当前模式：" + DesktopState.powerProfileLabel(DesktopState.powerProfile)
+                                + (DesktopState.powerProfilePending ? " · 正在切换…" : "")
+                              : "电源模式服务不可用"
+                        color: Theme.foreground
+                        font.family: Settings.fontFamily
+                        font.pixelSize: 13
+                        Layout.fillWidth: true
+                        wrapMode: Text.Wrap
+                    }
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 8
+                        ActionButton {
+                            objectName: "powerSaverButton"
+                            Layout.fillWidth: true
+                            label: "省电"
+                            description: "降低功耗，优先延长续航"
+                            enabled: DesktopState.powerProfilesAvailable && !DesktopState.powerProfilePending
+                            highlighted: DesktopState.powerProfile === "power-saver"
+                            onClicked: DesktopState.setPowerProfile("power-saver")
+                        }
+                        ActionButton {
+                            objectName: "balancedPowerButton"
+                            Layout.fillWidth: true
+                            label: "均衡"
+                            description: "平衡性能与功耗"
+                            enabled: DesktopState.powerProfilesAvailable && !DesktopState.powerProfilePending
+                            highlighted: DesktopState.powerProfile === "balanced"
+                            onClicked: DesktopState.setPowerProfile("balanced")
+                        }
+                        ActionButton {
+                            objectName: "performancePowerButton"
+                            Layout.fillWidth: true
+                            label: "性能"
+                            description: DesktopState.hasPerformanceProfile ? "优先性能，可能增加功耗和发热" : "此设备不支持性能模式"
+                            enabled: DesktopState.hasPerformanceProfile && !DesktopState.powerProfilePending
+                            highlighted: DesktopState.powerProfile === "performance"
+                            onClicked: DesktopState.setPowerProfile("performance")
+                        }
+                    }
+                    Text {
+                        visible: DesktopState.powerProfilesAvailable && !DesktopState.hasPerformanceProfile
+                        text: "此设备支持省电和均衡模式"
+                        color: Theme.foregroundVariant
+                        font.family: Settings.fontFamily
+                        font.pixelSize: 12
+                        Layout.fillWidth: true
+                        wrapMode: Text.Wrap
+                    }
+                    Text {
+                        visible: DesktopState.powerProfileDegradation.length > 0
+                        text: DesktopState.powerProfileDegradation
+                        color: Theme.primary
+                        font.family: Settings.fontFamily
+                        font.pixelSize: 12
+                        Layout.fillWidth: true
+                        wrapMode: Text.Wrap
+                    }
+                    Text {
+                        visible: DesktopState.powerProfileHolds.length > 0
+                        text: "应用正在保持电源模式：\n" + DesktopState.powerProfileHolds
+                        color: Theme.foregroundVariant
+                        font.family: Settings.fontFamily
+                        font.pixelSize: 12
+                        Layout.fillWidth: true
+                        wrapMode: Text.Wrap
+                    }
+                    Text {
+                        objectName: "powerProfileError"
+                        visible: text.length > 0
+                        text: DesktopState.powerProfileError
+                              || (!DesktopState.powerProfilesAvailable ? DesktopState.powerProfilesError : "")
+                        color: Theme.error
+                        font.family: Settings.fontFamily
+                        font.pixelSize: 12
+                        Layout.fillWidth: true
+                        wrapMode: Text.Wrap
                     }
                 }
                 PanelSection {
