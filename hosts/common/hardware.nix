@@ -10,7 +10,7 @@ let
   openlogi = inputs.openlogi.packages.${pkgs.stdenv.hostPlatform.system}.openlogi;
   monetSource = pkgs.applyPatches {
     name = "openlogi-monet-source";
-    src = openlogi.src;
+    inherit (openlogi) src;
     patches = [ ../../patches/openlogi/monet.patch ];
   };
 in
