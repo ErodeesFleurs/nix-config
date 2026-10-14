@@ -47,8 +47,11 @@ in
       };
       settings = lib.recursiveUpdate {
         # 0.29 使用分模式主题配置；上游模块通过 VICINAE_OVERRIDES 保留用户可写设置。
+        # 原生 icon_theme 使用 Monet 单色 SVG；扩展图片和绝对路径图标保留原色。
         theme.light.name = "monet-light";
+        theme.light.icon_theme = "Monet-Vicinae-Light";
         theme.dark.name = "monet-dark";
+        theme.dark.icon_theme = "Monet-Vicinae-Dark";
       } cfg.settings;
 
       package = pkgs.vicinae;
