@@ -92,6 +92,68 @@ themeLib.mkApp {
         "light"
         "dark"
       ]
+    ++
+      map
+        (polarity: {
+          name = "fcitx5-configtool-${polarity}";
+          input = themeLib.materialize {
+            source = ./templates/fcitx5-configtool.qss;
+            mode = polarity;
+            literals.font = font;
+          };
+          output = "${polarity}/fcitx5/configtool.qss";
+        })
+        [
+          "light"
+          "dark"
+        ]
+    ++
+      lib.concatMap
+        (
+          polarity:
+          map
+            (glyph: {
+              name = "fcitx5-configtool-${glyph}-${polarity}";
+              input = themeLib.materialize {
+                source = ./. + "/templates/fcitx5-configtool-${glyph}.svg";
+                mode = polarity;
+              };
+              output = "${polarity}/fcitx5/configtool-${glyph}.svg";
+            })
+            [
+              "check"
+              "partial"
+            ]
+        )
+        [
+          "light"
+          "dark"
+        ]
+    ++
+      lib.concatMap
+        (
+          polarity:
+          lib.mapAttrsToList
+            (direction: rotation: {
+              name = "fcitx5-configtool-${direction}-${polarity}";
+              input = themeLib.materialize {
+                source = ./templates/fcitx5-configtool-arrow.svg;
+                mode = polarity;
+                literals.rotation = toString rotation;
+              };
+              output = "${polarity}/fcitx5/configtool-${direction}.svg";
+            })
+            {
+              left = 0;
+              up = 90;
+              right = 180;
+              down = 270;
+            }
+        )
+        [
+          "light"
+          "dark"
+        ]
     ++ themeTemplates;
 
   postSteps = _: postStepsText;

@@ -7,6 +7,16 @@
 
 let
   cfg = config.homeModules.theme;
+  # Scope Qt Widgets styling to the configurator; do not change the global Qt
+  # platform theme or the input method's writable settings.
+  # Keep the NixOS wrapper's addon GUI paths (e.g. Chinese addon editors).
+  # Qt reads QSS at startup; reopen the tool after changing theme polarity.
+  fcitxConfig = pkgs.writeShellScriptBin "fcitx5-config-qt" ''
+    exec /run/current-system/sw/bin/fcitx5-config-qt \
+      -style fusion \
+      -stylesheet "''${XDG_DATA_HOME:-$HOME/.local/share}/themes/current/fcitx5/configtool.qss" \
+      "$@"
+  '';
 in
 {
   options.homeModules.theme = {
@@ -127,6 +137,7 @@ in
       cfg.icons.package
       # darkman 使用 Adwaita-dark；GTK3 缺少此命名主题时会回退到浅色 Adwaita。
       pkgs.gnome-themes-extra
+      fcitxConfig
     ];
 
     fonts.fontconfig.enable = true;

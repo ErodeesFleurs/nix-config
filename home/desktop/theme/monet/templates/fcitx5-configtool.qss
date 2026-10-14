@@ -1,0 +1,193 @@
+/* Application-scoped Qt Widgets styling; palette is loaded when the tool opens. */
+QWidget {
+    font-family: "@font@";
+    font-size: 11pt;
+    color: @on_surface@;
+    background-color: @surface@;
+    selection-background-color: @primary_container@;
+    selection-color: @on_primary_container@;
+}
+QLabel, QCheckBox, QRadioButton {
+    background-color: transparent;
+}
+QLabel:disabled, QCheckBox:disabled, QRadioButton:disabled {
+    color: @outline@;
+}
+QCheckBox::indicator, QAbstractItemView::indicator {
+    width: 16px;
+    height: 16px;
+    border: 1px solid @outline@;
+    border-radius: 4px;
+    background-color: @surface_container_low@;
+}
+QCheckBox::indicator:checked, QAbstractItemView::indicator:checked {
+    image: url(configtool-check.svg);
+    background-color: @primary_container@;
+    border-color: @primary@;
+}
+QCheckBox::indicator:indeterminate, QAbstractItemView::indicator:indeterminate {
+    image: url(configtool-partial.svg);
+    background-color: @primary_container@;
+    border-color: @primary@;
+}
+QCheckBox::indicator:disabled, QAbstractItemView::indicator:disabled {
+    border-color: @outline_variant@;
+}
+QRadioButton::indicator {
+    width: 12px;
+    height: 12px;
+    border: 3px solid @outline_variant@;
+    border-radius: 9px;
+    background-color: @surface_container_low@;
+}
+QRadioButton::indicator:checked {
+    background-color: @primary@;
+    border-color: @primary_container@;
+}
+QTabWidget::pane {
+    border: 0;
+    border-top: 1px solid @outline_variant@;
+    padding-top: 8px;
+}
+QTabBar::tab {
+    background-color: @surface_container@;
+    border: 1px solid @outline_variant@;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    padding: 8px 14px;
+    margin-right: 4px;
+}
+QTabBar::tab:selected {
+    background-color: @primary_container@;
+    color: @on_primary_container@;
+    border-color: @primary@;
+}
+QTabBar::tab:hover:!selected {
+    background-color: @surface_container_high@;
+}
+QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox {
+    background-color: @surface_container_low@;
+    border: 1px solid @outline_variant@;
+    border-radius: 6px;
+    padding: 6px 8px;
+    min-height: 20px;
+}
+QLineEdit:focus, QComboBox:focus, QSpinBox:focus, QDoubleSpinBox:focus {
+    border-color: @primary@;
+}
+QLineEdit:disabled, QComboBox:disabled, QSpinBox:disabled, QDoubleSpinBox:disabled {
+    color: @outline@;
+    background-color: @surface_container@;
+}
+QComboBox::down-arrow, QSpinBox::down-arrow, QDoubleSpinBox::down-arrow {
+    image: url(configtool-down.svg);
+    width: 10px;
+    height: 10px;
+}
+QSpinBox::up-arrow, QDoubleSpinBox::up-arrow {
+    image: url(configtool-up.svg);
+    width: 10px;
+    height: 10px;
+}
+QAbstractItemView {
+    background-color: @surface_container_low@;
+    alternate-background-color: @surface_container@;
+    border: 1px solid @outline_variant@;
+    border-radius: 8px;
+    padding: 4px;
+}
+QAbstractItemView::item {
+    padding: 4px 6px;
+}
+QAbstractItemView::item:selected {
+    background-color: @primary_container@;
+    color: @on_primary_container@;
+}
+QAbstractItemView::item:hover:!selected {
+    background-color: @surface_container_high@;
+}
+QAbstractItemView::item:disabled {
+    color: @on_surface_variant@;
+}
+QPushButton, QToolButton {
+    background-color: @surface_container@;
+    border: 1px solid @outline_variant@;
+    border-radius: 6px;
+    min-height: 24px;
+    padding: 5px 10px;
+}
+/* Qt's fallback arrow bitmaps stay black in dark mode; use palette SVGs. */
+QToolButton#addIMButton {
+    qproperty-icon: url(configtool-left.svg);
+}
+QToolButton#removeIMButton {
+    qproperty-icon: url(configtool-right.svg);
+}
+QToolButton#moveUpButton {
+    qproperty-icon: url(configtool-up.svg);
+}
+QToolButton#moveDownButton {
+    qproperty-icon: url(configtool-down.svg);
+}
+QPushButton:hover, QToolButton:hover {
+    background-color: @surface_container_high@;
+    border-color: @outline@;
+}
+QPushButton:pressed, QToolButton:pressed, QToolButton:checked {
+    background-color: @primary_container@;
+    color: @on_primary_container@;
+    border-color: @primary@;
+}
+QPushButton:default {
+    background-color: @primary_container@;
+    color: @on_primary_container@;
+    border-color: @primary@;
+}
+QPushButton:disabled, QToolButton:disabled {
+    background-color: @surface_container_low@;
+    color: @outline@;
+    border-color: @outline_variant@;
+}
+QScrollBar:vertical {
+    background-color: @surface_container_low@;
+    width: 12px;
+    margin: 2px;
+}
+QScrollBar:horizontal {
+    background-color: @surface_container_low@;
+    height: 12px;
+    margin: 2px;
+}
+QScrollBar::handle {
+    background-color: @outline_variant@;
+    border-radius: 4px;
+    min-height: 28px;
+    min-width: 28px;
+}
+QScrollBar::handle:hover {
+    background-color: @outline@;
+}
+QScrollBar::add-line, QScrollBar::sub-line {
+    width: 0;
+    height: 0;
+}
+QScrollBar::add-page, QScrollBar::sub-page {
+    background-color: transparent;
+}
+QGroupBox {
+    border: 1px solid @outline_variant@;
+    border-radius: 8px;
+    margin-top: 14px;
+    padding: 10px;
+}
+QGroupBox::title {
+    subcontrol-origin: margin;
+    left: 10px;
+    color: @on_surface_variant@;
+}
+QToolTip {
+    color: @on_surface@;
+    background-color: @surface_container_high@;
+    border: 1px solid @outline_variant@;
+    padding: 6px;
+}
