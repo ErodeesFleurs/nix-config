@@ -1,0 +1,815 @@
+--- a/main.c
++++ b/main.c
+@@ -75,6 +75,140 @@
+ static bool hidden = false;
+ static bool im_auto = false;
+ 
++/* Floating coordinates are relative to the output's usable layer-shell area. */
++struct output {
++    struct output *next;
++    struct wl_output *wl;
++    uint32_t name;
++    int32_t width, height, transform, scale;
++    bool changed;
++};
++static struct output *outputs, *current_output;
++static bool dimensions_pending;
++static bool scale_pending;
++static int floating_x, floating_y;
++static bool position_initialized;
++static const char *position_file;
++static int32_t active_touch = -1;
++static uint32_t input_time;
++static uint32_t configured_width, configured_height;
++enum drag_source { DRAG_NONE, DRAG_POINTER, DRAG_TOUCH };
++static enum drag_source dragging;
++static int grab_x, grab_y;
++static int drag_start_x, drag_start_y;
++
++static void
++save_position(void)
++{
++    if (!keyboard.floating || !position_file || !position_initialized)
++        return;
++    FILE *file = fopen(position_file, "w");
++    if (file) {
++        fprintf(file, "%d %d\n", floating_x, floating_y);
++        fclose(file);
++    }
++}
++
++static void
++clamp_position(void)
++{
++    int max_x = available_width > keyboard.w ? available_width - keyboard.w : 0;
++    int max_y = available_height > keyboard.h ? available_height - keyboard.h : 0;
++    if (floating_x < 0) floating_x = 0;
++    if (floating_y < 0) floating_y = 0;
++    if (floating_x > max_x) floating_x = max_x;
++    if (floating_y > max_y) floating_y = max_y;
++}
++
++static void
++set_position(void)
++{
++    zwlr_layer_surface_v1_set_margin(layer_surface, floating_y, 0, 0, floating_x);
++}
++
++static void
++drag_motion(int x, int y)
++{
++    int old_x = floating_x, old_y = floating_y;
++    /* Niri pins grab coordinates to the surface origin at button/touch-down. */
++    floating_x = drag_start_x + x - grab_x;
++    floating_y = drag_start_y + y - grab_y;
++    clamp_position();
++    if (floating_x != old_x || floating_y != old_y) {
++        set_position();
++        wl_surface_commit(draw_surf.surf);
++    }
++}
++
++static bool
++header_press(int x, int y, enum drag_source source)
++{
++    if (!keyboard.floating || x < 0 || x >= keyboard.w ||
++        y < 0 || y >= FLOATING_HEADER_HEIGHT)
++        return false;
++    if (x >= keyboard.w - 56 && x < keyboard.w - FLOATING_PADDING) {
++        run_display = false;
++    } else {
++        dragging = source;
++        grab_x = x;
++        grab_y = y;
++        drag_start_x = floating_x;
++        drag_start_y = floating_y;
++    }
++    return true;
++}
++
++static void
++output_geometry(void *data, struct wl_output *wl_output, int32_t x, int32_t y,
++                int32_t physical_width, int32_t physical_height, int32_t subpixel,
++                const char *make, const char *model, int32_t transform)
++{
++    struct output *output = data;
++    if (output->transform != transform) {
++        output->transform = transform;
++        output->changed = true;
++    }
++}
++
++static void
++output_mode(void *data, struct wl_output *wl_output, uint32_t flags,
++            int32_t width, int32_t height, int32_t refresh)
++{
++    struct output *output = data;
++    if ((flags & WL_OUTPUT_MODE_CURRENT) &&
++        (output->width != width || output->height != height)) {
++        output->width = width;
++        output->height = height;
++        output->changed = true;
++    }
++}
++
++static void
++output_scale(void *data, struct wl_output *wl_output, int32_t scale)
++{
++    struct output *output = data;
++    if (output->scale != scale) {
++        output->scale = scale;
++        output->changed = true;
++    }
++}
++
++static void
++output_done(void *data, struct wl_output *wl_output)
++{
++    struct output *output = data;
++    if (keyboard.floating && output == current_output && output->changed)
++        dimensions_pending = true;
++    output->changed = false;
++}
++
++static const struct wl_output_listener output_listener = {
++    .geometry = output_geometry,
++    .mode = output_mode,
++    .done = output_done,
++    .scale = output_scale,
++};
++
+ /* event handler prototypes */
+ static void wl_pointer_enter(void *data, struct wl_pointer *wl_pointer,
+                              uint32_t serial, struct wl_surface *surface,
+@@ -174,6 +308,16 @@
+ wl_surface_enter(void *data, struct wl_surface *wl_surface,
+                  struct wl_output *wl_output)
+ {
++    if (keyboard.floating && wl_surface == draw_surf.surf) {
++        for (struct output *output = outputs; output; output = output->next) {
++            if (output->wl == wl_output) {
++                if (current_output != output)
++                    dimensions_pending = true;
++                current_output = output;
++                break;
++            }
++        }
++    }
+ }
+ 
+ void
+@@ -184,6 +328,10 @@
+ void
+ wl_preferred_buffer_scale(void *data, struct wl_surface *wl_surface,
+                           int scale) {
++    if (keyboard.floating && keyboard.preferred_scale != scale) {
++        scale_pending = true;
++        dimensions_pending = current_output != NULL;
++    }
+     keyboard.preferred_scale = scale;
+ }
+ 
+@@ -248,19 +396,24 @@
+               uint32_t time, struct wl_surface *surface, int32_t id,
+               wl_fixed_t x, wl_fixed_t y)
+ {
+-    if(!layer_surface_configured || !popup_xdg_surface_configured) {
++    if (!layer_surface_configured || surface != draw_surf.surf)
++        return;
++    if (keyboard.floating && active_touch != -1)
+         return;
++    int touch_x = wl_fixed_to_int(x), touch_y = wl_fixed_to_int(y);
++    input_time = time;
++    if (keyboard.floating) {
++        if (dragging != DRAG_NONE || cur_press)
++            return;
++        active_touch = id;
++        if (header_press(touch_x, touch_y, DRAG_TOUCH))
++            return;
+     }
+-
+-    struct key *next_key;
+-    uint32_t touch_x, touch_y;
+-
+-    touch_x = wl_fixed_to_int(x);
+-    touch_y = wl_fixed_to_int(y);
++    if (!popup_xdg_surface_configured)
++        return;
+ 
+     kbd_unpress_key(&keyboard, time);
+-
+-    next_key = kbd_get_key(&keyboard, touch_x, touch_y);
++    struct key *next_key = kbd_get_key(&keyboard, touch_x, touch_y);
+     if (next_key) {
+         kbd_press_key(&keyboard, next_key, time);
+     } else if (keyboard.compose) {
+@@ -274,27 +427,39 @@
+ wl_touch_up(void *data, struct wl_touch *wl_touch, uint32_t serial,
+             uint32_t time, int32_t id)
+ {
+-    if(!layer_surface_configured || !popup_xdg_surface_configured) {
+-        return;
++    input_time = time;
++    if (keyboard.floating) {
++        if (id != active_touch)
++            return;
++        active_touch = -1;
++        if (dragging == DRAG_TOUCH) {
++            dragging = DRAG_NONE;
++            save_position();
++            return;
++        }
++        if (cur_press || dragging == DRAG_POINTER)
++            return;
+     }
+-
+-    kbd_release_key(&keyboard, time);
++    if (layer_surface_configured && popup_xdg_surface_configured)
++        kbd_release_key(&keyboard, time);
+ }
+ 
+ void
+ wl_touch_motion(void *data, struct wl_touch *wl_touch, uint32_t time,
+                 int32_t id, wl_fixed_t x, wl_fixed_t y)
+ {
+-    if(!layer_surface_configured || !popup_xdg_surface_configured) {
++    if (!layer_surface_configured ||
++        (keyboard.floating && id != active_touch))
++        return;
++    input_time = time;
++    int touch_x = wl_fixed_to_int(x), touch_y = wl_fixed_to_int(y);
++    if (dragging == DRAG_TOUCH) {
++        drag_motion(touch_x, touch_y);
+         return;
+     }
+-
+-    uint32_t touch_x, touch_y;
+-
+-    touch_x = wl_fixed_to_int(x);
+-    touch_y = wl_fixed_to_int(y);
+-
+-    kbd_motion_key(&keyboard, time, touch_x, touch_y);
++    if (popup_xdg_surface_configured &&
++        (!keyboard.floating || (dragging == DRAG_NONE && !cur_press)))
++        kbd_motion_key(&keyboard, time, touch_x, touch_y);
+ }
+ 
+ void
+@@ -305,6 +470,13 @@
+ void
+ wl_touch_cancel(void *data, struct wl_touch *wl_touch)
+ {
++    if (dragging == DRAG_TOUCH) {
++        dragging = DRAG_NONE;
++        save_position();
++    }
++    active_touch = -1;
++    if (!cur_press && layer_surface_configured && popup_xdg_surface_configured)
++        kbd_release_key(&keyboard, input_time);
+ }
+ 
+ void
+@@ -324,6 +496,10 @@
+                  struct wl_surface *surface, wl_fixed_t surface_x,
+                  wl_fixed_t surface_y)
+ {
++    if (surface == draw_surf.surf) {
++        cur_x = wl_fixed_to_int(surface_x);
++        cur_y = wl_fixed_to_int(surface_y);
++    }
+ }
+ 
+ void
+@@ -337,22 +513,36 @@
+ wl_pointer_motion(void *data, struct wl_pointer *wl_pointer, uint32_t time,
+                   wl_fixed_t surface_x, wl_fixed_t surface_y)
+ {
+-    if(!layer_surface_configured || !popup_xdg_surface_configured) {
+-        return;
+-    }
+-
+     cur_x = wl_fixed_to_int(surface_x);
+     cur_y = wl_fixed_to_int(surface_y);
+-
+-    if (cur_press) {
+-        kbd_motion_key(&keyboard, time, cur_x, cur_y);
++    input_time = time;
++    if (dragging == DRAG_POINTER) {
++        drag_motion(cur_x, cur_y);
++        return;
+     }
++    if (layer_surface_configured && popup_xdg_surface_configured && cur_press)
++        kbd_motion_key(&keyboard, time, cur_x, cur_y);
+ }
+ 
+ void
+ wl_pointer_button(void *data, struct wl_pointer *wl_pointer, uint32_t serial,
+                   uint32_t time, uint32_t button, uint32_t state)
+ {
++    input_time = time;
++    if (keyboard.floating) {
++        if (button != BTN_LEFT || active_touch != -1)
++            return;
++        if (state == WL_POINTER_BUTTON_STATE_RELEASED &&
++            dragging == DRAG_POINTER) {
++            dragging = DRAG_NONE;
++            save_position();
++            return;
++        }
++        if (layer_surface_configured &&
++            state == WL_POINTER_BUTTON_STATE_PRESSED &&
++            header_press(cur_x, cur_y, DRAG_POINTER))
++            return;
++    }
+     if(!layer_surface_configured || !popup_xdg_surface_configured) {
+         return;
+     }
+@@ -400,6 +590,15 @@
+         }
+     } else {
+         if (pointer != NULL) {
++            if (keyboard.floating) {
++                if (cur_press && layer_surface_configured && popup_xdg_surface_configured)
++                    kbd_release_key(&keyboard, input_time);
++                cur_press = false;
++                if (dragging == DRAG_POINTER) {
++                    dragging = DRAG_NONE;
++                    save_position();
++                }
++            }
+             wl_pointer_destroy(pointer);
+             pointer = NULL;
+         }
+@@ -411,6 +610,8 @@
+         }
+     } else {
+         if (touch != NULL) {
++            if (keyboard.floating)
++                wl_touch_cancel(NULL, touch);
+             wl_touch_destroy(touch);
+             touch = NULL;
+         }
+@@ -436,6 +637,19 @@
+ handle_global(void *data, struct wl_registry *registry, uint32_t name,
+               const char *interface, uint32_t version)
+ {
++    if (keyboard.floating && strcmp(interface, wl_output_interface.name) == 0) {
++        struct output *output = calloc(1, sizeof(*output));
++        if (!output) {
++            die("Failed to allocate output\n");
++        }
++        output->name = name;
++        output->wl = wl_registry_bind(registry, name, &wl_output_interface,
++                                      version < 2 ? version : 2);
++        output->next = outputs;
++        outputs = output;
++        wl_output_add_listener(output->wl, &output_listener, output);
++        return;
++    }
+     if (strcmp(interface, wl_compositor_interface.name) == 0) {
+         compositor =
+             wl_registry_bind(registry, name, &wl_compositor_interface, 6);
+@@ -469,6 +683,21 @@
+ void
+ handle_global_remove(void *data, struct wl_registry *registry, uint32_t name)
+ {
++    struct output **link = &outputs;
++    while (*link) {
++        struct output *output = *link;
++        if (output->name == name) {
++            if (current_output == output) {
++                current_output = NULL;
++                dimensions_pending = keyboard.floating;
++            }
++            *link = output->next;
++            wl_output_destroy(output->wl);
++            free(output);
++            return;
++        }
++        link = &output->next;
++    }
+ }
+ 
+ static void
+@@ -505,6 +734,11 @@
+     void *data, struct wp_fractional_scale_v1 *wp_fractional_scale_v1,
+     uint32_t scale)
+ {
++    if (keyboard.floating &&
++        keyboard.preferred_fractional_scale != (double)scale / 120) {
++        scale_pending = true;
++        dimensions_pending = current_output != NULL;
++    }
+     keyboard.preferred_fractional_scale = (double)scale / 120;
+ }
+ 
+@@ -551,9 +785,67 @@
+ {
+ }
+ 
++static void
++cancel_input(void)
++{
++    if (layer_surface_configured && popup_xdg_surface_configured)
++        kbd_release_key(&keyboard, input_time);
++    active_touch = -1;
++    cur_press = false;
++    dragging = DRAG_NONE;
++}
++
++static void
++destroy_popup(void)
++{
++    if (popup_draw_surf.frame_cb) {
++        wl_callback_destroy(popup_draw_surf.frame_cb);
++        popup_draw_surf.frame_cb = NULL;
++    }
++    if (popup_draw_surf_viewport) {
++        wp_viewport_destroy(popup_draw_surf_viewport);
++        popup_draw_surf_viewport = NULL;
++    }
++    if (popup_xdg_popup) {
++        xdg_popup_destroy(popup_xdg_popup);
++        popup_xdg_popup = NULL;
++    }
++    if (popup_xdg_surface) {
++        xdg_surface_destroy(popup_xdg_surface);
++        popup_xdg_surface = NULL;
++    }
++    if (popup_draw_surf.surf) {
++        wl_surface_destroy(popup_draw_surf.surf);
++        popup_draw_surf.surf = NULL;
++    }
++    popup_draw_surf.attached = false;
++    popup_xdg_surface_configured = false;
++}
++
++static void
++set_floating_input_region(void)
++{
++    struct wl_region *region = wl_compositor_create_region(compositor);
++    const int radius = FLOATING_PADDING;
++    wl_region_add(region, 0, radius, keyboard.w, keyboard.h - radius * 2);
++    for (int y = 0; y < radius; ++y) {
++        int inset = radius;
++        while (inset > 0 &&
++               (radius - inset) * (radius - inset) +
++               (radius - y - 1) * (radius - y - 1) < radius * radius)
++            --inset;
++        wl_region_add(region, inset, y, keyboard.w - inset * 2, 1);
++        wl_region_add(region, inset, keyboard.h - y - 1, keyboard.w - inset * 2, 1);
++    }
++    wl_surface_set_input_region(draw_surf.surf, region);
++    wl_region_destroy(region);
++}
++
+ void
+ redimension_keyboard()
+ {
++    bool orientation_changed =
++        keyboard.landscape != (available_width > available_height);
+     keyboard.landscape = available_width > available_height;
+ 
+     enum layout_id layer;
+@@ -567,6 +859,15 @@
+ 
+     keyboard.w = available_width;
+     keyboard.h = height;
++    if (keyboard.floating) {
++        uint32_t max_width = available_width > 32 ? available_width - 32 : available_width;
++        uint32_t max_height = available_height > 32 ? available_height - 32 : available_height;
++        keyboard.w = max_width < FLOATING_WIDTH ? max_width : FLOATING_WIDTH;
++        height += FLOATING_HEADER_HEIGHT + FLOATING_PADDING * 2;
++        keyboard.h = height < max_height ? height : max_height;
++        if (!orientation_changed && keyboard.layout)
++            return;
++    }
+     keyboard.layout = &keyboard.layouts[layer];
+     keyboard.layer_index = 0;
+     keyboard.prevlayout = keyboard.layout;
+@@ -574,35 +875,28 @@
+     keyboard.last_abc_index = 0;
+ }
+ 
+-void
+-layer_surface_configure(void *data, struct zwlr_layer_surface_v1 *surface,
+-                        uint32_t serial, uint32_t w, uint32_t h)
++static void
++configure_keyboard(uint32_t w, uint32_t h)
+ {
+-    // Swallow events for old/destroyed surface
+-    if (surface != layer_surface) {
+-        zwlr_layer_surface_v1_ack_configure(surface, serial);
+-        return;
+-    };
+-
+-    // Not what we expected, or redimension, refresh and restart
+-    if (keyboard.w != w || keyboard.h != h) {
+-        zwlr_layer_surface_v1_ack_configure(surface, serial);
+-        hide();
+-        show();
+-        return;
+-    };
+-
+-    // Swallow useless events
+-    if (layer_surface_configured) {
+-        return;
+-    };
+-    layer_surface_configured = true;
+ 
+     double scale = keyboard.preferred_scale;
+     if (keyboard.preferred_fractional_scale) {
+         scale = keyboard.preferred_fractional_scale;
+     }
+ 
++    scale_pending = false;
++    if (layer_surface_configured && configured_width == w &&
++        configured_height == h && keyboard.scale == scale)
++        return;
++    cancel_input();
++    destroy_popup();
++    if (draw_surf.frame_cb) {
++        wl_callback_destroy(draw_surf.frame_cb);
++        draw_surf.frame_cb = NULL;
++    }
++    keyboard.w = configured_width = w;
++    keyboard.h = configured_height = h;
++    layer_surface_configured = true;
+     keyboard.scale = scale;
+     hidden = false;
+ 
+@@ -612,6 +906,11 @@
+     } else {
+         wl_surface_set_buffer_scale(draw_surf.surf, keyboard.scale);
+     }
++    if (keyboard.floating) {
++        clamp_position();
++        set_position();
++        set_floating_input_region();
++    }
+ 
+     popup_draw_surf.surf = wl_compositor_create_surface(compositor);
+ 
+@@ -635,17 +934,30 @@
+ 
+     wl_surface_commit(popup_draw_surf.surf);
+ 
+-    zwlr_layer_surface_v1_ack_configure(surface, serial);
+ 
+     kbd_resize(&keyboard, layouts, NumLayouts);
+     drwsurf_attach(&draw_surf);
+ }
+ 
+ void
++layer_surface_configure(void *data, struct zwlr_layer_surface_v1 *surface,
++                        uint32_t serial, uint32_t w, uint32_t h)
++{
++    zwlr_layer_surface_v1_ack_configure(surface, serial);
++    if (surface != layer_surface)
++        return;
++    if (!keyboard.floating && (keyboard.w != w || keyboard.h != h)) {
++        hide();
++        show();
++        return;
++    }
++    configure_keyboard(w ? w : keyboard.w, h ? h : keyboard.h);
++}
++
++void
+ layer_surface_closed(void *data, struct zwlr_layer_surface_v1 *surface)
+ {
+-    zwlr_layer_surface_v1_destroy(surface);
+-    wl_surface_destroy(draw_surf.surf);
++    hide();
+     run_display = false;
+ }
+ 
+@@ -703,6 +1015,11 @@
+     fprintf(stderr, "  --non-exclusive    - Allow the keyboard to overlap"
+                     " windows. Do not request an exclusive zone from the"
+                     "compositor\n");
++    fprintf(stderr, "  --floating         - Draggable, non-exclusive panel (840px maximum width).\n"
++                    "                       Drag its header; the close button exits. Never takes\n"
++                    "                       keyboard focus; ignores --auto. -H/-L set key height,\n"
++                    "                       excluding the 68px frame. WVKBD_POSITION_FILE may name\n"
++                    "                       a runtime file used to retain the panel's x/y position.\n");
+ }
+ 
+ void
+@@ -722,6 +1039,8 @@
+     if (!layer_surface) {
+         return;
+     }
++    cancel_input();
++    save_position();
+ 
+     if (wfs_draw_surf) {
+         wp_fractional_scale_v1_destroy(wfs_draw_surf);
+@@ -731,18 +1050,7 @@
+         wp_viewport_destroy(draw_surf_viewport);
+         draw_surf_viewport = NULL;
+     }
+-    if (popup_xdg_popup) {
+-        xdg_popup_destroy(popup_xdg_popup);
+-        popup_xdg_popup = NULL;
+-    }
+-    if (popup_xdg_surface) {
+-        xdg_surface_destroy(popup_xdg_surface);
+-        popup_xdg_surface = NULL;
+-    }
+-    if (popup_draw_surf.surf) {
+-        wl_surface_destroy(popup_draw_surf.surf);
+-        popup_draw_surf.surf = NULL;
+-    }
++    destroy_popup();
+ 
+     zwlr_layer_surface_v1_destroy(layer_surface);
+     layer_surface = NULL;
+@@ -755,6 +1063,7 @@
+     }
+ 
+     wl_surface_destroy(draw_surf.surf);
++    draw_surf.surf = NULL;
+     draw_surf.attached = false;
+ 
+     hidden = true;
+@@ -769,6 +1078,25 @@
+ 
+     refresh_available_dimension();
+     redimension_keyboard();
++    if (keyboard.floating) {
++        if (!position_initialized) {
++            floating_x = (available_width - keyboard.w) / 2;
++            floating_y = (int)available_height - (int)keyboard.h - 16;
++            if (position_file) {
++                FILE *file = fopen(position_file, "r");
++                if (file) {
++                    int x, y;
++                    if (fscanf(file, "%d %d", &x, &y) == 2) {
++                        floating_x = x;
++                        floating_y = y;
++                    }
++                    fclose(file);
++                }
++            }
++            position_initialized = true;
++        }
++        clamp_position();
++    }
+ 
+     draw_surf.surf = wl_compositor_create_surface(compositor);
+     wl_surface_add_listener(
+@@ -782,15 +1110,23 @@
+             wp_viewporter_get_viewport(viewporter, draw_surf.surf);
+     }
+ 
+-    struct wl_output *current_output_data = NULL;
++    struct wl_output *current_output_data =
++        keyboard.floating && current_output ? current_output->wl : NULL;
+ 
+     layer_surface = zwlr_layer_shell_v1_get_layer_surface(
+         layer_shell, draw_surf.surf, current_output_data, layer, namespace);
+ 
+-    zwlr_layer_surface_v1_set_size(layer_surface, 0, height);
+-    zwlr_layer_surface_v1_set_anchor(layer_surface, anchor);
+-    if (keyboard.exclusive) {
+-        zwlr_layer_surface_v1_set_exclusive_zone(layer_surface, height);
++    if (keyboard.floating) {
++        zwlr_layer_surface_v1_set_size(layer_surface, keyboard.w, keyboard.h);
++        zwlr_layer_surface_v1_set_anchor(layer_surface,
++            ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP | ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT);
++        zwlr_layer_surface_v1_set_exclusive_zone(layer_surface, 0);
++        set_position();
++    } else {
++        zwlr_layer_surface_v1_set_size(layer_surface, 0, height);
++        zwlr_layer_surface_v1_set_anchor(layer_surface, anchor);
++        if (keyboard.exclusive)
++            zwlr_layer_surface_v1_set_exclusive_zone(layer_surface, height);
+     }
+     zwlr_layer_surface_v1_set_keyboard_interactivity(layer_surface, false);
+     zwlr_layer_surface_v1_add_listener(layer_surface, &layer_surface_listener,
+@@ -838,12 +1174,17 @@
+ {
+     struct wl_surface *surface = wl_compositor_create_surface(compositor);
+     struct zwlr_layer_surface_v1 *layer_surface = zwlr_layer_shell_v1_get_layer_surface(
+-        layer_shell, surface, NULL, layer, namespace);
++        layer_shell, surface,
++        keyboard.floating && current_output ? current_output->wl : NULL,
++        layer, namespace);
+     zwlr_layer_surface_v1_set_anchor(layer_surface,
+                                      ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP |
+                                      ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM |
+                                      ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT |
+                                      ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT);
++    wl_surface_set_input_region(surface, empty_region);
++    zwlr_layer_surface_v1_set_keyboard_interactivity(layer_surface,
++        ZWLR_LAYER_SURFACE_V1_KEYBOARD_INTERACTIVITY_NONE);
+     zwlr_layer_surface_v1_add_listener(layer_surface, &initiate_listener, NULL);
+     wl_surface_commit(surface);
+     wl_display_roundtrip(display);
+@@ -852,6 +1193,44 @@
+     wl_display_roundtrip(display);
+ }
+ 
++static void
++refresh_floating(void)
++{
++    dimensions_pending = false;
++    if (!layer_surface || !run_display)
++        return;
++    uint32_t old_available_width = available_width;
++    uint32_t old_available_height = available_height;
++    refresh_available_dimension();
++    if (!layer_surface || !run_display)
++        return;
++    if (available_width == old_available_width &&
++        available_height == old_available_height)
++        return;
++    uint32_t old_width = keyboard.w, old_height = keyboard.h;
++    bool old_landscape = keyboard.landscape;
++    int old_x = floating_x, old_y = floating_y;
++    cancel_input();
++    redimension_keyboard();
++    clamp_position();
++    if (keyboard.debug)
++        fprintf(stderr, "Floating output %ux%u, panel %ux%u at %d,%d\n",
++                available_width, available_height, keyboard.w, keyboard.h,
++                floating_x, floating_y);
++    if (old_width != keyboard.w || old_height != keyboard.h) {
++        layer_surface_configured = false;
++        zwlr_layer_surface_v1_set_size(layer_surface, keyboard.w, keyboard.h);
++        set_position();
++        wl_surface_commit(draw_surf.surf);
++    } else if (old_landscape != keyboard.landscape) {
++        layer_surface_configured = false;
++        configure_keyboard(keyboard.w, keyboard.h);
++    } else if (floating_x != old_x || floating_y != old_y) {
++        set_position();
++        wl_surface_commit(draw_surf.surf);
++    }
++}
++
+ int
+ main(int argc, char **argv)
+ {
+@@ -1057,6 +1436,8 @@
+             exit(0);
+         } else if ((!strcmp(argv[i], "-non-exclusive")) || (!strcmp(argv[i], "--non-exclusive"))) {
+             keyboard.exclusive = false;
++        } else if (!strcmp(argv[i], "--floating")) {
++            keyboard.floating = true;
+         } else if ((!strcmp(argv[i], "-auto")) ||
+                    (!strcmp(argv[i], "--auto"))) {
+             im_auto = true;
+@@ -1067,6 +1448,14 @@
+         }
+     }
+ 
++    if (keyboard.floating) {
++        /* Floating input uses virtual-keyboard only and never takes focus. */
++        im_auto = false;
++        keyboard.exclusive = false;
++        position_file = getenv("WVKBD_POSITION_FILE");
++        atexit(save_position);
++    }
++
+     if (alpha_defined) {
+         keyboard.schemes[0].bg.bgra[3] = alpha;
+         keyboard.schemes[0].fg.bgra[3] = alpha;
+@@ -1171,6 +1560,10 @@
+     sigaddset(&signal_mask, SIGUSR2);
+     sigaddset(&signal_mask, SIGRTMIN);
+     sigaddset(&signal_mask, SIGPIPE);
++    if (keyboard.floating) {
++        sigaddset(&signal_mask, SIGTERM);
++        sigaddset(&signal_mask, SIGINT);
++    }
+     if (sigprocmask(SIG_BLOCK, &signal_mask, NULL) == -1) {
+         die("Failed to disable handled signals: %d\n", errno);
+     }
+@@ -1181,6 +1574,12 @@
+     }
+ 
+     while (run_display) {
++        if (keyboard.floating && dimensions_pending)
++            refresh_floating();
++        if (scale_pending && layer_surface_configured)
++            configure_keyboard(keyboard.w, keyboard.h);
++        if (!run_display)
++            break;
+         wl_display_flush(display);
+         poll(fds, 2, -1);
+ 
+@@ -1206,8 +1605,12 @@
+                 toggle_visibility();
+             else if (si.ssi_signo == SIGPIPE)
+                 pipewarn();
++            else if (si.ssi_signo == SIGTERM || si.ssi_signo == SIGINT)
++                run_display = false;
+         }
+     }
++    hide();
++    wl_display_flush(display);
+ 
+     if (fc_font_pattern) {
+         free((void *)fc_font_pattern);

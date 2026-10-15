@@ -1,0 +1,75 @@
+--- a/keyboard.h
++++ b/keyboard.h
+@@ -4,6 +4,9 @@
+ #include "drw.h"
+ 
+ #define MAX_LAYERS 25
++#define FLOATING_WIDTH 840
++#define FLOATING_PADDING 12
++#define FLOATING_HEADER_HEIGHT 44
+ 
+ enum key_type;
+ enum key_modifier_type;
+@@ -95,6 +98,7 @@
+ 	bool debug;
+ 	bool show_popup;
+ 	bool show_highlight;
++	bool floating;
+ 
+ 	struct layout *layout;
+ 	struct clr_scheme *schemes;
+--- a/keyboard.c
++++ b/keyboard.c
+@@ -694,7 +694,27 @@
+     if (kb->debug)
+         fprintf(stderr, "Draw layout\n");
+ 
+-    drw_fill_rectangle(d, kb->schemes[0].bg, 0, 0, kb->w, kb->h, 0);
++    if (kb->floating) {
++        struct clr_scheme *scheme = &kb->schemes[0];
++        /* Clear first so rounded corners remain transparent on every redraw. */
++        drw_do_clear(d, 0, 0, kb->w, kb->h);
++        drw_fill_rectangle(d, scheme->bg, 0, 0, kb->w, kb->h,
++                           FLOATING_PADDING);
++        if (kb->w >= 2 * FLOATING_PADDING + FLOATING_HEADER_HEIGHT) {
++            drw_fill_rectangle(d, scheme->text, (kb->w - 48) / 2,
++                               FLOATING_HEADER_HEIGHT / 2 - 2, 48, 4, 2);
++            drw_fill_rectangle(d, scheme->fg,
++                               kb->w - FLOATING_PADDING - FLOATING_HEADER_HEIGHT,
++                               0, FLOATING_HEADER_HEIGHT, FLOATING_HEADER_HEIGHT,
++                               FLOATING_PADDING);
++            drw_draw_text(d, scheme->text,
++                          kb->w - FLOATING_PADDING - FLOATING_HEADER_HEIGHT, 0,
++                          FLOATING_HEADER_HEIGHT, FLOATING_HEADER_HEIGHT, 0,
++                          "×", scheme->font_description);
++        }
++    } else {
++        drw_fill_rectangle(d, kb->schemes[0].bg, 0, 0, kb->w, kb->h, 0);
++    }
+ 
+     while (next_key->type != Last) {
+         if ((next_key->type == Pad) || (next_key->type == EndRow)) {
+@@ -728,7 +748,22 @@
+                 fprintf(stderr, "Initialising unnamed layout %d, keymap %s\n",
+                         i, layouts[i].keymap_name);
+         }
+-        kbd_init_layout(&layouts[i], kb->w, kb->h);
++        if (kb->floating) {
++            uint32_t inset_width = 2 * FLOATING_PADDING;
++            uint32_t inset_height = FLOATING_HEADER_HEIGHT + 2 * FLOATING_PADDING;
++            kbd_init_layout(&layouts[i],
++                            kb->w > inset_width ? kb->w - inset_width : 0,
++                            kb->h > inset_height ? kb->h - inset_height : 0);
++            /* Store surface-local coordinates once, shared by hits and popups. */
++            for (struct key *k = layouts[i].keys; k->type != Last; k++) {
++                if (k->type != EndRow) {
++                    k->x += FLOATING_PADDING;
++                    k->y += FLOATING_HEADER_HEIGHT + FLOATING_PADDING;
++                }
++            }
++        } else {
++            kbd_init_layout(&layouts[i], kb->w, kb->h);
++        }
+     }
+     kbd_draw_layout(kb);
+ }

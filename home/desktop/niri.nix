@@ -9,7 +9,7 @@
 let
   niriSettings = {
 
-    prefer-no-csd = true;
+    prefer-no-csd = lib.mkDefault true;
 
     # 输入设备（原 services.libinput / xserver.xkb 仅作用于 X11，对 niri 无效，迁移至此）
     input = {

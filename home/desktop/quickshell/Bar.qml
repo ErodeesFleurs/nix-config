@@ -48,6 +48,13 @@ PanelWindow {
         width: root.sideWidth
         height: root.height - 4
         spacing: 8
+        ActionButton {
+            visible: Settings.touch
+            symbol: "󰕮"
+            description: "窗口总览 (Mod+O)"
+            minimumHeight: Settings.barHeight - 4
+            onClicked: Quickshell.execDetached(Settings.commands.niri.concat(["msg", "action", "toggle-overview"]))
+        }
         Flickable {
             id: workspaceScroll
             Layout.preferredWidth: Math.min(workspaceRow.implicitWidth, root.sideWidth * 0.65)

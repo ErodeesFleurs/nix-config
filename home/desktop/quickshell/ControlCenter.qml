@@ -80,6 +80,62 @@ PopupWindow {
                     }
                 }
                 PanelSection {
+                    visible: Settings.touch
+                    Layout.fillWidth: true
+                    title: "WINDOWS"
+                    RowLayout {
+                        Layout.fillWidth: true
+                        ActionButton {
+                            symbol: "󰁍"
+                            label: "上一列"
+                            Layout.fillWidth: true
+                            onClicked: root.launch(Settings.commands.niri.concat(["msg", "action", "focus-column-left"]))
+                        }
+                        ActionButton {
+                            symbol: "󰁔"
+                            label: "下一列"
+                            Layout.fillWidth: true
+                            onClicked: root.launch(Settings.commands.niri.concat(["msg", "action", "focus-column-right"]))
+                        }
+                    }
+                    RowLayout {
+                        Layout.fillWidth: true
+                        ActionButton {
+                            symbol: "󰁌"
+                            label: "切换宽度"
+                            Layout.fillWidth: true
+                            onClicked: root.launch(Settings.commands.niri.concat(["msg", "action", "switch-preset-column-width"]))
+                        }
+                        ActionButton {
+                            symbol: "󰊓"
+                            label: "整屏宽度"
+                            description: "切换最大列宽，保留状态栏和屏幕键盘入口"
+                            Layout.fillWidth: true
+                            onClicked: root.launch(Settings.commands.niri.concat(["msg", "action", "maximize-column"]))
+                        }
+                    }
+                }
+                PanelSection {
+                    visible: Settings.touch && root.barWindow.screen.name === "eDP-1"
+                    Layout.fillWidth: true
+                    title: "SCREEN"
+                    RowLayout {
+                        Layout.fillWidth: true
+                        ActionButton {
+                            symbol: "󰍹"
+                            label: "横屏"
+                            Layout.fillWidth: true
+                            onClicked: root.launch(Settings.commands.niri.concat(["msg", "output", root.barWindow.screen.name, "transform", "normal"]))
+                        }
+                        ActionButton {
+                            symbol: "󰆏"
+                            label: "竖屏"
+                            Layout.fillWidth: true
+                            onClicked: root.launch(Settings.commands.niri.concat(["msg", "output", root.barWindow.screen.name, "transform", "90"]))
+                        }
+                    }
+                }
+                PanelSection {
                     Layout.fillWidth: true
                     title: "SOUND"
                     RowLayout {

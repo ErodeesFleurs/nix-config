@@ -95,7 +95,7 @@ in
     touch = lib.mkOption {
       type = lib.types.bool;
       default = false;
-      description = "Use larger touch hitboxes without stretching the centered icon/label group; Surface enables this, the laptop uses compact controls.";
+      description = "Use larger touch hitboxes, a bar overview button, and control-center column navigation/width actions plus manual eDP-1 rotation; Surface enables this, the laptop keeps compact controls.";
     };
     barHeight = lib.mkOption {
       type = lib.types.ints.positive;

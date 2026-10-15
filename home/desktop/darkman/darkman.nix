@@ -32,6 +32,12 @@ let
       mkHookBlock "Quickshell — current 翻转后重新读取色板" themeLib.reloadScripts.quickshell
     ))
 
+    (lib.optionalString config.homeModules.desktop.quickshell.keyboard.enable (
+      mkHookBlock "屏幕键盘 — 仅刷新已打开的键盘，不在切换主题时弹出" ''
+        ${pkgs.systemd}/bin/systemctl --user try-restart ${lib.escapeShellArg config.homeModules.desktop.quickshell.keyboard.unit}
+      ''
+    ))
+
     (lib.optionalString config.programs.ghostty.enable (
       mkHookBlock "Ghostty — 发送 USR2 信号触发主题文件重读" ''
         ${pkgs.procps}/bin/pkill -SIGUSR2 ghostty 2>/dev/null || true
