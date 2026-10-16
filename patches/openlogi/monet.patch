@@ -3,7 +3,7 @@ diff -ruN a/Cargo.lock b/Cargo.lock
 +++ b/Cargo.lock	2026-10-11 15:41:50.885537424 +0800
 @@ -5933,8 +5933,15 @@
  name = "openlogi-ui"
- version = "0.8.13"
+ version = "0.8.14"
  dependencies = [
 + "anyhow",
 + "gpui-component",
@@ -748,7 +748,7 @@ diff -ruN a/crates/openlogi-desktop/src/features/mouse/inspector.rs b/crates/ope
 @@ -24,7 +24,7 @@
  use crate::state::AppState;
  use crate::ui::action::localized_action_label;
- use crate::ui::components::{MenuRow, control_button, control_input};
+ use crate::ui::components::{MenuRow, Toggle, control_button, control_input, toggle_row};
 -use crate::ui::theme::{self, ACCENT_BLUE, Palette, Typography as _};
 +use crate::ui::theme::{self, Palette, Typography as _};
  
@@ -1718,39 +1718,41 @@ diff -ruN a/crates/openlogi-desktop/src/windows/settings/permissions.rs b/crates
 diff -ruN a/crates/openlogi-overlay/src/main.rs b/crates/openlogi-overlay/src/main.rs
 --- a/crates/openlogi-overlay/src/main.rs	1970-01-01 08:00:01.000000000 +0800
 +++ b/crates/openlogi-overlay/src/main.rs	2026-10-11 15:41:50.893080025 +0800
-@@ -54,6 +54,7 @@
-     let mut app = gpui_platform::application().with_assets(openlogi_ui::action_icons::ActionIcons);
-     app = app.with_quit_mode(gpui::QuitMode::Explicit);
-     app.run(move |cx| {
+@@ -57,6 +57,7 @@
+         // Reapply the helper policy after that reset, without constructing
+         // NSApplication before GPUI has installed its subclass.
+         platform::configure_application();
 +        openlogi_ui::color::init(cx);
          let live_session = Arc::new(ClickAwaySession::new());
          spawn_click_away_dismissal(cx, Arc::clone(&live_session));
          cx.spawn(async move |cx| {
-@@ -87,7 +88,11 @@
-                     let commands = commands.clone();
-                     let timeout_commands = commands.clone();
-                     let session_id = invocation.session_id;
--                    match cx.open_window(placement.window_options(), |_, cx| {
-+                    match cx.open_window(placement.window_options(), |window, cx| {
-+                        openlogi_ui::color::apply(Some(window), cx);
-+                        window.observe_window_appearance(|window, cx| {
+@@ -103,9 +104,13 @@
+                     for (options, panel) in placement.openings() {
+                         let invocation = invocation.clone();
+                         let commands = commands.clone();
+-                        match cx.open_window(options, |_, cx| {
++                        match cx.open_window(options, |window, cx| {
 +                            openlogi_ui::color::apply(Some(window), cx);
-+                        }).detach();
-                         cx.new(|_| RingView::new(invocation, commands, &live_session))
-                     }) {
-                         Ok(handle) => {
++                            window.observe_window_appearance(|window, cx| {
++                                openlogi_ui::color::apply(Some(window), cx);
++                            }).detach();
+                             cx.new(|_| RingView::new(invocation, commands, &live_session, panel))
+                         }) {
+                             Ok(handle) => {
+                                 if primary.is_none() {
+                                     primary = Some(handle);
 diff -ruN a/crates/openlogi-overlay/src/ring.rs b/crates/openlogi-overlay/src/ring.rs
 --- a/crates/openlogi-overlay/src/ring.rs	1970-01-01 08:00:01.000000000 +0800
 +++ b/crates/openlogi-overlay/src/ring.rs	2026-10-11 15:41:50.893243165 +0800
-@@ -7,7 +7,7 @@
- #[cfg(any(not(target_os = "windows"), test))]
- use gpui::{Bounds, Pixels, Point, Size, point};
+@@ -8,7 +8,7 @@
  use gpui::{
--    Context, Hsla, InteractiveElement, IntoElement, ParentElement, Render, SharedString,
-+    Context, InteractiveElement, IntoElement, ParentElement, Render, SharedString,
-     StatefulInteractiveElement as _, Styled, Window, WindowBackgroundAppearance, WindowKind,
-     WindowOptions, div, prelude::FluentBuilder as _, px, svg,
+-    Bounds, Context, Div, Hsla, InteractiveElement, IntoElement, MouseMoveEvent, ParentElement,
++    Bounds, Context, Div, InteractiveElement, IntoElement, MouseMoveEvent, ParentElement,
+     Pixels, Point, Render, SharedString, Size, StatefulInteractiveElement as _, Styled, Window,
+     WindowBackgroundAppearance, WindowKind, WindowOptions, div, point, prelude::FluentBuilder as _,
+     px, svg,
  };
+ use openlogi_core::binding::{Action, ActionRingSlot};
 @@ -25,32 +25,6 @@
  pub(crate) const SLOT_SIZE: f32 = 54.0;
  pub(crate) const RADIUS: f32 = 122.0;
@@ -1781,9 +1783,9 @@ diff -ruN a/crates/openlogi-overlay/src/ring.rs b/crates/openlogi-overlay/src/ri
 -const SELECTED_FILL_L: f32 = 0.48;
 -const SELECTED_BORDER_L: f32 = 0.78;
 -
- pub(crate) struct RingView {
-     invocation: ActionRingInvocation,
-     commands: mpsc::UnboundedSender<OverlayCommand>,
+ /// Where the ring's panel sits inside the window it was given.
+ #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+ pub(crate) enum Placement {
 @@ -91,11 +65,17 @@
      fn slot_element(
          &self,
@@ -1826,15 +1828,15 @@ diff -ruN a/crates/openlogi-overlay/src/ring.rs b/crates/openlogi-overlay/src/ri
                  .on_hover(cx.listener(move |this, hovered, _, cx| {
                      if *hovered && this.hovered != Some(slot) {
                          this.hovered = Some(slot);
-@@ -147,6 +126,7 @@
- 
- impl Render for RingView {
-     fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+@@ -164,6 +143,7 @@
+ impl RingView {
+     /// The fixed 360×360 ring. Both placements anchor this same element.
+     fn panel(&self, cx: &mut Context<Self>) -> Div {
 +        let pal = color::palette(cx);
          let session_id = self.invocation.session_id;
-         let root_commands = self.commands.clone();
          let center_commands = self.commands.clone();
-@@ -166,7 +146,7 @@
+         let hovered_label = self.hovered.and_then(|slot| {
+@@ -182,7 +162,7 @@
          });
          let slots = ActionRingSlot::ALL
              .into_iter()
