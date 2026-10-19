@@ -1,0 +1,67 @@
+From: Fleurs Nix configuration
+Subject: [PATCH] Keep PAM listener alive and acknowledge processing
+
+Wait until password updates finish before the PAM caller can exit. Listener
+clones must not unlink the shared socket after each accepted connection;
+startup already removes stale sockets.
+
+--- a/src/pam_listener/mod.rs
++++ b/src/pam_listener/mod.rs
+@@ -6,7 +6,7 @@
+ use serde::{Deserialize, Serialize};
+ use serde_repr::{Deserialize_repr, Serialize_repr};
+ use tokio::{
+-    io::AsyncReadExt,
++    io::{AsyncReadExt, AsyncWriteExt},
+     net::{UnixListener, UnixStream},
+     sync::RwLock,
+ };
+@@ -148,6 +148,7 @@
+         let message = PamMessage::from_bytes(&message_bytes)
+             .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e.to_string()))?;
+ 
++        let mut status = 0u8;
+         match message.operation {
+             PamOperation::Unlock => {
+                 tracing::info!("Received unlock request for user: {}", message.username);
+@@ -170,6 +171,7 @@
+                         );
+                     }
+                     Err(e) => {
++                        status = 1;
+                         tracing::warn!(
+                             "Failed to unlock collections for user {}: {}",
+                             message.username,
+@@ -209,6 +211,7 @@
+                             .insert(message.username.clone(), new_secret);
+                     }
+                     Err(e) => {
++                        status = 1;
+                         tracing::error!(
+                             "Failed to change password for user {}: {}",
+                             message.username,
+@@ -219,6 +222,10 @@
+             }
+         }
+ 
++        // PAM must wait for processing, not merely a successful socket write.
++        // In particular, passwd may exit immediately after its module returns.
++        stream.write_all(&[status]).await?;
++
+         Ok(())
+     }
+ 
+@@ -352,13 +359,6 @@
+     }
+ }
+ 
+-impl Drop for PamListener {
+-    fn drop(&mut self) {
+-        if self.socket_path.exists() {
+-            let _ = std::fs::remove_file(&self.socket_path);
+-        }
+-    }
+-}
+ 
+ #[cfg(test)]
+ mod tests;

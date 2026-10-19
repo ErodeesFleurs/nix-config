@@ -7,6 +7,7 @@
 
 let
   cfg = config.homeModules.keyring;
+  oo7-server = import ../../lib/oo7-server.nix { inherit pkgs; };
 in
 {
   options.homeModules.keyring = {
@@ -31,13 +32,14 @@ in
       oo7-daemon = {
         Unit = {
           Description = "oo7 Secret Service daemon";
-          PartOf = [ "graphical-session.target" ];
         };
         Service = {
-          ExecStart = "${pkgs.oo7-server}/libexec/oo7-daemon";
+          ExecStart = "${oo7-server}/libexec/oo7-daemon";
           Restart = "on-failure";
         };
-        Install.WantedBy = [ "graphical-session.target" ];
+        # PAM 在图形会话启动前发送登录密码；密钥环需跟随用户管理器启动，
+        # 不能等 graphical-session.target，也不应在退出图形会话时丢掉解锁状态。
+        Install.WantedBy = [ "default.target" ];
       };
       oo7-portal = {
         Unit = {
