@@ -69,17 +69,17 @@ diff -ruN a/crates/openlogi-desktop/src/app/home/views.rs b/crates/openlogi-desk
  };
  use gpui_base::Button as BaseButton;
  use gpui_component::{
-@@ -227,8 +227,8 @@
-         .aria_description(device_accessibility_description(record))
-         .aria_selected(active)
-         .cursor_pointer()
--        .hover(move |card| card.border_color(rgb(theme::ACCENT_BLUE)).shadow_sm())
--        .focus_visible(move |card| card.border_color(rgb(theme::ACCENT_BLUE)).shadow_sm())
-+        .hover(move |card| card.border_color(pal.accent).shadow_sm())
-+        .focus_visible(move |card| card.border_color(pal.accent).shadow_sm())
-         .on_click(move |_, _, cx| {
-             view.update(cx, |this, cx| {
-                 this.open_device(record_key.clone(), cx);
+@@ -235,8 +235,8 @@
+     .aria_description(device_accessibility_description(record))
+     .aria_selected(active)
+     .cursor_pointer()
+-    .hover(move |card| card.border_color(rgb(theme::ACCENT_BLUE)).shadow_sm())
+-    .focus_visible(move |card| card.border_color(rgb(theme::ACCENT_BLUE)).shadow_sm())
++    .hover(move |card| card.border_color(pal.accent).shadow_sm())
++    .focus_visible(move |card| card.border_color(pal.accent).shadow_sm())
+     .on_click(move |_, _, cx| {
+         view.update(cx, |this, cx| {
+             this.open_device(record_key.clone(), cx);
 @@ -262,7 +262,7 @@
          .py_2()
          .rounded(pal.card_radius)
@@ -121,7 +121,7 @@ diff -ruN a/crates/openlogi-desktop/src/app/home.rs b/crates/openlogi-desktop/sr
          .bg(pal.panel)
          .shadow_xs()
          .child(
-@@ -262,9 +262,9 @@
+@@ -264,10 +264,10 @@
          )
  }
  
@@ -131,11 +131,12 @@ diff -ruN a/crates/openlogi-desktop/src/app/home.rs b/crates/openlogi-desktop/sr
 +/// Transport glyph in the card corner: Bluetooth uses the active accent,
 +/// receivers use the connected status hue, and cables stay muted. Connectivity
 +/// words ride its hover tip and the dimmed render marks an offline card.
- fn transport_glance(record: &DeviceRecord, pal: Palette) -> impl IntoElement {
-     let path = if matches!(record.kind, DeviceKind::Camera) {
-         "action-icons/usb.svg"
-@@ -272,10 +272,8 @@
-         connection_icon_path(record.route.as_ref(), record.model_info.as_ref())
+ fn transport_glance(
+     record: &DeviceRecord,
+     pal: Palette,
+     saved_transport: Option<ObservedConnection>,
+@@ -282,10 +282,8 @@
+         )
      };
      let color: Hsla = match path {
 -        "action-icons/bluetooth.svg" => rgb(theme::ACCENT_BLUE).into(),
@@ -625,32 +626,33 @@ diff -ruN a/crates/openlogi-desktop/src/features/keyboard/function_row.rs b/crat
              }
          }
      }
-@@ -845,15 +849,14 @@
-                                         .path("action-icons/keyboard.svg")
-                                         .size_4()
-                                         .flex_none()
--                                        .text_color(pal.text_muted),
-+                                        .text_color(if current.is_none() { pal.selected_foreground } else { pal.text_muted }),
-                                 )
-                                 .child(div().child(tr!("keyboard.native_function"))),
-                         )
-                         .when(current.is_none(), |row| {
-                             row.child(
-                                 gpui_component::Icon::new(gpui_component::IconName::Check)
--                                    .size_3()
--                                    .text_color(rgb(ACCENT_BLUE)),
-+                                    .size_3().text_color(pal.selected_foreground),
+@@ -842,7 +846,7 @@
+                                     .path("action-icons/keyboard.svg")
+                                     .size_4()
+                                     .flex_none()
+-                                    .text_color(pal.text_muted),
++                                    .text_color(if current.is_none() { pal.selected_foreground } else { pal.text_muted }),
                              )
-                         })
-                         .on_click(move |_ev, _window, cx| {
-@@ -963,15 +966,14 @@
+                             .child(div().child(tr!("keyboard.native_function"))),
+                     )
+@@ -850,8 +854,7 @@
+                         row.child(
+                             gpui_component::Icon::new(gpui_component::IconName::Check)
+-                                .size_3()
+-                                .text_color(rgb(ACCENT_BLUE)),
++                                .size_3().text_color(pal.selected_foreground),
+                         )
+                     })
+                     .on_click(move |_ev, _window, cx| {
+                         AppState::apply(cx, |state| {
+@@ -959,15 +962,14 @@
                                          .path(*icon_path)
                                          .size_4()
                                          .flex_none()
 -                                        .text_color(pal.text_muted),
 +                                        .text_color(if selected { pal.selected_foreground } else { pal.text_muted }),
                                  )
-                                 .child(div().child((*label).to_string())),
+                                 .child(div().child(label.clone())),
                          )
                          .when(selected, |s| {
                              s.child(
@@ -1107,7 +1109,16 @@ diff -ruN a/crates/openlogi-desktop/src/features/pointer/smartshift.rs b/crates/
          } else {
              pal.text_muted
          };
-@@ -240,7 +240,7 @@
+@@ -252,7 +252,7 @@
+         self.torque.sync(committed_torque, window, cx);
+         let display = self.torque.shown(committed_torque);
+         let torque_value_color = if ratchet {
+-            rgb(ACCENT_BLUE).into()
++            pal.accent
+         } else {
+             pal.text_muted
+         };
+@@ -308,7 +308,7 @@
                      .child(
                          div()
                              .text_body()
