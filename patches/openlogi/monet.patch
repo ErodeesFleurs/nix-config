@@ -1,9 +1,17 @@
 diff -ruN a/Cargo.lock b/Cargo.lock
 --- a/Cargo.lock	1970-01-01 08:00:01.000000000 +0800
 +++ b/Cargo.lock	2026-10-11 15:41:50.885537424 +0800
-@@ -5933,8 +5933,15 @@
+@@ -5915,6 +5915,7 @@
+  "block2 0.6.2",
+  "core-graphics 0.25.0",
+  "embed-resource",
++ "gpui-component",
+  "gpui-pre",
+  "gpui-pre-platform",
+  "objc2 0.6.4",
+@@ -5948,8 +5949,15 @@
  name = "openlogi-ui"
- version = "0.8.14"
+ version = "0.8.16"
  dependencies = [
 + "anyhow",
 + "gpui-component",
@@ -183,7 +191,18 @@ diff -ruN a/crates/openlogi-desktop/src/app/status.rs b/crates/openlogi-desktop/
          )
          .child(div().text_title().child(headline))
          .child(
-@@ -164,7 +164,7 @@
+@@ -202,9 +202,9 @@
+             div()
+                 .size_1p5()
+                 .rounded_full()
+-                .bg(rgb(theme::STATUS_CONNECTING)),
++                .bg(pal.warning),
+         )
+         .child(
+             div()
+                 .debug_selector(|| "secure-input-notice".into())
+                 .child(message),
+@@ -235,7 +235,7 @@
              div()
                  .size_1p5()
                  .rounded_full()
@@ -1589,23 +1608,23 @@ diff -ruN a/crates/openlogi-desktop/src/ui/theme.rs b/crates/openlogi-desktop/sr
 -        );
 -    }
  }
-diff -ruN a/crates/openlogi-desktop/src/windows/add_device.rs b/crates/openlogi-desktop/src/windows/add_device.rs
---- a/crates/openlogi-desktop/src/windows/add_device.rs	1970-01-01 08:00:01.000000000 +0800
-+++ b/crates/openlogi-desktop/src/windows/add_device.rs	2026-10-11 15:45:19.829717208 +0800
-@@ -480,6 +480,13 @@
-             border: gpui::hsla(0., 0., 0., 1.),
-             text_primary,
-             text_muted: gpui::hsla(0., 0., 0., 1.),
-+            accent: text_primary,
-+            selected: text_primary,
-+            selected_foreground: text_primary,
-+            selected_hover: text_primary,
-+            success: text_primary,
-+            warning: text_primary,
-+            danger: text_primary,
-             card_radius: gpui::px(8.),
-             control_radius: gpui::px(4.),
-         };
+diff -ruN a/crates/openlogi-desktop/src/windows/add_device/tests.rs b/crates/openlogi-desktop/src/windows/add_device/tests.rs
+--- a/crates/openlogi-desktop/src/windows/add_device/tests.rs	1970-01-01 08:00:01.000000000 +0800
++++ b/crates/openlogi-desktop/src/windows/add_device/tests.rs	2026-10-22 00:00:00.000000000 +0800
+@@ -415,6 +415,13 @@
+         border: gpui::hsla(0., 0., 0., 1.),
+         text_primary,
+         text_muted: gpui::hsla(0., 0., 0., 1.),
++        accent: text_primary,
++        selected: text_primary,
++        selected_foreground: text_primary,
++        selected_hover: text_primary,
++        success: text_primary,
++        warning: text_primary,
++        danger: text_primary,
+         card_radius: gpui::px(8.),
+         control_radius: gpui::px(4.),
+     };
 diff -ruN a/crates/openlogi-desktop/src/windows/settings/appearance.rs b/crates/openlogi-desktop/src/windows/settings/appearance.rs
 --- a/crates/openlogi-desktop/src/windows/settings/appearance.rs	1970-01-01 08:00:01.000000000 +0800
 +++ b/crates/openlogi-desktop/src/windows/settings/appearance.rs	2026-10-11 15:41:50.892952149 +0800
@@ -1726,42 +1745,52 @@ diff -ruN a/crates/openlogi-desktop/src/windows/settings/permissions.rs b/crates
      } else {
          status_badge(status, pal)
      };
+diff -ruN a/crates/openlogi-overlay/Cargo.toml b/crates/openlogi-overlay/Cargo.toml
+--- a/crates/openlogi-overlay/Cargo.toml	1970-01-01 08:00:01.000000000 +0800
++++ b/crates/openlogi-overlay/Cargo.toml	2026-10-22 00:00:00.000000000 +0800
+@@ -33,7 +33,8 @@
+ openlogi-ipc = { path = "../openlogi-ipc", features = ["test-support"] }
+ tokio = { workspace = true, features = ["test-util"] }
+ # A headless app, for the windows an indicator opens and closes.
+ gpui = { workspace = true, features = ["test-support"] }
++gpui-component = { workspace = true }
+ 
+ [build-dependencies]
+ embed-resource = "3.0.9"
 diff -ruN a/crates/openlogi-overlay/src/main.rs b/crates/openlogi-overlay/src/main.rs
 --- a/crates/openlogi-overlay/src/main.rs	1970-01-01 08:00:01.000000000 +0800
 +++ b/crates/openlogi-overlay/src/main.rs	2026-10-11 15:41:50.893080025 +0800
-@@ -57,6 +57,7 @@
+@@ -74,6 +74,7 @@
          // Reapply the helper policy after that reset, without constructing
          // NSApplication before GPUI has installed its subclass.
          platform::configure_application();
 +        openlogi_ui::color::init(cx);
          let live_session = Arc::new(ClickAwaySession::new());
          spawn_click_away_dismissal(cx, Arc::clone(&live_session));
-         cx.spawn(async move |cx| {
-@@ -103,9 +104,13 @@
-                     for (options, panel) in placement.openings() {
+         let shelf = Rc::new(RefCell::new(NoticeShelf::default()));
+@@ -134,8 +135,12 @@
+                     let primary = platform::open_first(placement.openings(), |(options, panel)| {
                          let invocation = invocation.clone();
                          let commands = commands.clone();
--                        match cx.open_window(options, |_, cx| {
-+                        match cx.open_window(options, |window, cx| {
+                         let pointer = pointer.clone();
+                         cx.open_window(options, |window, cx| {
 +                            openlogi_ui::color::apply(Some(window), cx);
 +                            window.observe_window_appearance(|window, cx| {
 +                                openlogi_ui::color::apply(Some(window), cx);
 +                            }).detach();
-                             cx.new(|_| RingView::new(invocation, commands, &live_session, panel))
-                         }) {
-                             Ok(handle) => {
-                                 if primary.is_none() {
-                                     primary = Some(handle);
+                             cx.new(|cx| {
+                                 RingView::new(
+                                     invocation,
 diff -ruN a/crates/openlogi-overlay/src/ring.rs b/crates/openlogi-overlay/src/ring.rs
 --- a/crates/openlogi-overlay/src/ring.rs	1970-01-01 08:00:01.000000000 +0800
 +++ b/crates/openlogi-overlay/src/ring.rs	2026-10-11 15:41:50.893243165 +0800
 @@ -8,7 +8,7 @@
  use gpui::{
--    Bounds, Context, Div, Hsla, InteractiveElement, IntoElement, MouseMoveEvent, ParentElement,
-+    Bounds, Context, Div, InteractiveElement, IntoElement, MouseMoveEvent, ParentElement,
-     Pixels, Point, Render, SharedString, Size, StatefulInteractiveElement as _, Styled, Window,
-     WindowBackgroundAppearance, WindowKind, WindowOptions, div, point, prelude::FluentBuilder as _,
-     px, svg,
+-    Bounds, Context, Div, Entity, Hsla, InteractiveElement, IntoElement, MouseMoveEvent,
++    Bounds, Context, Div, Entity, InteractiveElement, IntoElement, MouseMoveEvent,
+     ParentElement, Pixels, Point, Render, SharedString, Size, StatefulInteractiveElement as _,
+     Styled, Subscription, Window, WindowBackgroundAppearance, WindowId, WindowKind, WindowOptions,
+     div, point, prelude::FluentBuilder as _, px, svg,
  };
  use openlogi_core::binding::{Action, ActionRingSlot};
 @@ -25,32 +25,6 @@
@@ -1894,6 +1923,14 @@ diff -ruN a/crates/openlogi-overlay/src/ring.rs b/crates/openlogi-overlay/src/ri
                          .child(label),
                  )
              })
+@@ -539,6 +525,7 @@
+     #[gpui::test]
+     fn a_ring_window_that_loses_the_pointer_stops_drawing_and_hovering(cx: &mut TestAppContext) {
++        cx.update(gpui_component::init);
+         let live = Arc::new(ClickAwaySession::new());
+         let (commands, mut sent) = mpsc::unbounded_channel();
+         let pointer = cx.new(|_| RingPointer::default());
+         let open = |cx: &mut TestAppContext| -> WindowHandle<RingView> {
 diff -ruN a/crates/openlogi-ui/Cargo.toml b/crates/openlogi-ui/Cargo.toml
 --- a/crates/openlogi-ui/Cargo.toml	1970-01-01 08:00:01.000000000 +0800
 +++ b/crates/openlogi-ui/Cargo.toml	2026-10-11 15:41:50.893358019 +0800

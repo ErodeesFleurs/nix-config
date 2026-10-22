@@ -44,8 +44,8 @@ in
   programs.openlogi = {
     enable = true;
     # 上游只嵌入内置主题；补丁加载 Monet 文件，并同步主界面及 Actions Ring。
-    # 补丁适配 0.8.14：Wayland 每屏窗口分别监听外观，环形面板读取当前配色。
-    # abc815ac 新增的 SmartShift 滚动力度值也使用 Monet accent，不恢复固定蓝色。
+    # 适配 0.8.16（cc77685d）：保留 open_first / RingPointer，每屏窗口分别监听外观。
+    # Secure Input 警告使用 Monet warning；GPUI 指针回归初始化内存主题，不启动文件监听。
     package = openlogi.overrideAttrs (old: {
       src = monetSource;
       # 补丁仅引用已经锁定的依赖：复用上游 vendor，更新工作区依赖清单。
