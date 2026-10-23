@@ -24,6 +24,15 @@
   # surface 内核跟踪最新稳定版（另一档 longterm 跟踪 LTS）
   hardware.microsoft-surface.kernelVersion = "stable";
 
+  # Surface 6.19.8 尚未适配 Rust 1.98 的 ABI 更名；回移上游版本判断，
+  # 保留内核 Rust 支持。升级到包含该修复的内核后移除此补丁。
+  boot.kernelPatches = [
+    {
+      name = "rustc-softfloat-abi";
+      patch = ../../patches/linux-surface/rustc-softfloat-abi.patch;
+    }
+  ];
+
   # 无线网络省电模式关闭（Surface 网卡稳定性；
   # 原 NetworkManager wifi.powersave=false 的 udev 等价物）
   services.udev.extraRules = ''
