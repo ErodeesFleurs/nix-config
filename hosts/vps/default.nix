@@ -10,6 +10,9 @@
     ./services-web.nix
   ];
 
+  # Follow the newest released kernel in the locked nixpkgs, not the default LTS.
+  boot.kernelPackages = pkgs.linuxPackages_latest;
+
   networking = {
     hostName = "vps";
     useDHCP = false;
@@ -78,11 +81,19 @@
       auto-optimise-store = true;
     };
   };
-  systemd.services.nix-daemon.serviceConfig = {
-    MemoryHigh = "20G";
-    MemoryMax = "24G";
-    CPUQuota = "1200%";
+  # One shared budget, including local-store builds that bypass nix-daemon.
+  # A top-level sibling keeps application/system services outside this budget.
+  systemd.slices.build = {
+    description = "Aggregate compiler and Nix build budget";
+    sliceConfig = {
+      MemoryHigh = "20G";
+      MemoryMax = "24G";
+      CPUQuota = "1200%";
+      CPUWeight = 25;
+      IOWeight = 25;
+    };
   };
+  systemd.services.nix-daemon.serviceConfig.Slice = "build.slice";
   systemd.tmpfiles.rules = [ "d /nix/var/nix/builds 0755 root root -" ];
 
   # Retain the provider's existing static management agent and external config.
@@ -121,6 +132,36 @@
     rsync
     starship
     tmux
+    # Keep systemd-run's options, with a mandatory "-- COMMAND" boundary.
+    # --scope inherits cwd/environment and waits; --unit/--no-block makes a
+    # durable service. Forced options come last so callers cannot undo them.
+    (writeShellScriptBin "build-run" ''
+      options=()
+      while (( $# )); do
+        if [[ "$1" == -- ]]; then
+          shift
+          break
+        fi
+        case "$1" in
+          --slice*|Slice=*|-*pSlice=*|--*=Slice=*)
+            echo "build-run: slice selection is reserved for the shared build budget" >&2
+            exit 2
+            ;;
+          -H*|-M*|-C*|--host*|--machine*|--capsule*)
+            echo "build-run: only the local system manager is supported" >&2
+            exit 2
+            ;;
+        esac
+        options+=("$1")
+        shift
+      done
+      if (( $# == 0 )); then
+        echo "usage: build-run [systemd-run options] -- COMMAND [ARG ...]" >&2
+        exit 2
+      fi
+      exec ${systemd}/bin/systemd-run "''${options[@]}" \
+        --system --slice=build.slice --expand-environment=no -- "$@"
+    '')
   ];
 
   system.stateVersion = "26.05";

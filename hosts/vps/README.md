@@ -31,11 +31,37 @@ The root shell no longer sources the old clashctl proxy setup. Mihomo is not par
 
 Recovery material remains on the server at `/var/backups/nixos-migration-20261024`: `etc-debian`, `boot-debian.tar`, `partition-table.txt`, the pinned NapCat OCI image and `final-service-state.tar.gz`. The workstation's migration backup directory was removed at the user's request (about 1.5 GiB). Server backups contain secrets; keep them private.
 
-New OpenSSH configuration and QQ ELF-loader checks passed on the server. Both HTTPS applications and the progress webpage responded after the first NixOS boot. NapCat starts with its existing session data but currently requests QR login; a running container or reachable management page is not proof of a logged-in QQ account or working bot reply.
+New OpenSSH configuration and QQ ELF-loader checks passed on the server. Both HTTPS applications and the progress webpage responded after the first NixOS boot. NapCat initially required QR login; a running container or reachable management page is not proof of a logged-in QQ account or working bot reply.
 
 Further controlled reboots confirmed the final system generation, SSH, static routing, swap and all application daemons. Outfit, the public QQ management page and progress UI each returned HTTP 200; the private model tunnel returned an HTTP response from its upstream. The final boot has no failed systemd units. A real sandboxed Nix build produced `nixos-builder-ok`. Obsolete Debian `/usr/lib/systemd` and `/usr/lib/binfmt.d` were moved into the recovery directory to prevent loading old dynamically linked service executables.
 
-After authorizing QQ login, verify a real bot reply and media capabilities. Preserve the backup and provider rescue access until those application-level checks are complete.
+Authorize QQ through `https://198.44.178.249:8444/` using the existing management credentials, then open **账号登录**, scan with the configured QQ account and confirm on the phone. If the QR expires or the page retains a NapCat WebUI authentication timeout, use **刷新二维码**; this cleared the observed cached error without restarting NapCat or deleting its session data. Do not refresh again while a scan is in progress. Before QQ login, a refused OneBot port 3001 is not by itself a token/configuration mismatch. Avoid the old `/opt/qq-agent/qq-agent-login` helper, which bypasses the Nix ELF loader and launches another foreground bot.
+
+After authorizing QQ login, verify the management page reports the account logged in and OneBot connected, then send an intentional test message and exercise media capabilities. A running container, visible QR or reachable management page is insufficient proof. Preserve the backup and provider rescue access until those application-level checks are complete.
+
+After phone authorization on 2026-10-24, authenticated checks confirmed the expected account logged in, OneBot connected and an authenticated WebSocket handshake successful, with no reported login/connection errors. These remained healthy after deploying build isolation without restarting QQ or NapCat. Actual message replies and media capabilities still require an intentional user test.
+
+## Mainline kernel
+
+`boot.kernelPackages = pkgs.linuxPackages_latest` follows the newest released kernel packaged in the locked nixpkgs, rather than NixOS's default LTS or release candidates. On 2026-10-24 this selected Linux 7.3, matching [kernel.org's latest release](https://www.kernel.org/releases.json). The server was rebooted into generation 6; `uname -r` reported `7.3.0`. SSH, static routing, the retained swap and NapCat recovered; both HTTPS sites, the progress UI and the private model endpoint returned HTTP 200, with no failed systemd units. At that boot QQ still reported `OneBot unavailable`; it was subsequently restored through phone authorization as described above.
+
+This is lock-based tracking, not an automatic upstream updater. After intentionally updating the nixpkgs lock, build/install the next boot generation with `sudo nixos-rebuild boot --flake /etc/nixos#vps`, then reboot in a maintenance window. A rebuild without rebooting does not replace the running kernel. GRUB retains five generations, including the preceding Linux 6.18.57 generation after this upgrade; select the previous generation from GRUB if a new kernel cannot boot. Keep old generations and provider rescue access until the new boot is verified.
+
+## Shared build resource budget
+
+`build.slice` is a top-level sibling of `system.slice` and `user.slice`. All participating builds share `MemoryHigh=20G`, `MemoryMax=24G` and `CPUQuota=1200%` in aggregate, not per job. Its CPU and IO weights are 25 versus the default 100 for other slices, favoring application responsiveness under contention. The memory ceiling is a build-side safety limit, not a reservation for applications. Nix keeps one concurrent build, 12 build cores and disk-backed temporary storage.
+
+The Nix daemon belongs to this slice automatically. Independent local-store builds must use the installed `build-run [systemd-run options] -- COMMAND [ARG ...]` launcher; bare `NIX_REMOTE=local` or arbitrary root commands are not automatically covered:
+
+```sh
+sudo build-run --scope --quiet -- env NIX_REMOTE=local nix build --no-link path:/etc/nixos#vps
+```
+
+`--scope` waits and preserves the invoking environment, working directory and standard streams. Durable services may use systemd-run's `--unit`/`--no-block` options but must specify their working directory/environment explicitly. The launcher rejects slice overrides and remote-manager selection and disables argument environment expansion; pass environment variables explicitly rather than embedding shell expansion in command arguments.
+
+The canonical `/root/.local/share/osb-build-progress/build-progress.py --run` capture entrypoint now enters this slice before launching its payload, unless already inside it. Its observer/`--auto` mode remains outside the build budget. This runtime script is retained application state, not a Nix-store source; preserve it during recovery. Historical probe scripts were not rewritten, so new independent build launchers must use `build-run` rather than bare `systemd-run`.
+
+Live verification compiled and executed a C program through both the Nix daemon and `NIX_REMOTE=local`, proving their builders/children ran below the same parent slice. Scope and canonical capture smoke checks covered literal arguments, cwd/environment/stdin, nonzero exit status, signal termination and capture metadata. Kernel cgroup files confirmed the aggregate limits; QQ, Caddy and the progress observer remained in `system.slice`. The deployed generation has no failed units and the HTTPS/progress endpoints still return HTTP 200.
 
 ## Declarative administrator account
 
