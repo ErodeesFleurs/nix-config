@@ -156,18 +156,32 @@
       nixosConfigurations = {
         spectre = mkHost ./hosts/spectre;
         spectre-surface = mkHost ./hosts/spectre-surface;
+        vps = nixpkgs.lib.nixosSystem {
+          inherit system;
+          specialArgs = { inherit inputs; };
+          modules = [
+            inputs.agenix.nixosModules.default
+            ./hosts/vps
+          ];
+        };
       };
 
       homeConfigurations = {
         "fleurs@spectre" = mkHome ./users/fleurs;
         "fleurs@spectre-surface" = mkHome ./users/fleurs-surface;
+        "fleurs@vps" = home-manager.lib.homeManagerConfiguration {
+          inherit pkgs;
+          modules = [ ./users/fleurs-vps ];
+        };
       };
 
       packages.${system} = {
         spectre = self.nixosConfigurations.spectre.config.system.build.toplevel;
         spectre-surface = self.nixosConfigurations.spectre-surface.config.system.build.toplevel;
+        vps = self.nixosConfigurations.vps.config.system.build.toplevel;
         fleurs = self.homeConfigurations."fleurs@spectre".activationPackage;
         fleurs-surface = self.homeConfigurations."fleurs@spectre-surface".activationPackage;
+        fleurs-vps = self.homeConfigurations."fleurs@vps".activationPackage;
       };
 
       # nix fmt：treefmt 统一入口（nixfmt + deadnix --edit，见 treefmt.toml）
