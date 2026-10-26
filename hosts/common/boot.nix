@@ -3,8 +3,7 @@
 
 {
   boot = {
-    initrd.systemd.enable = true;
-
+    # systemd initrd 已是唯一路径，不再设置已移除的 initrd.systemd.enable。
     loader = {
       systemd-boot = {
         enable = true;

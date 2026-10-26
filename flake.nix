@@ -45,7 +45,8 @@
     };
 
     openlogi = {
-      url = "github:AprilNEA/OpenLogi";
+      # 直接使用正式 packaging flake，避免已弃用的根目录转发入口。
+      url = "github:AprilNEA/OpenLogi?dir=packaging";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.rust-overlay.inputs.nixpkgs.follows = "nixpkgs";
     };

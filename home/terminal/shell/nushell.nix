@@ -41,6 +41,8 @@ in
   config = lib.mkIf cfg.enable {
     programs.nushell = {
       enable = true;
+      # 保持现有环境变量继承方式，不自动导入 HM sessionVariables。
+      loadSessionVariables = false;
 
       settings = {
         show_banner = cfg.show-banner;
