@@ -12,6 +12,9 @@
     ];
   };
 
+  # 使用 fleurs-nur 的 HM 模块；存档、日志和模组沿用 $XDG_DATA_HOME/OpenStarbound。
+  home.programs.openstarbound.enable = true;
+
   homeModules = {
     terminal = {
       shell.nushell = {
@@ -66,7 +69,6 @@
     mpv.enable = true;
     obs.enable = true;
     openlogi.enable = true;
-    starbound.enable = false;
     mycard.enable = true;
     discord = {
       enable = false;

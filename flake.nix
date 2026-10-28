@@ -148,6 +148,7 @@
             inputs.vicinae.homeManagerModules.default
             inputs.niri.homeModules.niri
             inputs.agenix.homeManagerModules.default
+            inputs.fleurs-nur.homeModules.openstarbound
             ./home
             userDir
           ];
