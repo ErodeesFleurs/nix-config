@@ -11,7 +11,7 @@ diff -ruN a/Cargo.lock b/Cargo.lock
   "objc2 0.6.4",
 @@ -5948,8 +5949,15 @@
  name = "openlogi-ui"
- version = "0.8.16"
+ version = "0.8.18"
  dependencies = [
 + "anyhow",
 + "gpui-component",
@@ -363,7 +363,7 @@ diff -ruN a/crates/openlogi-desktop/src/features/binding_editor.rs b/crates/open
  
  /// Height cap shared by compact inspector and editor lists.
  pub(crate) const EDITOR_LIST_MAX_H: f32 = 360.;
-@@ -176,15 +176,14 @@
+@@ -179,21 +179,21 @@
                                          .path(icon_path)
                                          .size_4()
                                          .flex_none()
@@ -374,10 +374,16 @@ diff -ruN a/crates/openlogi-desktop/src/features/binding_editor.rs b/crates/open
                          )
                          .when(selected, |row| {
                              row.child(
-                                 Icon::new(IconName::Check)
--                                    .size_3()
--                                    .text_color(rgb(ACCENT_BLUE)),
-+                                    .size_3().text_color(pal.selected_foreground),
+                                 div()
+                                     .debug_selector(|| format!("{id_prefix}-{action:?}-check"))
+                                     .flex_none()
+                                     .size_3()
+                                     .child(
+                                         Icon::new(IconName::Check)
+                                             .size_3()
+-                                            .text_color(rgb(ACCENT_BLUE)),
++                                            .text_color(pal.selected_foreground),
+                                     ),
                              )
                          })
                          .on_click(move |_event, window, cx| (on_pick)(action.clone(), window, cx))
@@ -645,26 +651,27 @@ diff -ruN a/crates/openlogi-desktop/src/features/keyboard/function_row.rs b/crat
              }
          }
      }
-@@ -842,7 +846,7 @@
+@@ -852,7 +856,7 @@
+                                 svg()
                                      .path("action-icons/keyboard.svg")
                                      .size_4()
                                      .flex_none()
 -                                    .text_color(pal.text_muted),
-+                                    .text_color(if current.is_none() { pal.selected_foreground } else { pal.text_muted }),
++                                    .text_color(if uses_default { pal.selected_foreground } else { pal.text_muted }),
                              )
-                             .child(div().child(tr!("keyboard.native_function"))),
-                     )
-@@ -850,8 +854,7 @@
-                         row.child(
-                             gpui_component::Icon::new(gpui_component::IconName::Check)
--                                .size_3()
--                                .text_color(rgb(ACCENT_BLUE)),
-+                                .size_3().text_color(pal.selected_foreground),
+                             .child(div().child(if app.is_some() {
+@@ -868,9 +872,9 @@
+                                 .flex_none()
+                                 .size_3()
+                                 .child(
+                                     gpui_component::Icon::new(gpui_component::IconName::Check)
+                                         .size_3()
+-                                        .text_color(rgb(ACCENT_BLUE)),
++                                        .text_color(pal.selected_foreground),
+                                 ),
                          )
                      })
-                     .on_click(move |_ev, _window, cx| {
-                         AppState::apply(cx, |state| {
-@@ -959,15 +962,14 @@
+@@ -959,15 +963,14 @@
                                          .path(*icon_path)
                                          .size_4()
                                          .flex_none()
@@ -1380,6 +1387,27 @@ diff -ruN a/crates/openlogi-desktop/src/ui/components.rs b/crates/openlogi-deskt
                  } else {
                      pal.control_hover
                  })
+@@ -663,7 +665,7 @@
+             .selected(self.selected)
+             .disabled(self.disabled)
+             .when(marked, |pill| {
+-                pill.selected_border(true, pal).selected_fill(true)
++                pill.selected_border(true, pal).selected_fill(true, pal)
+             })
+     }
+ }
+diff -ruN a/crates/openlogi-desktop/src/ui/components/tests.rs b/crates/openlogi-desktop/src/ui/components/tests.rs
+--- a/crates/openlogi-desktop/src/ui/components/tests.rs
++++ b/crates/openlogi-desktop/src/ui/components/tests.rs
+@@ -300,7 +300,7 @@
+ 
+     assert_eq!(
+         mark(true, false),
+-        (Some(theme::accent()), Some(theme::accent_tint().into())),
++        (Some(pal.accent), Some(pal.selected.into())),
+         "the selected pill takes the accent border and fill",
+     );
+     assert_eq!(
 diff -ruN a/crates/openlogi-desktop/src/ui/gallery.rs b/crates/openlogi-desktop/src/ui/gallery.rs
 --- a/crates/openlogi-desktop/src/ui/gallery.rs	1970-01-01 08:00:01.000000000 +0800
 +++ b/crates/openlogi-desktop/src/ui/gallery.rs	2026-10-11 15:41:50.892386036 +0800
