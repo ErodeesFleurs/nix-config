@@ -15,10 +15,11 @@
 
     mimeApps = {
       enable = true;
-      # Prefer dedicated image/document viewers to browser MIME associations.
+      # Prefer dedicated image/document/archive viewers to browser MIME associations.
       defaultApplicationPackages = [
         pkgs.loupe
         pkgs.papers
+        pkgs.file-roller
         config.homeModules.nautilus.package
         config.programs.ghostty.package
         config.programs.zed-editor.package

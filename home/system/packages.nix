@@ -103,7 +103,8 @@ in
         wineWow64Packages.waylandFull
         winetricks
 
-        # 压缩/归档（GUI 场景使用 Nautilus 内置归档功能，GVFS 提供挂载访问）
+        # 压缩/归档：File Roller 提供图形浏览与选择性解压，ouch 用于命令行。
+        file-roller
         ouch
 
         # 媒体处理
