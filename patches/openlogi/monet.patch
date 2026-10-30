@@ -11,7 +11,7 @@ diff -ruN a/Cargo.lock b/Cargo.lock
   "objc2 0.6.4",
 @@ -5948,8 +5949,15 @@
  name = "openlogi-ui"
- version = "0.8.18"
+ version = "0.8.19"
  dependencies = [
 + "anyhow",
 + "gpui-component",
@@ -345,25 +345,27 @@ diff -ruN a/crates/openlogi-desktop/src/features/action_ring.rs b/crates/openlog
 diff -ruN a/crates/openlogi-desktop/src/features/binding_editor.rs b/crates/openlogi-desktop/src/features/binding_editor.rs
 --- a/crates/openlogi-desktop/src/features/binding_editor.rs	1970-01-01 08:00:01.000000000 +0800
 +++ b/crates/openlogi-desktop/src/features/binding_editor.rs	2026-10-11 15:41:50.888669467 +0800
-@@ -4,7 +4,7 @@
- 
+@@ -5,9 +5,9 @@
  use gpui::{
-     App, InteractiveElement, IntoElement, ParentElement, Role, StatefulInteractiveElement as _,
--    Styled, Window, div, prelude::FluentBuilder as _, px, rgb, svg,
-+    Styled, Window, div, prelude::FluentBuilder as _, px, svg,
+     App, Entity, InteractiveElement, IntoElement, ParentElement, Role,
+-    StatefulInteractiveElement as _, Styled, Window, div, prelude::FluentBuilder as _, px, rgb,
++    StatefulInteractiveElement as _, Styled, Window, div, prelude::FluentBuilder as _, px,
+     svg,
  };
- use gpui_component::{Icon, IconName, Selectable as _, h_flex, v_flex};
- use openlogi_core::binding::{Action, Category, GestureDirection};
-@@ -12,7 +12,7 @@
+ use gpui_component::{
+     Icon, IconName, Selectable as _, button::Button, h_flex, input::InputState, v_flex,
+ };
+ use openlogi_core::binding::{Action, ApplicationTarget, Category, GestureDirection};
+@@ -16,7 +16,7 @@
  use crate::ui::action::localized_action_label;
- use crate::ui::components::MenuRow;
+ use crate::ui::components::{MenuRow, control_input};
  use crate::ui::section::section_label;
 -use crate::ui::theme::{ACCENT_BLUE, Palette, Typography as _};
 +use crate::ui::theme::{Palette, Typography as _};
  
- /// Height cap shared by compact inspector and editor lists.
- pub(crate) const EDITOR_LIST_MAX_H: f32 = 360.;
-@@ -179,21 +179,21 @@
+ mod shortcut_recorder;
+ 
+@@ -185,21 +185,21 @@
                                          .path(icon_path)
                                          .size_4()
                                          .flex_none()
@@ -387,6 +389,15 @@ diff -ruN a/crates/openlogi-desktop/src/features/binding_editor.rs b/crates/open
                              )
                          })
                          .on_click(move |_event, window, cx| (on_pick)(action.clone(), window, cx))
+@@ -359,7 +359,7 @@
+                 div()
+                     .debug_selector(move || format!("{id_prefix}-custom-{field}-error"))
+                     .text_caption()
+-                    .text_color(rgb(0x00ef_4444))
++                    .text_color(pal.danger)
+                     .child(tr!("action_ring.custom_action_invalid_input")),
+             )
+         })
 diff -ruN a/crates/openlogi-desktop/src/features/camera/controls/rows.rs b/crates/openlogi-desktop/src/features/camera/controls/rows.rs
 --- a/crates/openlogi-desktop/src/features/camera/controls/rows.rs	1970-01-01 08:00:01.000000000 +0800
 +++ b/crates/openlogi-desktop/src/features/camera/controls/rows.rs	2026-10-11 15:41:50.888913796 +0800
