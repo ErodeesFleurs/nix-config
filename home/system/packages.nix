@@ -8,35 +8,6 @@
 
 let
   cfg = config.homeModules.packages;
-  # 官方 AppImage 滚动地址会原地换包；更新哈希时需核对主程序版本并同步 version。
-  # 固定官方 AppImage 的哈希并沿用上游 FHS 打包，避免更新整套 nixpkgs。
-  # Wayland 会话下自动选择原生后端；保留 DISPLAY 给小程序，不强制 Qt 后端。
-  wechat = pkgs.callPackage "${pkgs.path}/pkgs/by-name/we/wechat/linux.nix" {
-    pname = "wechat";
-    version = "4.1.13.26";
-    src = pkgs.fetchurl {
-      name = "WeChatLinux_x86_64.AppImage";
-      url = "https://dldir1v6.qq.com/weixin/Universal/Linux/WeChatLinux_x86_64.AppImage";
-      hash = "sha256-RSYYC8qYASh5FZmvEi/0eVACpXFaUQ9qZUgOK+aHQkQ=";
-    };
-    meta = pkgs.wechat.meta;
-    # 在 FHS 构造阶段设置 profile，仅微信的原生 Wayland 启用内置 v3 输入插件。
-    # 外层 overrideAttrs.profile 不会重建 /etc/profile；X11 启动保持原有输入法设置。
-    appimageTools = pkgs.appimageTools // {
-      wrapAppImage =
-        args:
-        pkgs.appimageTools.wrapAppImage (
-          args
-          // {
-            profile = (args.profile or "") + ''
-              if [[ -n "''${WAYLAND_DISPLAY:-}" && "''${QT_QPA_PLATFORM:-}" != xcb* ]]; then
-                export QT_IM_MODULE=text-input-unstable-v3
-              fi
-            '';
-          }
-        );
-    };
-  };
   # QQ / Electron 40 用 GTK3 背景色判断模式；GTK3 缓存的 Monet 用户样式会覆盖 portal。
   # 仅在 QQ 的挂载视图中隔离静态 CSS/设置，保留系统主题信号、账号路径与原生 Wayland。
   # GTK3 配置是符号链接，需挂载到解析后的文件；这不是安全沙箱，不隔离用户数据。
@@ -123,6 +94,7 @@ in
 
         # 通讯
         qq
+        # 原生 deb 包及 Wayland/输入法选择由 nixpkgs 维护，不再调用其内部打包文件。
         wechat
         telegram-desktop
       ]
