@@ -1,14 +1,23 @@
 /**
  * @name Monet MD3
- * @description Generated Material Design 3 theme from the current Monet palette.
+ * @description System Monet colors; generated for each light/dark palette by matugen.
  * @author matugen
  */
 
+/* Palette-only: preserve Discord's layout, focus rings and component states.
+ * Both wallpaper palettes are embedded; system appearance selects the colors.
+ * Keep presence, positive/warning feedback and destructive controls semantic.
+ */
 :root,
 .theme-light,
 .theme-dark,
+.theme-darker,
+.theme-midnight,
 .visual-refresh {
+  color-scheme: @mode@;
+
   --md3-surface: @surface@;
+  --md3-surface-container-lowest: @surface_container_lowest@;
   --md3-surface-container-low: @surface_container_low@;
   --md3-surface-container: @surface_container@;
   --md3-surface-container-high: @surface_container_high@;
@@ -21,97 +30,141 @@
   --md3-on-primary: @on_primary@;
   --md3-primary-container: @primary_container@;
   --md3-on-primary-container: @on_primary_container@;
-  --md3-secondary: @secondary@;
   --md3-secondary-container: @secondary_container@;
   --md3-on-secondary-container: @on_secondary_container@;
-  --md3-tertiary: @tertiary@;
-  --md3-tertiary-container: @tertiary_container@;
-  --md3-on-tertiary-container: @on_tertiary_container@;
   --md3-error: @error@;
   --md3-error-container: @error_container@;
   --md3-on-error-container: @on_error_container@;
+  --md3-hover: color-mix(in srgb, var(--md3-on-surface) 8%, transparent);
+  --md3-active: color-mix(in srgb, var(--md3-on-surface) 12%, transparent);
 
-  --background-primary: var(--md3-surface);
-  --background-secondary: var(--md3-surface-container-low);
+  /* Main content → navigation → app frame; elevated menus stay distinct. */
+  --background-base-low: var(--md3-surface);
+  --background-base-lower: var(--md3-surface-container-low);
+  --background-base-lowest: var(--md3-surface-container-lowest);
+  --background-surface-high: var(--md3-surface-container);
+  --background-surface-higher: var(--md3-surface-container-high);
+  --background-surface-highest: var(--md3-surface-container-highest);
   --background-secondary-alt: var(--md3-surface-container);
-  --background-tertiary: var(--md3-surface-container-high);
-  --background-floating: var(--md3-surface-container-high);
-  --background-modifier-hover: color-mix(in srgb, var(--md3-primary) 10%, transparent);
-  --background-modifier-active: color-mix(in srgb, var(--md3-primary) 16%, transparent);
-  --background-modifier-selected: var(--md3-primary-container);
-  --background-modifier-accent: var(--md3-outline-variant);
-  --bg-base-primary: var(--md3-surface);
-  --bg-base-secondary: var(--md3-surface-container-low);
-  --bg-base-tertiary: var(--md3-surface-container);
-  --bg-surface-overlay: var(--md3-surface-container-high);
   --bg-surface-raised: var(--md3-surface-container-high);
-  --bg-mod-faint: color-mix(in srgb, var(--md3-primary) 8%, transparent);
-  --bg-mod-subtle: color-mix(in srgb, var(--md3-primary) 12%, transparent);
-  --bg-mod-strong: var(--md3-primary-container);
-  --text-normal: var(--md3-on-surface);
+  --background-accent: var(--md3-primary-container);
+  --background-brand: var(--md3-primary);
+  --background-code: var(--md3-surface-container);
+  --background-mod-muted: color-mix(in srgb, var(--md3-on-surface) 4%, transparent);
+  --background-mod-subtle: var(--md3-hover);
+  --background-mod-normal: var(--md3-active);
+  --background-mod-strong: color-mix(in srgb, var(--md3-on-surface) 16%, transparent);
+  --chat-background: var(--md3-surface);
+  --chat-background-default: var(--md3-surface);
+  --chat-border: var(--md3-outline-variant);
+  --modal-background: var(--md3-surface-container-high);
+  --modal-footer-background: var(--md3-surface-container);
+
+  --text-default: var(--md3-on-surface);
+  --text-strong: var(--md3-on-surface);
   --text-muted: var(--md3-on-surface-variant);
+  --text-subtle: var(--md3-on-surface-variant);
+  --text-brand: var(--md3-primary);
   --text-link: var(--md3-primary);
-  --interactive-normal: var(--md3-on-surface-variant);
-  --interactive-hover: var(--md3-on-surface);
-  --interactive-active: var(--md3-on-surface);
-  --interactive-muted: color-mix(in srgb, var(--md3-on-surface-variant) 50%, transparent);
-  --channels-default: var(--md3-on-surface-variant);
-  --channel-icon: var(--md3-on-surface-variant);
-  --header-primary: var(--md3-on-surface);
-  --header-secondary: var(--md3-on-surface-variant);
-  --brand-experiment: var(--md3-primary);
-  --brand-experiment-560: var(--md3-primary);
-  --button-secondary-background: var(--md3-secondary-container);
-  --button-secondary-background-hover: color-mix(in srgb, var(--md3-secondary-container) 86%, var(--md3-on-secondary-container));
-  --button-secondary-text: var(--md3-on-secondary-container);
-  --status-danger: var(--md3-error);
-  --info-danger-background: var(--md3-error-container);
-  --info-danger-foreground: var(--md3-on-error-container);
+  --text-code: var(--md3-on-surface);
+  --chat-text-muted: var(--md3-on-surface-variant);
+  --icon-default: var(--md3-on-surface-variant);
+  --icon-strong: var(--md3-on-surface);
+  --icon-muted: var(--md3-on-surface-variant);
+  --icon-subtle: var(--md3-on-surface-variant);
+  --icon-brand: var(--md3-primary);
+  --icon-link: var(--md3-primary);
+
+  --border-muted: color-mix(in srgb, var(--md3-outline-variant) 50%, transparent);
+  --border-subtle: var(--md3-outline-variant);
+  --border-normal: var(--md3-outline-variant);
+  --border-strong: var(--md3-outline);
+  --border-focus: var(--md3-primary);
   --focus-primary: var(--md3-primary);
-}
 
-[class*="sidebar_"],
-[class*="privateChannels_"],
-[class*="container_"][aria-label*="Servers"],
-[class*="panels_"] {
-  background: var(--md3-surface-container-low) !important;
-}
+  /* Neutral state layers; selection is tonal, never a blanket class override. */
+  --interactive-background-default: transparent;
+  --interactive-background-hover: var(--md3-hover);
+  --interactive-background-active: var(--md3-active);
+  --interactive-background-selected: var(--md3-primary-container);
+  --interactive-text-default: var(--md3-on-surface-variant);
+  --interactive-text-hover: var(--md3-on-surface);
+  --interactive-text-active: var(--md3-on-primary-container);
+  --interactive-icon-default: var(--md3-on-surface-variant);
+  --interactive-icon-hover: var(--md3-on-surface);
+  --interactive-icon-active: var(--md3-on-primary-container);
+  --interactive-muted: color-mix(in srgb, var(--md3-on-surface) 38%, transparent);
+  --interactive-accent-background-default: var(--md3-secondary-container);
+  --interactive-accent-background-hover: var(--md3-primary-container);
+  --interactive-accent-background-active: var(--md3-primary-container);
+  --interactive-accent-background-selected: var(--md3-primary-container);
+  --mention-background: var(--md3-primary-container);
+  --mention-foreground: var(--md3-on-primary-container);
 
-[class*="chat_"],
-[class*="content_"],
-[class*="members_"],
-[class*="member_"],
-[class*="messagesWrapper_"] {
-  background: var(--md3-surface) !important;
-}
+  /* Filled controls always keep their paired on-primary foreground. */
+  --control-brand-foreground: var(--md3-primary);
+  --control-brand-foreground-new: var(--md3-primary);
+  --control-primary-background-default: var(--md3-primary);
+  --control-primary-background-hover: color-mix(in srgb, var(--md3-primary) 92%, var(--md3-on-primary));
+  --control-primary-background-active: color-mix(in srgb, var(--md3-primary) 88%, var(--md3-on-primary));
+  --control-primary-border-default: transparent;
+  --control-primary-border-hover: transparent;
+  --control-primary-border-active: transparent;
+  --control-primary-text-default: var(--md3-on-primary);
+  --control-primary-text-hover: var(--md3-on-primary);
+  --control-primary-text-active: var(--md3-on-primary);
+  --control-primary-icon-default: var(--md3-on-primary);
+  --control-primary-icon-hover: var(--md3-on-primary);
+  --control-primary-icon-active: var(--md3-on-primary);
 
-[class*="panels_"],
-[class*="container_"][class*="floating_"],
-[class*="menu_"],
-[class*="layer_"] [role="dialog"],
-[class*="root_"][role="dialog"] {
-  border: 1px solid var(--md3-outline-variant) !important;
-  border-radius: 22px !important;
-  box-shadow: 0 8px 24px color-mix(in srgb, var(--md3-outline) 24%, transparent) !important;
-}
+  --control-secondary-background-default: var(--md3-secondary-container);
+  --control-secondary-background-hover: color-mix(in srgb, var(--md3-secondary-container) 92%, var(--md3-on-secondary-container));
+  --control-secondary-background-active: color-mix(in srgb, var(--md3-secondary-container) 84%, var(--md3-on-secondary-container));
+  --control-secondary-border-default: var(--md3-outline-variant);
+  --control-secondary-border-hover: var(--md3-outline);
+  --control-secondary-border-active: var(--md3-outline);
+  --control-secondary-text-default: var(--md3-on-secondary-container);
+  --control-secondary-text-hover: var(--md3-on-secondary-container);
+  --control-secondary-text-active: var(--md3-on-secondary-container);
+  --control-secondary-icon-default: var(--md3-on-secondary-container);
+  --control-secondary-icon-hover: var(--md3-on-secondary-container);
+  --control-secondary-icon-active: var(--md3-on-secondary-container);
+  --button-outline-brand-background-hover: var(--md3-hover);
+  --button-outline-brand-border-active: var(--md3-primary);
+  --button-outline-primary-text: var(--md3-on-surface);
+  --control-icon-only-background-hover: var(--md3-hover);
+  --control-icon-only-background-active: var(--md3-active);
+  --control-icon-only-border-hover: transparent;
+  --control-icon-only-border-active: transparent;
+  --control-icon-only-icon-default: var(--md3-on-surface-variant);
+  --control-icon-only-icon-hover: var(--md3-on-surface);
+  --control-icon-only-icon-active: var(--md3-primary);
 
-[class*="item_"][aria-selected="true"],
-[class*="modeSelected_"],
-[class*="selected_"] {
-  background: var(--md3-primary-container) !important;
-  color: var(--md3-on-primary-container) !important;
-  border-radius: 18px !important;
-}
+  --input-background-default: var(--md3-surface-container);
+  --input-background-error-default: var(--md3-error-container);
+  --input-border-default: var(--md3-outline-variant);
+  --input-border-hover: var(--md3-outline);
+  --input-border-active: var(--md3-primary);
+  --input-border-readonly: var(--md3-outline-variant);
+  --input-border-error-default: var(--md3-error);
+  --input-text-default: var(--md3-on-surface);
+  --input-text-error-default: var(--md3-on-error-container);
+  --input-placeholder-text-default: var(--md3-on-surface-variant);
+  --input-icon-default: var(--md3-on-surface-variant);
 
-[class*="button_"],
-button {
-  border-radius: 999px;
-}
+  --background-feedback-info: var(--md3-primary-container);
+  --border-feedback-info: var(--md3-primary);
+  --text-feedback-info: var(--md3-primary);
+  --icon-feedback-info: var(--md3-primary);
+  --background-feedback-critical: var(--md3-error-container);
+  --border-feedback-critical: var(--md3-error);
+  --text-feedback-critical: var(--md3-error);
+  --icon-feedback-critical: var(--md3-error);
 
-[class*="input_"],
-[class*="textArea_"],
-[class*="scrollableContainer_"] {
-  background: var(--md3-surface-container) !important;
-  border-radius: 20px !important;
-  color: var(--md3-on-surface) !important;
+  --scrollbar-thin-thumb: var(--md3-outline);
+  --scrollbar-thin-track: transparent;
+  --scrollbar-auto-thumb: var(--md3-outline);
+  --scrollbar-auto-track: var(--md3-surface-container-low);
+  --scrollbar-auto-scrollbar-color-thumb: var(--md3-outline);
+  --scrollbar-auto-scrollbar-color-track: var(--md3-surface-container-low);
 }

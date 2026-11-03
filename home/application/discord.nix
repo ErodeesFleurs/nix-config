@@ -15,7 +15,7 @@ in
       enable = lib.mkOption {
         type = lib.types.bool;
         default = false;
-        description = "Enable Vesktop Discord client";
+        description = "Enable Vesktop instead of the official Discord client";
       };
     };
 
@@ -23,7 +23,7 @@ in
       enable = lib.mkOption {
         type = lib.types.bool;
         default = false;
-        description = "Enable Dorion Discord client";
+        description = "Enable Dorion instead of the official Discord client";
       };
 
       auto-clear-cache = lib.mkOption {
@@ -100,6 +100,9 @@ in
     programs.nixcord = {
       enable = true;
 
+      # 选择替代客户端时不再额外安装官方 Discord。
+      discord.enable = !(cfg.vesktop.enable || cfg.dorion.enable);
+
       vesktop.enable = cfg.vesktop.enable;
 
       dorion = {
@@ -117,10 +120,6 @@ in
         autoUpdate = cfg.config.auto-update;
         notifyAboutUpdates = cfg.config.notify-about-updates;
         autoUpdateNotification = cfg.config.auto-update-notification;
-        themes.monet-md3 = ''
-          @import url("file://${config.home.homeDirectory}/.local/share/themes/current/discord/monet.css");
-        '';
-        enabledThemes = lib.mkAfter [ "monet-md3.css" ];
         plugins = cfg.config.plugins;
       };
     };

@@ -381,6 +381,15 @@ in
 
     xdg.configFile = lib.optionalAttrs cfg.monet.enable monetTheme.xdgConfig;
 
+    # 直接交给 Nixcord 的受支持主题协议，不从 renderer 导入 file://。
+    # 在产物所有者处注册，避免经 home.file 回读引入模块求值递归。
+    programs.nixcord.config = lib.mkIf (cfg.monet.enable && config.homeModules.discord.enable) {
+      themes.monet-md3 = pkgs.concatText "discord-monet-theme.css" [
+        "${mkThemes}/light/discord/monet.css"
+      ];
+      enabledThemes = lib.mkAfter [ "monet-md3.css" ];
+    };
+
     home.activation = lib.optionalAttrs cfg.monet.enable monetTheme.activation // {
       # ── 初始化 current 软链接 (默认为 light) ────────
       initThemeLinks = lib.hm.dag.entryAfter [ "writeBoundary" ] ''

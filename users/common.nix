@@ -71,7 +71,7 @@
     openlogi.enable = true;
     mycard.enable = true;
     discord = {
-      enable = false;
+      enable = true;
       vesktop.enable = true;
     };
 
