@@ -44,7 +44,7 @@ in
   programs.openlogi = {
     enable = true;
     # 上游只嵌入内置主题；补丁加载 Monet 文件，并同步主界面及 Actions Ring。
-    # 适配 0.8.20（e581c205）：保留新版键盘/鼠标布局与 SliderRow，选择态沿用 Monet 配对颜色。
+    # 适配 0.8.20（3c56b9ea）：保留 ConnectionGlyph/Lightspeed 图标，Flow 状态与选择态使用 Monet。
     # 共享 UI 的 Monet 依赖随 gpui feature 启用，agent 的纯图标构建不引入图形依赖。
     # 保留 open_first / RingPointer，每屏窗口分别监听外观。
     # Secure Input 警告使用 Monet warning；GPUI 指针回归初始化内存主题，不启动文件监听。

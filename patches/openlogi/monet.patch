@@ -1,7 +1,7 @@
 diff --git a/Cargo.lock b/Cargo.lock
 --- a/Cargo.lock
 +++ b/Cargo.lock
-@@ -6178,6 +6178,7 @@
+@@ -6179,6 +6179,7 @@
   "block2 0.6.2",
   "core-graphics 0.25.0",
   "embed-resource",
@@ -9,7 +9,7 @@ diff --git a/Cargo.lock b/Cargo.lock
   "gpui-pre",
   "gpui-pre-platform",
   "objc2 0.6.4",
-@@ -6211,8 +6212,15 @@
+@@ -6212,8 +6213,15 @@
  name = "openlogi-ui"
  version = "0.8.20"
  dependencies = [
@@ -39,7 +39,7 @@ diff --git a/Cargo.toml b/Cargo.toml
 diff --git a/crates/openlogi-desktop/src/app/detail.rs b/crates/openlogi-desktop/src/app/detail.rs
 --- a/crates/openlogi-desktop/src/app/detail.rs
 +++ b/crates/openlogi-desktop/src/app/detail.rs
-@@ -219,21 +219,21 @@
+@@ -222,21 +222,21 @@
                  .cursor_pointer()
                  .text_body()
                  .text_color(if selected {
@@ -120,7 +120,7 @@ diff --git a/crates/openlogi-desktop/src/app/home.rs b/crates/openlogi-desktop/s
  };
  use gpui_base::Button as BaseButton;
  use gpui_component::{
-@@ -177,7 +177,7 @@
+@@ -178,7 +178,7 @@
          .p_4()
          .rounded(pal.card_radius)
          .border_1()
@@ -129,7 +129,7 @@ diff --git a/crates/openlogi-desktop/src/app/home.rs b/crates/openlogi-desktop/s
          .bg(pal.panel)
          .shadow_xs()
          .child(
-@@ -264,10 +264,9 @@
+@@ -265,10 +265,9 @@
          )
  }
  
@@ -143,20 +143,19 @@ diff --git a/crates/openlogi-desktop/src/app/home.rs b/crates/openlogi-desktop/s
  pub(super) fn transport_icon(
      record: &DeviceRecord,
      saved_transport: Option<ObservedConnection>,
-@@ -283,10 +282,8 @@
+@@ -285,9 +284,9 @@
          )
      };
-     let color: Hsla = match path {
--        "action-icons/bluetooth.svg" => rgb(theme::ACCENT_BLUE).into(),
--        "action-icons/bolt.svg" | "action-icons/unifying.svg" => {
+     let color: Hsla = match glyph {
+-        ConnectionGlyph::Bluetooth => rgb(theme::ACCENT_BLUE).into(),
++        ConnectionGlyph::Bluetooth => pal.accent,
+         ConnectionGlyph::Bolt | ConnectionGlyph::Unifying | ConnectionGlyph::Dongle => {
 -            rgb(theme::STATUS_CONNECTED).into()
--        }
-+        "action-icons/bluetooth.svg" => pal.accent,
-+        "action-icons/bolt.svg" | "action-icons/unifying.svg" => pal.success,
-         _ => pal.text_muted,
++            pal.success
+         }
+         ConnectionGlyph::Cable | ConnectionGlyph::Unknown => pal.text_muted,
      };
-     svg().path(path).flex_none().text_color(color)
-@@ -335,11 +332,11 @@
+@@ -337,11 +336,11 @@
          .tooltip(move |window, cx| Tooltip::new(hint.clone()).build(window, cx))
  }
  
@@ -212,7 +211,7 @@ diff --git a/crates/openlogi-desktop/src/app/status.rs b/crates/openlogi-desktop
 diff --git a/crates/openlogi-desktop/src/app/tests.rs b/crates/openlogi-desktop/src/app/tests.rs
 --- a/crates/openlogi-desktop/src/app/tests.rs
 +++ b/crates/openlogi-desktop/src/app/tests.rs
-@@ -1061,7 +1061,7 @@
+@@ -1100,7 +1100,7 @@
  /// row's transport glyph blank. Every transport must carry the corner color.
  #[gpui::test]
  fn home_transport_icon_paints_in_its_transport_color(cx: &mut gpui::TestAppContext) {
@@ -221,17 +220,48 @@ diff --git a/crates/openlogi-desktop/src/app/tests.rs b/crates/openlogi-desktop/
  
      use super::home::transport_icon;
      use crate::ui::theme;
-@@ -1082,8 +1082,8 @@
-     });
+@@ -1128,9 +1128,9 @@
+     };
      let camera = record(DeviceKind::Camera, None);
-     let expected: [(&DeviceRecord, Hsla); 3] = [
+     let expected: [(&DeviceRecord, Hsla); 4] = [
 -        (&bolt, rgb(theme::STATUS_CONNECTED).into()),
+-        (&lightspeed, rgb(theme::STATUS_CONNECTED).into()),
 -        (&bluetooth, rgb(theme::ACCENT_BLUE).into()),
 +        (&bolt, pal.success),
++        (&lightspeed, pal.success),
 +        (&bluetooth, pal.accent),
          (&camera, pal.text_muted),
      ];
      for (record, color) in expected {
+diff --git a/crates/openlogi-desktop/src/app/widgets.rs b/crates/openlogi-desktop/src/app/widgets.rs
+--- a/crates/openlogi-desktop/src/app/widgets.rs
++++ b/crates/openlogi-desktop/src/app/widgets.rs
+@@ -17,7 +17,7 @@
+ use super::AppView;
+ use crate::state::{AppState, DeviceRecord};
+ use crate::ui::components::control_button;
+-use crate::ui::theme::{Palette, Typography as _};
++use crate::ui::theme::{self, Palette, Typography as _};
+ 
+ /// "← Devices" affordance on the detail screen; returns to the gallery without
+ /// changing the active-device selection.
+@@ -55,6 +55,7 @@
+ 
+ impl RenderOnce for FlowButton {
+     fn render(self, _: &mut Window, cx: &mut App) -> impl IntoElement {
++        let pal = theme::palette(cx);
+         let readiness = AppState::try_read(cx).map(AppState::flow_readiness);
+         let status = readiness
+             .as_ref()
+@@ -62,7 +63,7 @@
+             .unwrap_or_default();
+         let color = readiness
+             .as_ref()
+-            .and_then(|readiness| crate::windows::flow::health_color(readiness.health));
++            .and_then(|readiness| crate::windows::flow::health_color(readiness.health, pal));
+         let label = tr!("flow.button_label", status => status.to_string());
+         Button::new("home-flow")
+             .outline()
 diff --git a/crates/openlogi-desktop/src/app.rs b/crates/openlogi-desktop/src/app.rs
 --- a/crates/openlogi-desktop/src/app.rs
 +++ b/crates/openlogi-desktop/src/app.rs
@@ -244,7 +274,7 @@ diff --git a/crates/openlogi-desktop/src/app.rs b/crates/openlogi-desktop/src/ap
  };
  use gpui_base::Button as BaseButton;
  use gpui_component::{
-@@ -483,7 +483,7 @@
+@@ -496,7 +496,7 @@
              .child(
                  Icon::new(IconName::TriangleAlert)
                      .size_8()
@@ -1764,6 +1794,202 @@ diff --git a/crates/openlogi-desktop/src/windows/add_device.rs b/crates/openlogi
          .child(div().flex_1().min_w_0().truncate().text_body().child(label))
          .child(
              Icon::new(IconName::ChevronRight)
+diff --git a/crates/openlogi-desktop/src/windows/flow/arrangement.rs b/crates/openlogi-desktop/src/windows/flow/arrangement.rs
+--- a/crates/openlogi-desktop/src/windows/flow/arrangement.rs
++++ b/crates/openlogi-desktop/src/windows/flow/arrangement.rs
+@@ -210,7 +210,7 @@
+         .w(px(w))
+         .h(px(h))
+         .rounded_full()
+-        .bg(if armed { theme::accent() } else { pal.border })
++        .bg(if armed { pal.accent } else { pal.border })
+ }
+ 
+ /// A monitor outline: the visual of one computer.
+@@ -224,20 +224,22 @@
+         .rounded(pal.card_radius)
+         .border_2()
+         .border_color(if selected {
+-            theme::accent()
++            pal.accent
+         } else if quiet {
+             pal.border
+         } else {
+             pal.text_muted.opacity(0.6)
+         })
+         .bg(if this {
+-            theme::accent_tint()
++            pal.selected
+         } else if quiet {
+             pal.muted
+         } else {
+             pal.panel
+         })
+-        .text_color(if quiet {
++        .text_color(if this {
++            pal.selected_foreground
++        } else if quiet {
+             pal.text_muted
+         } else {
+             pal.text_primary
+@@ -285,7 +287,7 @@
+                     .px_2()
+                     .truncate()
+                     .text_caption()
+-                    .text_color(theme::accent())
++                    .text_color(pal.selected_foreground)
+                     .child(tr!("flow.this_computer")),
+             ),
+         )
+@@ -330,7 +332,7 @@
+                 .items_center()
+                 .text_caption()
+                 .text_color(pal.text_muted)
+-                .child(link_dot(peer.link))
++                .child(link_dot(peer.link, pal))
+                 .child(link_label(peer.link)),
+         )
+ }
+@@ -377,7 +379,7 @@
+         .rounded_full()
+         .border_1()
+         .border_color(if is_selected {
+-            theme::accent()
++            pal.accent
+         } else {
+             pal.border
+         })
+@@ -414,9 +416,9 @@
+         .h(px(SCREEN_H))
+         .rounded(pal.card_radius)
+         .border_2()
+-        .border_color(theme::accent().opacity(0.35))
+-        .drag_over::<DraggedPeer>(|style, _, _, _| {
+-            style.bg(theme::accent_tint()).border_color(theme::accent())
++        .border_color(pal.accent.opacity(0.35))
++        .drag_over::<DraggedPeer>(move |style, _, _, _| {
++            style.bg(pal.selected).border_color(pal.accent)
+         })
+         .on_drop(cx.listener(move |_, dragged: &DraggedPeer, _, cx| {
+             let peer = dragged.name.clone();
+diff --git a/crates/openlogi-desktop/src/windows/flow/inspector.rs b/crates/openlogi-desktop/src/windows/flow/inspector.rs
+--- a/crates/openlogi-desktop/src/windows/flow/inspector.rs
++++ b/crates/openlogi-desktop/src/windows/flow/inspector.rs
+@@ -92,7 +92,7 @@
+                         .items_center()
+                         .text_caption()
+                         .text_color(pal.text_muted)
+-                        .child(link_dot(peer.link))
++                        .child(link_dot(peer.link, pal))
+                         .child(link_label(peer.link)),
+                 ),
+         )
+diff --git a/crates/openlogi-desktop/src/windows/flow/pairing.rs b/crates/openlogi-desktop/src/windows/flow/pairing.rs
+--- a/crates/openlogi-desktop/src/windows/flow/pairing.rs
++++ b/crates/openlogi-desktop/src/windows/flow/pairing.rs
+@@ -430,11 +430,13 @@
+         .gap_3()
+         .rounded(pal.control_radius)
+         .border_1()
+-        .border_color(if chosen { theme::accent() } else { pal.border })
+-        .when(chosen, |row| row.bg(theme::accent_tint()))
++        .border_color(if chosen { pal.accent } else { pal.border })
++        .when(chosen, |row| {
++            row.bg(pal.selected).text_color(pal.selected_foreground)
++        })
+         .when(!nearby.added, |row| {
+             row.cursor_pointer()
+-                .hover(|style| style.bg(pal.control_hover))
++                .hover(|style| style.bg(if chosen { pal.selected_hover } else { pal.control_hover }))
+         })
+         .when(nearby.added, |row| row.opacity(0.6))
+         .child(
+@@ -442,7 +444,7 @@
+                 .path("action-icons/monitor.svg")
+                 .size_4()
+                 .flex_none()
+-                .text_color(pal.text_muted),
++                .text_color(if chosen { pal.selected_foreground } else { pal.text_muted }),
+         )
+         .child(
+             v_flex()
+@@ -457,7 +459,7 @@
+                 Icon::new(IconName::Check)
+                     .size_4()
+                     .flex_none()
+-                    .text_color(theme::accent()),
++                    .text_color(pal.selected_foreground),
+             )
+         })
+ }
+diff --git a/crates/openlogi-desktop/src/windows/flow.rs b/crates/openlogi-desktop/src/windows/flow.rs
+--- a/crates/openlogi-desktop/src/windows/flow.rs
++++ b/crates/openlogi-desktop/src/windows/flow.rs
+@@ -14,7 +14,7 @@
+ use gpui::{
+     App, Context, Entity, FocusHandle, Hsla, InteractiveElement as _, IntoElement,
+     ParentElement as _, Render, SharedString, Size, Styled as _, Subscription, Window, div,
+-    prelude::FluentBuilder as _, px, rgb,
++    prelude::FluentBuilder as _, px,
+ };
+ use gpui_component::Selectable as _;
+ use gpui_component::{
+@@ -241,7 +241,7 @@
+                 .text_caption()
+                 .text_color(pal.text_muted)
+                 .debug_selector(|| "flow-status".into())
+-                .when_some(health_color(model.readiness.health), |row, color| {
++                .when_some(health_color(model.readiness.health, pal), |row, color| {
+                     row.child(dot(color, false))
+                 })
+                 .child(status_text(&model.readiness)),
+@@ -309,10 +309,10 @@
+ /// working.
+ fn summary(readiness: &FlowReadiness, pal: Palette) -> impl IntoElement {
+     let (icon, color) = match readiness.health {
+-        FlowHealth::Ready => (IconName::CircleCheck, rgb(theme::STATUS_CONNECTED).into()),
++        FlowHealth::Ready => (IconName::CircleCheck, pal.success),
+         FlowHealth::Blocked => (
+             IconName::TriangleAlert,
+-            rgb(theme::STATUS_CONNECTING).into(),
++            pal.warning,
+         ),
+         FlowHealth::Off | FlowHealth::NoPeers => (IconName::Info, pal.text_muted),
+     };
+@@ -407,10 +407,10 @@
+ 
+ /// The colour of a status dot for `health`; none when Flow is off or has no
+ /// peer, which needs no attention.
+-pub(crate) fn health_color(health: FlowHealth) -> Option<Hsla> {
++pub(crate) fn health_color(health: FlowHealth, pal: Palette) -> Option<Hsla> {
+     match health {
+-        FlowHealth::Ready => Some(rgb(theme::STATUS_CONNECTED).into()),
+-        FlowHealth::Blocked => Some(rgb(theme::STATUS_CONNECTING).into()),
++        FlowHealth::Ready => Some(pal.success),
++        FlowHealth::Blocked => Some(pal.warning),
+         FlowHealth::Off | FlowHealth::NoPeers => None,
+     }
+ }
+@@ -439,13 +439,13 @@
+     }
+ }
+ 
+-/// Connected is a solid green dot, unstable a solid amber one, offline or
+-/// unknown a hollow grey ring, so the state never depends on hue alone.
+-fn link_dot(link: Option<FlowLinkState>) -> impl IntoElement {
++/// Connected and degraded links use solid semantic status dots; offline or
++/// unknown links use a hollow muted ring, so state never depends on hue alone.
++fn link_dot(link: Option<FlowLinkState>, pal: Palette) -> impl IntoElement {
+     match link {
+-        Some(FlowLinkState::Connected) => dot(rgb(theme::STATUS_CONNECTED).into(), false),
+-        Some(FlowLinkState::Degraded) => dot(rgb(theme::STATUS_CONNECTING).into(), false),
+-        _ => dot(rgb(theme::STATUS_OFFLINE).into(), true),
++        Some(FlowLinkState::Connected) => dot(pal.success, false),
++        Some(FlowLinkState::Degraded) => dot(pal.warning, false),
++        _ => dot(pal.text_muted, true),
+     }
+ }
+ 
 diff --git a/crates/openlogi-desktop/src/windows/settings/appearance.rs b/crates/openlogi-desktop/src/windows/settings/appearance.rs
 --- a/crates/openlogi-desktop/src/windows/settings/appearance.rs
 +++ b/crates/openlogi-desktop/src/windows/settings/appearance.rs
