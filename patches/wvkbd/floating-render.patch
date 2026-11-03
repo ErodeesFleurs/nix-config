@@ -10,7 +10,7 @@
  
  enum key_type;
  enum key_modifier_type;
-@@ -95,6 +98,7 @@
+@@ -97,6 +100,7 @@
  	bool debug;
  	bool show_popup;
  	bool show_highlight;
@@ -20,11 +20,11 @@
  	struct clr_scheme *schemes;
 --- a/keyboard.c
 +++ b/keyboard.c
-@@ -694,7 +694,27 @@
+@@ -708,7 +708,25 @@
      if (kb->debug)
          fprintf(stderr, "Draw layout\n");
  
--    drw_fill_rectangle(d, kb->schemes[0].bg, 0, 0, kb->w, kb->h, 0);
+-    if (kb->corner_radius > 0) {
 +    if (kb->floating) {
 +        struct clr_scheme *scheme = &kb->schemes[0];
 +        /* Clear first so rounded corners remain transparent on every redraw. */
@@ -43,13 +43,11 @@
 +                          FLOATING_HEADER_HEIGHT, FLOATING_HEADER_HEIGHT, 0,
 +                          "×", scheme->font_description);
 +        }
-+    } else {
-+        drw_fill_rectangle(d, kb->schemes[0].bg, 0, 0, kb->w, kb->h, 0);
-+    }
- 
-     while (next_key->type != Last) {
-         if ((next_key->type == Pad) || (next_key->type == EndRow)) {
-@@ -728,7 +748,22 @@
++    } else if (kb->corner_radius > 0) {
+         drw_do_clear(d, 0, 0, kb->w, kb->h);
+         drw_fill_rectangle(d, kb->schemes[0].bg, 0, 0, kb->w, kb->h, kb->corner_radius);
+     } else {
+@@ -747,7 +765,22 @@
                  fprintf(stderr, "Initialising unnamed layout %d, keymap %s\n",
                          i, layouts[i].keymap_name);
          }

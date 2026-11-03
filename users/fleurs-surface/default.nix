@@ -7,6 +7,7 @@
 }:
 let
   # 原生 layer-shell 悬浮面板：保持 virtual-keyboard 输入，不创建抢焦点的普通窗口。
+  # 补丁适配 wvkbd 0.21：保留上游普通模式圆角与隐藏时释键，浮动模式独立处理布局。
   floatingWvkbd = pkgs.wvkbd.overrideAttrs (old: {
     patches = (old.patches or [ ]) ++ [
       ../../patches/wvkbd/floating-render.patch
