@@ -102,6 +102,7 @@
             "steamcmd"
             "proton-ge-bin"
             "openstarbound"
+            "openstarbound-sdks"
             # IM / 工具
             "qq"
             "wechat"
