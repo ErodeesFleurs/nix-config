@@ -15,6 +15,7 @@
     hashedPassword = "$y$j9T$J9OIb1xLg.x2FQN6Mx04p1$SA.Nt.QpDSHN/.V6nIYQoctbBNtc7GZ1V7E3gYFus8D";
     openssh.authorizedKeys.keys = [
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIICXZT5BZTeDTgIk2oEOiZwjtrSLwlnD6tCla410rGut"
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHvb93FRr1GI3AwH3P0endhZ82g/bxG+/KYQBNM+/Yya fleurs-vps-admin"
     ];
   };
 
