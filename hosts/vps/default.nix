@@ -88,7 +88,7 @@
     sliceConfig = {
       MemoryHigh = "20G";
       MemoryMax = "24G";
-      CPUQuota = "1200%";
+      CPUQuota = "3200%";
       CPUWeight = 25;
       IOWeight = 25;
     };
