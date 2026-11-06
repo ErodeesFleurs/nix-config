@@ -66,6 +66,7 @@
       force-extensions = true;
     };
     nautilus.enable = true;
+    libreoffice.enable = true;
     mpv.enable = true;
     obs.enable = true;
     openlogi.enable = true;
