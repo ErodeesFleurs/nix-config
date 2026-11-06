@@ -124,6 +124,7 @@
   environment.systemPackages = with pkgs; [
     curl
     file
+    ghostty.terminfo
     git
     htop
     jq
