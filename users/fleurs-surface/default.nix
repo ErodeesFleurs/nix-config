@@ -60,6 +60,14 @@ in
 
   homeModules.krita.enable = true;
 
+  # 8 GiB 设备单独限流；其他设备保留 Clice 按本机资源计算的默认值。
+  homeModules.zed.userSettings.lsp.clice.initialization_options.project = {
+    stateful_worker_count = 1;
+    stateless_worker_count = 1;
+    max_stateless_worker_count = 2;
+    max_resident_documents = 4;
+  };
+
   # 沿用 Surface 已有的 Firefox profile；避免主题配置写入未使用的 XDG profile。
   programs.firefox = {
     configPath = ".mozilla/firefox";

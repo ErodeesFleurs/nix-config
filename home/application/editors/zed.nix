@@ -8,6 +8,8 @@
 let
   cfg = config.homeModules.zed;
   theme = config.homeModules.theme;
+  clice = pkgs.callPackage ../../../lib/clice.nix { };
+  cliceZed = pkgs.callPackage ../../../lib/clice-zed.nix { };
 in
 {
   options.homeModules.zed = {
@@ -21,6 +23,9 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+    home.packages = [ clice ];
+    xdg.dataFile."zed/extensions/installed/clice".source = cliceZed;
+
     programs.zed-editor = {
       enable = true;
       extraPackages = with pkgs; [
@@ -88,6 +93,16 @@ in
           };
 
           lsp = with pkgs; {
+            clice = {
+              binary = {
+                path = lib.getExe clice;
+                arguments = [ "serve" ];
+                env = {
+                  LC_ALL = "C";
+                  LANGUAGE = "C";
+                };
+              };
+            };
             rust-analyzer = {
               initialization_options = {
                 check = {
@@ -136,6 +151,16 @@ in
           };
 
           languages = {
+            C.language_servers = [
+              "clice"
+              "!clangd"
+              "..."
+            ];
+            "C++".language_servers = [
+              "clice"
+              "!clangd"
+              "..."
+            ];
             Python = {
               language_servers = [
                 "ruff"
