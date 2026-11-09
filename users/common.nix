@@ -69,7 +69,6 @@
     libreoffice.enable = true;
     mpv.enable = true;
     obs.enable = true;
-    openlogi.enable = true;
     mycard.enable = true;
     discord = {
       enable = true;

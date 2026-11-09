@@ -228,8 +228,8 @@ rec {
       # 所有条目带 light/ dark/ 子树前缀，一次 matugen 运行渲染两个主题
       templates = lib.concatMap (app: app.templates or [ ]) enabledApps;
 
-      # Include-only entries are needed by both subtree configs (Zed/OpenLogi
-      # families); only rendered files are filtered by their output prefix.
+      # Include-only entries are shared by both subtree configs (for example Zed);
+      # only rendered files are filtered by their output prefix.
       subtreeEntries =
         polarity: builtins.filter (e: !(e ? output) || lib.hasPrefix "${polarity}/" e.output) templates;
     in

@@ -1,19 +1,11 @@
 # 通用硬件支持（主机特定项：NVIDIA、VDPAU 在各 host 中设置）
 {
+  config,
   lib,
   pkgs,
   inputs,
   ...
 }:
-
-let
-  openlogi = inputs.openlogi.packages.${pkgs.stdenv.hostPlatform.system}.openlogi;
-  monetSource = pkgs.applyPatches {
-    name = "openlogi-monet-source";
-    inherit (openlogi) src;
-    patches = [ ../../patches/openlogi/monet.patch ];
-  };
-in
 
 {
   hardware.graphics = {
@@ -39,32 +31,35 @@ in
     drivers = with pkgs; [ gutenprint ];
   };
 
-  # Logitech：OpenLogi 模块提供设备访问规则和随图形会话启动的后台服务。
+  # Logitech：使用 nixpkgs 内置模块安装 OpenLogi 及设备访问规则；agent 服务在下方声明。
   # 不与 Solaar 同时运行，避免争用 HID++；不再安装旧 ltunify 管理工具。
   programs.openlogi = {
     enable = true;
-    # 上游只嵌入内置主题；补丁加载 Monet 文件，并同步主界面及 Actions Ring。
-    # 适配 0.9.0（10c42c8c）：沿用 GPUI Kit 与新版 Ring，Flow/通知/选择态使用 Monet。
-    # 共享 UI 的 Monet 依赖随 gpui feature 启用，agent 的纯图标构建不引入图形依赖。
-    # 保留 open_first / RingPointer，每屏窗口分别监听外观。
-    # Secure Input 警告使用 Monet warning；GPUI 指针回归初始化 Kit 内存主题，不启动文件监听。
-    package = openlogi.overrideAttrs (old: {
-      src = monetSource;
-      # 补丁仅引用已经锁定的依赖：复用上游 vendor，更新工作区依赖清单。
-      cargoDeps = old.cargoDeps.overrideAttrs (vendor: {
-        buildCommand = vendor.buildCommand + ''
-          ln -sfn ${monetSource}/Cargo.lock "$out/Cargo.lock"
-        '';
-      });
+    # 保留官方源码和内置主题，不做 Monet 补丁；避免使用 nixpkgs 较旧版本降级。
+    package = inputs.openlogi.packages.${pkgs.stdenv.hostPlatform.system}.openlogi.overrideAttrs (old: {
+      # cargo setup 强制使用系统 zstd；工作区测试的 xtask 需要 libzstd.pc。
+      checkInputs = (old.checkInputs or [ ]) ++ [ pkgs.zstd ];
     });
   };
 
-  # 上游 0.8.13 仅为主界面设置图形库 RPATH；Actions Ring 子进程也需要它们。
-  systemd.user.services.openlogi-agent.environment.LD_LIBRARY_PATH = lib.makeLibraryPath [
-    pkgs.wayland
-    pkgs.vulkan-loader
-    pkgs.libGL
-  ];
+  # nixpkgs 内置模块不创建 agent 服务；保留随图形会话启动和退出的生命周期。
+  systemd.user.services.openlogi-agent = {
+    description = "OpenLogi background agent";
+    wantedBy = [ "graphical-session.target" ];
+    after = [ "graphical-session.target" ];
+    partOf = [ "graphical-session.target" ];
+    serviceConfig = {
+      ExecStart = lib.getExe' config.programs.openlogi.package "openlogi-agent";
+      Restart = "on-failure";
+      RestartSec = 5;
+    };
+    # Actions Ring 子进程也需要图形库，不能只依赖主界面的 RPATH。
+    environment.LD_LIBRARY_PATH = lib.makeLibraryPath [
+      pkgs.wayland
+      pkgs.vulkan-loader
+      pkgs.libGL
+    ];
+  };
 
   # 电源管理：ppd 全权负责；不与 powertop --auto-tune 并存
   # （auto-tune 开机全局写 sysfs 且无模式感知，会覆盖 ppd performance 档）

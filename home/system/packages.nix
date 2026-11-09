@@ -47,8 +47,9 @@ let
       postBuild = ''
         ln -sfn ${launcher} "$out/bin/qq"
         rm "$out/share/applications/qq.desktop"
+        # 上游桌面入口使用 PATH 中的 qq；显式指向包装器，避免绕过主题隔离。
         substitute ${upstream}/share/applications/qq.desktop "$out/share/applications/qq.desktop" \
-          --replace-fail "${upstream}/bin/qq" "$out/bin/qq"
+          --replace-fail "Exec=qq %U" "Exec=$out/bin/qq %U"
       '';
     };
 in

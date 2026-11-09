@@ -133,7 +133,6 @@
             inputs.daeuniverse.nixosModules.daed
             inputs.niri.nixosModules.niri
             inputs.agenix.nixosModules.default
-            inputs.openlogi.nixosModules.default
             ./modules
             hostDir
           ];
