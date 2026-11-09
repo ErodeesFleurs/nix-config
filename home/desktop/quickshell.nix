@@ -59,7 +59,7 @@ let
         monitor = [
           "${pkgs.ghostty}/bin/ghostty"
           "-e"
-          "${pkgs.btop}/bin/btop"
+          (lib.getExe config.programs.btop.package)
         ];
         keyboardToggle = cfg.keyboard.toggleCommand;
         status = [ (lib.getExe status) ];

@@ -139,10 +139,13 @@
         };
 
       mkHome =
-        userDir:
+        hostName: userDir:
         home-manager.lib.homeManagerConfiguration {
           inherit pkgs;
-          extraSpecialArgs = specialArgs;
+          # Standalone Home Manager 也按目标主机配置选择硬件相关软件包。
+          extraSpecialArgs = specialArgs // {
+            osConfig = self.nixosConfigurations.${hostName}.config;
+          };
           modules = [
             inputs.nixcord.homeModules.nixcord
             inputs.vicinae.homeManagerModules.default
@@ -169,8 +172,8 @@
       };
 
       homeConfigurations = {
-        "fleurs@spectre" = mkHome ./users/fleurs;
-        "fleurs@spectre-surface" = mkHome ./users/fleurs-surface;
+        "fleurs@spectre" = mkHome "spectre" ./users/fleurs;
+        "fleurs@spectre-surface" = mkHome "spectre-surface" ./users/fleurs-surface;
         "fleurs@vps" = home-manager.lib.homeManagerConfiguration {
           inherit pkgs;
           modules = [ ./users/fleurs-vps ];

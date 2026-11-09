@@ -1,6 +1,8 @@
 {
   config,
   lib,
+  pkgs,
+  osConfig ? { },
   ...
 }:
 
@@ -15,6 +17,11 @@ in
   config = lib.mkIf cfg.enable {
     programs.btop = {
       enable = true;
+      # NVML 由系统 NVIDIA 驱动提供；cudaSupport 为 btop 加入驱动库搜索路径，
+      # 不引入完整 CUDA 工具链。按目标配置判断，不探测执行求值的机器。
+      package = pkgs.btop.override {
+        cudaSupport = builtins.elem "nvidia" (osConfig.services.xserver.videoDrivers or [ ]);
+      };
 
       settings = {
         color_theme = "monet";
@@ -22,7 +29,8 @@ in
         update_ms = 2000;
 
         cpu_graph_upper = "total";
-        cpu_graph_lower = "total";
+        # 有 GPU 时下半图显示 GPU 使用率，否则自动回退到 CPU。
+        cpu_graph_lower = "Auto";
         cpu_single_graph = false;
         cpu_invert_lower = true;
         proc_per_core = false;
