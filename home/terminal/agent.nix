@@ -6,9 +6,13 @@
 }:
 let
   llmAgents = inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system};
+  # pi-natives 的 zstd-sys 通过 pkg-config 链接系统 libzstd；上游包遗漏此构建依赖。
+  omp = llmAgents.omp.overrideAttrs (old: {
+    buildInputs = (old.buildInputs or [ ]) ++ [ pkgs.zstd ];
+  });
 in
 {
-  home.packages = [ llmAgents.omp ];
+  home.packages = [ omp ];
 
   programs.opencode = {
     enable = true;
