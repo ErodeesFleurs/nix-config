@@ -6,9 +6,12 @@
 }:
 let
   llmAgents = inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system};
-  # pi-natives 的 zstd-sys 通过 pkg-config 链接系统 libzstd；上游包遗漏此构建依赖。
+  # pi-natives 的 zstd-sys/onig_sys 需要系统库；上游包遗漏这些构建依赖。
   omp = llmAgents.omp.overrideAttrs (old: {
-    buildInputs = (old.buildInputs or [ ]) ++ [ pkgs.zstd ];
+    buildInputs = (old.buildInputs or [ ]) ++ [
+      pkgs.zstd
+      pkgs.oniguruma
+    ];
   });
 in
 {
