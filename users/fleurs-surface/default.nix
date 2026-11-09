@@ -74,6 +74,9 @@ in
     profiles.${config.homeModules.firefox.profile-name}.path = "ftj1tpra.default";
   };
 
+  # 搜索配置由 Home Manager 接管，允许替换 Firefox 已生成的搜索设置文件。
+  homeModules.firefox.search.force = true;
+
   xdg.mimeApps.defaultApplications = {
     "text/html" = "firefox.desktop";
     "x-scheme-handler/http" = "firefox.desktop";
