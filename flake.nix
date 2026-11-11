@@ -101,7 +101,7 @@
             "steam-run"
             "steamcmd"
             "proton-ge-bin"
-            "openstarbound"
+            "asterbound"
             "openstarbound-sdks"
             # IM / 工具
             "qq"
@@ -151,7 +151,7 @@
             inputs.vicinae.homeManagerModules.default
             inputs.niri.homeModules.niri
             inputs.agenix.homeManagerModules.default
-            inputs.fleurs-nur.homeModules.openstarbound
+            inputs.fleurs-nur.homeModules.asterbound
             ./home
             userDir
           ];

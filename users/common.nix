@@ -12,8 +12,8 @@
     ];
   };
 
-  # 使用 fleurs-nur 的 HM 模块；存档、日志和模组沿用 $XDG_DATA_HOME/OpenStarbound。
-  home.programs.openstarbound.enable = true;
+  # Asterbound 使用独立的 $XDG_DATA_HOME/asterbound；旧 OpenStarbound 数据需显式导入。
+  home.programs.asterbound.enable = true;
 
   homeModules = {
     terminal = {
