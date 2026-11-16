@@ -1,67 +1,168 @@
 From: Fleurs Nix configuration
-Subject: [PATCH] Keep PAM listener alive and acknowledge processing
+Subject: [PATCH] Preserve the managed PAM processing acknowledgement on oo7 0.7.1
 
-Wait until password updates finish before the PAM caller can exit. Listener
-clones must not unlink the shared socket after each accepted connection;
-startup already removes stale sockets.
+The deployed managed PAM module waits for one byte: zero after successful
+processing, nonzero on failure. Replace the upstream framed response with
+that protocol and propagate write errors. Upstream already removed the
+listener-clone Drop which unlinked the shared socket; do not reapply it.
 
 --- a/src/pam_listener/mod.rs
 +++ b/src/pam_listener/mod.rs
-@@ -6,7 +6,7 @@
- use serde::{Deserialize, Serialize};
- use serde_repr::{Deserialize_repr, Serialize_repr};
- use tokio::{
--    io::AsyncReadExt,
-+    io::{AsyncReadExt, AsyncWriteExt},
-     net::{UnixListener, UnixStream},
-     sync::RwLock,
- };
-@@ -148,6 +148,7 @@
-         let message = PamMessage::from_bytes(&message_bytes)
-             .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e.to_string()))?;
+@@ -34,12 +34,6 @@
+     new_secret: Vec<u8>,
+ }
  
-+        let mut status = 0u8;
-         match message.operation {
-             PamOperation::Unlock => {
-                 tracing::info!("Received unlock request for user: {}", message.username);
-@@ -170,6 +171,7 @@
-                         );
-                     }
-                     Err(e) => {
-+                        status = 1;
-                         tracing::warn!(
-                             "Failed to unlock collections for user {}: {}",
-                             message.username,
-@@ -209,6 +211,7 @@
-                             .insert(message.username.clone(), new_secret);
-                     }
-                     Err(e) => {
-+                        status = 1;
-                         tracing::error!(
-                             "Failed to change password for user {}: {}",
-                             message.username,
-@@ -219,6 +222,10 @@
-             }
-         }
- 
-+        // PAM must wait for processing, not merely a successful socket write.
-+        // In particular, passwd may exit immediately after its module returns.
-+        stream.write_all(&[status]).await?;
-+
-         Ok(())
-     }
- 
-@@ -352,13 +359,6 @@
+-#[derive(Serialize, Deserialize, Type)]
+-struct PamResponse {
+-    success: bool,
+-    error_message: String,
+-}
+-
+ impl PamMessage {
+     fn from_bytes(bytes: &[u8]) -> Result<Self, zgvariant::Error> {
+         let ctxt = Context::new(zgvariant::LE, 0);
+@@ -48,40 +42,6 @@
      }
  }
  
--impl Drop for PamListener {
--    fn drop(&mut self) {
--        if self.socket_path.exists() {
--            let _ = std::fs::remove_file(&self.socket_path);
+-impl PamResponse {
+-    fn success() -> Self {
+-        Self {
+-            success: true,
+-            error_message: String::new(),
 -        }
 -    }
+-
+-    fn error(message: String) -> Self {
+-        Self {
+-            success: false,
+-            error_message: message,
+-        }
+-    }
+-
+-    #[cfg(test)]
+-    fn from_bytes(bytes: &[u8]) -> Result<Self, zgvariant::Error> {
+-        let ctxt = Context::new(zgvariant::LE, 0);
+-        let data = Data::new(bytes, ctxt);
+-        data.deserialize().map(|(msg, _)| msg)
+-    }
+-
+-    fn to_bytes(&self) -> Result<Vec<u8>, zgvariant::Error> {
+-        let ctxt = Context::new(zgvariant::LE, 0);
+-        let encoded = zgvariant::to_bytes(ctxt, self)?;
+-        let message_bytes = encoded.to_vec();
+-
+-        // Prepend length prefix (4 bytes, little-endian)
+-        let mut result = (message_bytes.len() as u32).to_le_bytes().to_vec();
+-        result.extend_from_slice(&message_bytes);
+-        Ok(result)
+-    }
 -}
+-
+ /// PAM listener that receives authentication secrets from the PAM module
+ #[derive(Clone)]
+ pub struct PamListener {
+@@ -189,7 +149,7 @@
+         let message = PamMessage::from_bytes(&message_bytes)
+             .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e.to_string()))?;
  
- #[cfg(test)]
- mod tests;
+-        let response = match message.operation {
++        let success = match message.operation {
+             PamOperation::Unlock => {
+                 tracing::info!("Received unlock request for user: {}", message.username);
+                 tracing::debug!(
+@@ -209,7 +169,7 @@
+                             "Successfully unlocked collections for user: {}",
+                             message.username
+                         );
+-                        PamResponse::success()
++                        true
+                     }
+                     Err(e) => {
+                         tracing::warn!(
+@@ -217,7 +177,7 @@
+                             message.username,
+                             e
+                         );
+-                        PamResponse::error(e.to_string())
++                        false
+                     }
+                 }
+             }
+@@ -250,7 +210,7 @@
+                             .write()
+                             .await
+                             .insert(message.username.clone(), new_secret);
+-                        PamResponse::success()
++                        true
+                     }
+                     Err(e) => {
+                         tracing::error!(
+@@ -258,18 +218,15 @@
+                             message.username,
+                             e
+                         );
+-                        PamResponse::error(e.to_string())
++                        false
+                     }
+                 }
+             }
+         };
+ 
+-        // Send response back to client
++        // Match the managed PAM module: acknowledge processing, not delivery.
+         use tokio::io::AsyncWriteExt;
+-        if let Ok(response_bytes) = response.to_bytes() {
+-            let _ = stream.write_all(&response_bytes).await;
+-            let _ = stream.flush().await;
+-        }
++        stream.write_all(&[u8::from(!success)]).await?;
+ 
+         Ok(())
+     }
+--- a/src/pam_listener/tests.rs
++++ b/src/pam_listener/tests.rs
+@@ -36,19 +36,11 @@
+     stream.write_all(message_bytes).await?;
+     stream.flush().await?;
+ 
+-    // Read response
+-    let mut length_bytes = [0u8; 4];
+-    stream.read_exact(&mut length_bytes).await?;
+-    let response_length = u32::from_le_bytes(length_bytes) as usize;
+-
+-    let mut response_bytes = vec![0u8; response_length];
+-    stream.read_exact(&mut response_bytes).await?;
+-
+-    let response = PamResponse::from_bytes(&response_bytes)?;
+-
+-    // Check if response indicates success or error
+-    if !response.success {
+-        return Err(format!("PAM operation failed: {}", response.error_message).into());
++    stream.shutdown().await?;
++    let mut acknowledgement = [0u8; 1];
++    stream.read_exact(&mut acknowledgement).await?;
++    if acknowledgement[0] != 0 {
++        return Err("PAM operation failed".into());
+     }
+ 
+     Ok(())
+@@ -428,18 +420,5 @@
+     assert_eq!(decoded.old_secret, b"old-pass");
+     assert_eq!(decoded.new_secret, b"new-pass");
+ 
+-    // Test PamResponse serialization
+-    let success_response = PamResponse::success();
+-    let encoded = success_response.to_bytes()?;
+-    let decoded = PamResponse::from_bytes(&encoded[4..])?; // Skip length prefix
+-    assert!(decoded.success);
+-    assert!(decoded.error_message.is_empty());
+-
+-    let error_response = PamResponse::error("Something went wrong".to_string());
+-    let encoded = error_response.to_bytes()?;
+-    let decoded = PamResponse::from_bytes(&encoded[4..])?; // Skip length prefix
+-    assert!(!decoded.success);
+-    assert_eq!(decoded.error_message, "Something went wrong");
+-
+     Ok(())
+ }

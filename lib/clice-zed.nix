@@ -21,8 +21,8 @@ pkgsCross.wasm32-wasip1.rustPlatform.buildRustPackage (finalAttrs: {
   src = fetchFromGitHub {
     owner = "clice-io";
     repo = "clice";
-    rev = "ec5b90e1617bda438e794aa1ac3a84da21b00be5";
-    hash = "sha256-UHNj3Vu6bXZDJ08AOHrtaOMM+hZzMohhR0Q+ckMZGBw=";
+    rev = "92d26ad688e439961d6176cf3d30270bd898c55e";
+    hash = "sha256-z7BvAJp6C+8JyqoFcNZRPvFxatPMqDz9ajdpIBZZ8I0=";
   };
 
   sourceRoot = "${finalAttrs.src.name}/editors/zed";

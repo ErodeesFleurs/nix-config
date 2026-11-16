@@ -1,3 +1,14 @@
+From: Fleurs Nix configuration
+Subject: [PATCH] Rebase managed PAM delivery onto oo7 0.7.1
+
+Keep synchronous delivery, a single five-second deadline, daemon UID checks
+and the processing acknowledgement required by pam-completion.patch. The
+user manager owns daemon startup; do not fork a login helper from PAM.
+Retain upstream socket metadata validation on every retry. Decode fallback
+PAM_AUTHTOK as a C string, never as the boxed stashed password. Adapt PAM
+integration coverage to the acknowledged protocol, including the fallback;
+remove obsolete fork/credential-switch implementation tests.
+
 --- a/src/lib.rs
 +++ b/src/lib.rs
 @@ -85,8 +85,8 @@
@@ -40,7 +51,7 @@
  ) -> c_int {
      // Initialize journald logging for PAM module
      // PAM modules should log to journald/syslog, not stdout/stderr
-@@ -222,21 +222,6 @@
+@@ -222,38 +222,25 @@
          let _ = tracing::subscriber::set_global_default(subscriber);
      }
  
@@ -60,9 +71,41 @@
 -    }
 -
      let mut password_ptr: *const std::os::raw::c_void = std::ptr::null();
-     let ret = unsafe {
-         ffi::pam_get_data(
-@@ -266,8 +251,8 @@
+     let ret = unsafe { ffi::pam_get_data(pamh, STASHED_PASSWORD_KEY.as_ptr(), &mut password_ptr) };
+ 
+-    if ret != PAM_SUCCESS || password_ptr.is_null() {
+-        // Try to fall back to PAM_AUTHTOK, it may have been set by a previous
+-        // module.
+-        password_ptr = std::ptr::null();
+-        let ret = unsafe { ffi::pam_get_item(pamh, PAM_AUTHTOK, &mut password_ptr) };
+-        if ret != PAM_SUCCESS || password_ptr.is_null() {
+-            tracing::debug!("No stashed password found in session");
+-            return PAM_SUCCESS;
+-        }
+-    }
+-
+-    let password = unsafe { &*(password_ptr as *const Zeroizing<Vec<u8>>) };
++    let fallback_password;
++    let password = if ret == PAM_SUCCESS && !password_ptr.is_null() {
++        unsafe { &*(password_ptr as *const Zeroizing<Vec<u8>>) }
++    } else {
++        // PAM_AUTHTOK is a C string, not the boxed Vec stored by this module.
++        fallback_password = match unsafe { get_auth_token(pamh) } {
++            Ok(password) => password,
++            Err(_) => {
++                tracing::debug!("No password found in session");
++                return PAM_SUCCESS;
++            }
++        };
++        &fallback_password
++    };
+     tracing::debug!(
+-        "Retrieved stashed password of length {} bytes",
++        "Retrieved session password of length {} bytes",
+         password.len()
+     );
+ 
+@@ -266,8 +253,8 @@
          }
      };
  
@@ -73,33 +116,22 @@
          None => {
              tracing::error!("Failed to get credentials for user: {}", username);
              return PAM_SUCCESS;
-@@ -276,12 +261,12 @@
- 
+@@ -277,12 +264,9 @@
      let message = PamMessage::unlock(username.clone(), password.to_vec());
  
--    // Send the secret to the oo7 daemon
--    std::thread::spawn(move || {
--        match send_secret_to_daemon(message, user_uid, user_gid, auto_start) {
-+    // Complete bounded delivery before the module can be unloaded or PAM exits.
-+    {
-+        match send_secret_to_daemon(message, user_uid) {
-             Ok(_) => {
-                 tracing::info!(
--                    "Successfully sent secret to oo7 daemon for user: {}",
-+                    "oo7 daemon processed unlock request for user: {}",
-                     username
-                 );
-             }
-@@ -289,7 +274,7 @@
-                 tracing::error!("Failed to send secret to oo7 daemon: {}", e);
-             }
+     // Complete delivery before the caller can exit or unload the PAM module.
+-    match send_secret_to_daemon(message, user_uid, user_gid, auto_start) {
++    match send_secret_to_daemon(message, user_uid) {
+         Ok(_) => {
+-            tracing::info!(
+-                "Successfully sent secret to oo7 daemon for user: {}",
+-                username
+-            );
++            tracing::info!("oo7 daemon processed unlock request for user: {}", username);
          }
--    });
-+    }
- 
-     PAM_SUCCESS
- }
-@@ -336,8 +321,8 @@
+         Err(e) => {
+             tracing::error!("Failed to send secret to oo7 daemon: {}", e);
+@@ -334,8 +318,8 @@
              }
          };
  
@@ -110,34 +142,34 @@
              None => {
                  tracing::error!("Failed to get credentials for user: {}", username);
                  return PAM_SYSTEM_ERR;
-@@ -384,11 +369,11 @@
-             new_password.to_vec(),
-         );
+@@ -384,10 +368,10 @@
  
--        std::thread::spawn(move || {
--            match send_secret_to_daemon(message, user_uid, user_gid, false) {
-+        {
-+            match send_secret_to_daemon(message, user_uid) {
-                 Ok(_) => {
-                     tracing::info!(
--                        "Successfully sent password change request to oo7 daemon for user: {}",
-+                        "oo7 daemon processed password change for user: {}",
-                         username
-                     );
-                 }
-@@ -396,7 +381,7 @@
-                     tracing::error!("Failed to send password change to oo7 daemon: {}", e);
-                 }
+         // A password-changing application may exit immediately after PAM
+         // returns.
+-        match send_secret_to_daemon(message, user_uid, user_gid, false) {
++        match send_secret_to_daemon(message, user_uid) {
+             Ok(_) => {
+                 tracing::info!(
+-                    "Successfully sent password change request to oo7 daemon for user: {}",
++                    "oo7 daemon processed password change for user: {}",
+                     username
+                 );
              }
--        });
-+        }
- 
-         return PAM_SUCCESS;
-     }
 --- a/src/socket.rs
 +++ b/src/socket.rs
-@@ -1,6 +1,10 @@
- use std::{io, path::PathBuf, time::Duration};
+@@ -1,15 +1,15 @@
+ use std::{
+-    io::{self, Write as _},
+-    os::unix::{
+-        fs::{FileTypeExt, MetadataExt},
+-        process::CommandExt,
+-    },
++    io,
++    os::unix::fs::{FileTypeExt, MetadataExt},
+     path::PathBuf,
+-    process::{Command, Stdio},
+     time::Duration,
+ };
  
 -use tokio::{io::AsyncWriteExt, net::UnixStream, time::timeout};
 +use tokio::{
@@ -148,7 +180,48 @@
  use zeroize::Zeroizing;
  
  use crate::protocol::PamMessage;
-@@ -38,157 +42,28 @@
+@@ -17,40 +17,6 @@
+ /// Timeout for socket operations (in milliseconds)
+ const SOCKET_TIMEOUT_MS: u64 = 5000;
+ 
+-struct SavedSignals {
+-    sigpipe: libc::sigaction,
+-    sigchld: libc::sigaction,
+-}
+-
+-impl SavedSignals {
+-    fn new() -> Self {
+-        unsafe {
+-            let mut saved = Self {
+-                sigpipe: std::mem::zeroed(),
+-                sigchld: std::mem::zeroed(),
+-            };
+-
+-            let mut action: libc::sigaction = std::mem::zeroed();
+-            action.sa_sigaction = libc::SIG_IGN;
+-            libc::sigaction(libc::SIGPIPE, &action, &mut saved.sigpipe);
+-
+-            action.sa_sigaction = libc::SIG_DFL;
+-            libc::sigaction(libc::SIGCHLD, &action, &mut saved.sigchld);
+-
+-            saved
+-        }
+-    }
+-}
+-
+-impl Drop for SavedSignals {
+-    fn drop(&mut self) {
+-        unsafe {
+-            libc::sigaction(libc::SIGPIPE, &self.sigpipe, std::ptr::null_mut());
+-            libc::sigaction(libc::SIGCHLD, &self.sigchld, std::ptr::null_mut());
+-        }
+-    }
+-}
+-
+ /// Error type for socket operations
+ #[derive(Debug)]
+ pub enum SocketError {
+@@ -83,161 +49,28 @@
      }
  }
  
@@ -163,12 +236,20 @@
 -    let current_gid = unsafe { libc::getgid() };
 -    let current_euid = unsafe { libc::geteuid() };
 -    let current_egid = unsafe { libc::getegid() };
--
++pub fn send_secret_to_daemon(message: PamMessage, uid: u32) -> Result<(), SocketError> {
++    // The listener accepts root or its own UID; no fork or credential switch is
++    // needed. Verify the daemon UID below before transmitting any password.
++    let runtime = tokio::runtime::Builder::new_current_thread()
++        .enable_io()
++        .enable_time()
++        .build()
++        .map_err(SocketError::Connect)?;
+ 
 -    if uid == current_uid && gid == current_gid && uid == current_euid && gid == current_egid {
 -        tracing::debug!("Already running as target user (UID={uid}, GID={gid})",);
 -        let runtime = tokio::runtime::Runtime::new().map_err(SocketError::Connect)?;
 -        return runtime
--            .block_on(async { send_secret_to_daemon_async(message, uid, auto_start).await });
+-            .block_on(async { send_secret_to_daemon_async(message, uid, auto_start, None).await });
 -    }
 -
 -    // Need to fork and switch credentials
@@ -176,14 +257,19 @@
 -        "Running as different user (current UID={current_uid}, target UID={uid}), forking to switch credentials"
 -    );
 -
+-    let saved_signals = SavedSignals::new();
+-
 -    match unsafe { libc::fork() } {
 -        -1 => {
+-            drop(saved_signals);
 -            tracing::error!("Failed to fork process for credential switch");
 -            Err(SocketError::Connect(io::Error::last_os_error()))
 -        }
 -        0 => {
 -            unsafe {
--                if libc::setgid(gid) < 0
+-                // Clear inherited groups before dropping root privileges.
+-                if (current_euid == 0 && libc::setgroups(0, std::ptr::null()) < 0)
+-                    || libc::setgid(gid) < 0
 -                    || libc::setuid(uid) < 0
 -                    || libc::setegid(gid) < 0
 -                    || libc::seteuid(uid) < 0
@@ -206,8 +292,9 @@
 -                }
 -            };
 -
--            let result = runtime
--                .block_on(async { send_secret_to_daemon_async(message, uid, auto_start).await });
+-            let result = runtime.block_on(async {
+-                send_secret_to_daemon_async(message, uid, auto_start, None).await
+-            });
 -
 -            match result {
 -                Ok(_) => unsafe { libc::_exit(0) },
@@ -229,11 +316,14 @@
 -                } else if wait_result == -1 {
 -                    let err = io::Error::last_os_error();
 -                    if err.kind() != io::ErrorKind::Interrupted {
+-                        drop(saved_signals);
 -                        tracing::error!("Failed to wait for child process: {err}",);
 -                        return Err(SocketError::Connect(err));
 -                    }
 -                }
 -            }
+-
+-            drop(saved_signals);
 -
 -            if libc::WIFEXITED(status) {
 -                let exit_code = libc::WEXITSTATUS(status);
@@ -254,167 +344,191 @@
 -            }
 -        }
 -    }
--}
-+pub fn send_secret_to_daemon(message: PamMessage, uid: u32) -> Result<(), SocketError> {
-+    // The listener accepts root or its own UID; no fork or credential switch is
-+    // needed. Verify the daemon UID below before transmitting any password.
-+    let runtime = tokio::runtime::Builder::new_current_thread()
-+        .enable_io()
-+        .enable_time()
-+        .build()
-+        .map_err(SocketError::Connect)?;
- 
--/// Start the oo7-daemon for the current user
--fn start_daemon() -> Result<(), SocketError> {
--    tracing::info!("Attempting to start oo7-daemon directly");
--
--    // Fork and exec the daemon directly (like gnome-keyring does)
--    // We can't use systemctl --user here because the user session bus isn't ready
--    // yet
--    match unsafe { libc::fork() } {
--        -1 => {
--            tracing::error!("Failed to fork process");
--            Err(SocketError::Connect(io::Error::last_os_error()))
--        }
--        0 => {
--            // Child process - exec oo7-daemon
--            // Close stdin, stdout, stderr and reopen to /dev/null
--            unsafe {
--                let dev_null = libc::open(c"/dev/null".as_ptr(), libc::O_RDWR);
--                if dev_null >= 0 {
--                    libc::dup2(dev_null, 0);
--                    libc::dup2(dev_null, 1);
--                    libc::dup2(dev_null, 2);
--                    if dev_null > 2 {
--                        libc::close(dev_null);
--                    }
--                }
--
--                // Exec the daemon
--                let daemon_path = c"/usr/bin/oo7-daemon".as_ptr();
--                let args = [daemon_path, std::ptr::null()];
--                libc::execv(daemon_path, args.as_ptr());
--
--                // If exec fails, exit the child process
--                libc::_exit(1);
--            }
--        }
--        child_pid => {
--            // Parent process - daemon is starting in background
--            tracing::info!("Started oo7-daemon with PID {}", child_pid);
--            Ok(())
--        }
--    }
 +    runtime.block_on(async {
 +        timeout(
 +            Duration::from_millis(SOCKET_TIMEOUT_MS),
-+            send_secret_to_daemon_async(message, uid),
++            send_secret_to_daemon_async(message, uid, None),
 +        )
 +        .await
 +        .map_err(|_| SocketError::Timeout)?
 +    })
  }
  
+-/// Start the oo7-daemon-login helper, passing the secret via stdin pipe.
+-///
+-/// The helper holds the secret on a socket until oo7-daemon connects and
+-/// retrieves it via memfd.
+-fn start_login_helper(secret: &[u8]) -> Result<(), SocketError> {
+-    tracing::info!("Starting oo7-daemon-login helper");
+-
+-    let (pipe_read, mut pipe_write) = io::pipe().map_err(SocketError::Connect)?;
+-    let saved_signals = SavedSignals::new();
+-
+-    let mut helper = Command::new(
+-        option_env!("OO7_DAEMON_LOGIN_PATH").unwrap_or("/usr/libexec/oo7-daemon-login"),
+-    );
+-    helper
+-        .stdin(pipe_read)
+-        // Don't inherit the caller's stdout/stderr, it may be a console
+-        .stdout(Stdio::null())
+-        .stderr(Stdio::null());
+-    unsafe {
+-        helper.pre_exec(|| {
+-            // Leave the login's session and its controlling terminal. On a
+-            // text console, the terminal is hung up when the session moves on
+-            // to the user's shell, and the SIGHUP would kill the helper before
+-            // oo7-daemon has picked up the secret.
+-            libc::setsid();
+-            libc::signal(libc::SIGHUP, libc::SIG_IGN);
+-            Ok(())
+-        })
+-    };
+-    let child = helper.spawn().map_err(SocketError::Connect)?;
+-    drop(helper); // drops `pipe_read`
+-    pipe_write.write_all(secret).map_err(SocketError::Send)?;
+-    drop(pipe_write);
+-    drop(saved_signals);
+-    tracing::info!("Started oo7-daemon-login with PID {}", child.id());
+-    Ok(())
+-}
+-
  async fn send_secret_to_daemon_async(
      message: PamMessage,
      uid: u32,
 -    auto_start: bool,
+     socket_path: Option<PathBuf>,
  ) -> Result<(), SocketError> {
-     let socket_path = std::env::var("OO7_PAM_SOCKET")
-         .map(PathBuf::from)
-@@ -196,57 +71,25 @@
+     let socket_path = socket_path
+@@ -246,80 +79,86 @@
  
      tracing::debug!("Connecting to daemon socket at: {}", socket_path.display());
  
--    // Try to connect with retries if auto_start is enabled
--    // We don't check if socket exists to avoid SELinux getattr denials
--    let mut stream = None;
--    let max_retries = if auto_start { 20 } else { 1 }; // 20 * 100ms = 2 seconds
--    let mut daemon_started = false;
--
--    for attempt in 0..max_retries {
--        match timeout(
--            Duration::from_millis(SOCKET_TIMEOUT_MS),
--            UnixStream::connect(&socket_path),
--        )
--        .await
--        {
--            Ok(Ok(s)) => {
--                stream = Some(s);
--                if daemon_started {
--                    tracing::info!("Successfully connected to daemon socket");
--                }
--                break;
--            }
--            Ok(Err(e)) if e.kind() == io::ErrorKind::NotFound && auto_start && !daemon_started => {
--                // Socket doesn't exist yet, start daemon on first attempt
--                tracing::info!("Socket not found, attempting to start daemon");
--                start_daemon()?;
--                daemon_started = true;
--                tokio::time::sleep(Duration::from_millis(100)).await;
--            }
--            Ok(Err(e))
--                if (e.kind() == io::ErrorKind::NotFound
--                    || e.kind() == io::ErrorKind::ConnectionRefused)
--                    && auto_start
--                    && attempt + 1 < max_retries =>
--            {
--                // Socket not ready yet, retry
-+    // pam_systemd starts the user manager before this session hook. The managed
-+    // daemon starts at default.target, independently of graphical-session.target.
-+    // Wait for its socket within the single overall deadline; never spawn it.
+-    // Validate socket ownership before connecting to prevent interception
+-    // by a fake socket placed by another user.
+-    match socket_path.symlink_metadata() {
+-        Ok(meta) => {
+-            if meta.file_type().is_symlink() {
+-                return Err(SocketError::InvalidSocket(
+-                    "socket path is a symlink".to_string(),
+-                ));
++    // pam_systemd starts the user manager before this hook. Wait for its
++    // managed daemon within the single deadline; never spawn another daemon.
 +    let mut stream = loop {
-+        match UnixStream::connect(&socket_path).await {
-+            Ok(stream) => break stream,
-+            Err(e) if matches!(e.kind(), io::ErrorKind::NotFound | io::ErrorKind::ConnectionRefused) => {
-                 tokio::time::sleep(Duration::from_millis(100)).await;
++        // Validate the socket on each retry, including after delayed creation.
++        match socket_path.symlink_metadata() {
++            Ok(meta) => {
++                if meta.file_type().is_symlink() {
++                    return Err(SocketError::InvalidSocket(
++                        "socket path is a symlink".to_string(),
++                    ));
++                }
++                if !meta.file_type().is_socket() {
++                    return Err(SocketError::InvalidSocket(
++                        "path is not a socket".to_string(),
++                    ));
++                }
++                if meta.uid() != uid {
++                    return Err(SocketError::InvalidSocket(format!(
++                        "socket owned by UID {} but expected {}",
++                        meta.uid(),
++                        uid
++                    )));
++                }
              }
--            Ok(Err(e)) => {
--                return Err(SocketError::Connect(e));
--            }
--            Err(_) => {
--                return Err(SocketError::Timeout);
--            }
-+            Err(e) => return Err(SocketError::Connect(e)),
+-            if !meta.file_type().is_socket() {
+-                return Err(SocketError::InvalidSocket(
+-                    "path is not a socket".to_string(),
+-                ));
++            Err(e) if e.kind() == io::ErrorKind::NotFound => {
++                tokio::time::sleep(Duration::from_millis(100)).await;
++                continue;
+             }
+-            if meta.uid() != uid {
+-                return Err(SocketError::InvalidSocket(format!(
+-                    "socket owned by UID {} but expected {}",
+-                    meta.uid(),
+-                    uid
+-                )));
++            Err(e) => {
++                return Err(SocketError::Connect(e));
+             }
          }
+-        Err(e) if auto_start && e.kind() == io::ErrorKind::NotFound => {
+-            tracing::info!("Socket not found, starting login helper");
+-            start_login_helper(&message.new_secret)?;
+-            return Ok(());
+-        }
+-        Err(e) => {
+-            return Err(SocketError::Connect(e));
+-        }
 -    }
-+    };
  
--    let mut stream = stream.ok_or_else(|| {
--        SocketError::Connect(io::Error::new(
--            io::ErrorKind::NotFound,
--            "Failed to connect to daemon socket after retries",
--        ))
--    })?;
-+    if stream.peer_cred().map_err(SocketError::Connect)?.uid() != uid {
-+        return Err(SocketError::Connect(io::Error::new(
-+            io::ErrorKind::PermissionDenied,
-+            "PAM socket peer does not match the target user",
-+        )));
-+    }
- 
-     tracing::debug!("Connected to daemon socket");
- 
-@@ -259,17 +102,24 @@
-         .await
-         .map_err(SocketError::Send)?;
- 
--    timeout(
+-    let mut stream = match timeout(
 -        Duration::from_millis(SOCKET_TIMEOUT_MS),
--        stream.write_all(&message_bytes),
+-        UnixStream::connect(&socket_path),
 -    )
 -    .await
--    .map_err(|_| SocketError::Timeout)?
--    .map_err(SocketError::Send)?;
+-    {
+-        Ok(Ok(s)) => s,
+-        Ok(Err(e)) if auto_start => {
+-            tracing::info!("Daemon not running ({}), starting login helper", e.kind());
+-            start_login_helper(&message.new_secret)?;
+-            return Ok(());
++        match UnixStream::connect(&socket_path).await {
++            Ok(stream) => break stream,
++            Err(e)
++                if matches!(
++                    e.kind(),
++                    io::ErrorKind::NotFound | io::ErrorKind::ConnectionRefused
++                ) =>
++            {
++                tokio::time::sleep(Duration::from_millis(100)).await;
++            }
++            Err(e) => return Err(SocketError::Connect(e)),
+         }
+-        Ok(Err(e)) => {
+-            return Err(SocketError::Connect(e));
+-        }
+-        Err(_) => {
+-            return Err(SocketError::Timeout);
+-        }
+     };
+ 
++    if stream.peer_cred().map_err(SocketError::Connect)?.uid() != uid {
++        return Err(SocketError::InvalidSocket(
++            "PAM socket peer does not match the target user".to_string(),
++        ));
++    }
++
+     tracing::debug!("Connected to daemon socket");
+ 
+     tracing::debug!("Sending message for user {}", message.username);
+     let message_bytes = Zeroizing::new(message.to_bytes().map_err(SocketError::Serialize)?);
+ 
+-    let mut request = Zeroizing::new(Vec::with_capacity(4 + message_bytes.len()));
+-    request.extend_from_slice(&(message_bytes.len() as u32).to_le_bytes());
+-    request.extend_from_slice(&message_bytes);
++    stream
++        .write_all(&(message_bytes.len() as u32).to_le_bytes())
++        .await
++        .map_err(SocketError::Send)?;
 +    stream
 +        .write_all(&message_bytes)
 +        .await
 +        .map_err(SocketError::Send)?;
- 
-     stream.flush().await.map_err(SocketError::Send)?;
- 
--    tracing::debug!("Sent message to daemon, waiting for response");
 +    stream.shutdown().await.map_err(SocketError::Send)?;
+ 
+-    timeout(Duration::from_millis(SOCKET_TIMEOUT_MS), async {
+-        stream.write_all(&request).await?;
+-        // The daemon reads the whole request before acting on it, so it is
+-        // handled even if the PAM caller exits right after we return. Don't
+-        // wait for the response, it would stall the login on the unlock.
+-        stream.shutdown().await
+-    })
+-    .await
+-    .map_err(|_| SocketError::Timeout)?
+-    .map_err(SocketError::Send)?;
++    // A successful write is not proof that the password update has finished.
 +    let mut acknowledgement = [0u8; 1];
 +    stream
 +        .read_exact(&mut acknowledgement)
@@ -425,10 +539,13 @@
 +            "Daemon failed to process the PAM request",
 +        )));
 +    }
+ 
+-    tracing::debug!("Sent message to daemon");
+-
      Ok(())
  }
  
-@@ -303,13 +153,14 @@
+@@ -349,6 +188,7 @@
              let message = PamMessage::from_bytes(&message_bytes).unwrap();
              assert_eq!(message.username, "testuser");
              assert_eq!(message.new_secret, b"testpassword");
@@ -436,11 +553,374 @@
          });
  
          tokio::time::sleep(Duration::from_millis(100)).await;
+@@ -357,7 +197,7 @@
  
-         let message = PamMessage::unlock("testuser".to_string(), b"testpassword".to_vec());
- 
--        let result = send_secret_to_daemon_async(message, 1000, false).await;
-+        let result = send_secret_to_daemon_async(message, unsafe { libc::getuid() }).await;
+         // The socket must be owned by the given UID
+         let uid = unsafe { libc::getuid() };
+-        let result = send_secret_to_daemon_async(message, uid, false, Some(socket_path)).await;
++        let result = send_secret_to_daemon_async(message, uid, Some(socket_path)).await;
          assert!(result.is_ok());
  
          server.await?;
+--- a/tests/pam.rs
++++ b/tests/pam.rs
+@@ -6,62 +6,65 @@
+ mod protocol;
+ 
+ use std::{
+-    fs,
+-    io::{self, Read},
+-    os::{
+-        fd::AsRawFd,
+-        unix::{
+-            fs::{PermissionsExt, chown},
+-            net::{UnixListener, UnixStream},
+-        },
++    io::{self, Read, Write},
++    os::unix::net::UnixListener,
++    sync::{
++        Arc,
++        atomic::{AtomicBool, Ordering},
+     },
++    thread::{self, JoinHandle},
+     time::{Duration, Instant},
+ };
+ 
+ use common::PAM_SUCCESS;
+ use protocol::PamMessage;
+ 
+-/// The request must be fully written by the time PAM returns, the caller may
+-/// exit right after.
+-fn take_request(listener: &UnixListener) -> Vec<u8> {
+-    let (stream, _) = listener
+-        .accept()
+-        .expect("PAM returned before connecting to the daemon");
+-    read_request(stream)
++/// Acknowledge only after handling the complete request. The caller must not
++/// return before this acknowledgement, even if it can already write the socket.
++fn handle_request(listener: UnixListener) -> (JoinHandle<Vec<u8>>, Arc<AtomicBool>) {
++    listener.set_nonblocking(true).unwrap();
++    let completed = Arc::new(AtomicBool::new(false));
++    let handled = completed.clone();
++    let server = thread::spawn(move || {
++        let deadline = Instant::now() + Duration::from_secs(8);
++        let mut stream = loop {
++            match listener.accept() {
++                Ok((stream, _)) => break stream,
++                Err(e) if e.kind() == io::ErrorKind::WouldBlock && Instant::now() < deadline => {
++                    thread::sleep(Duration::from_millis(10));
++                }
++                Err(e) => panic!("PAM did not deliver its request: {e}"),
++            }
++        };
++        stream
++            .set_read_timeout(Some(Duration::from_secs(8)))
++            .unwrap();
++        let mut bytes = Vec::new();
++        stream.read_to_end(&mut bytes).unwrap();
++        let (length, message) = bytes.split_at(4);
++        assert_eq!(
++            u32::from_le_bytes(length.try_into().unwrap()) as usize,
++            message.len()
++        );
++        handled.store(true, Ordering::SeqCst);
++        stream.write_all(&[0]).unwrap();
++        message.to_vec()
++    });
++    (server, completed)
+ }
+ 
+-fn read_request(mut stream: UnixStream) -> Vec<u8> {
+-    stream.set_nonblocking(true).unwrap();
+-    let mut bytes = Vec::new();
+-    stream
+-        .read_to_end(&mut bytes)
+-        .expect("PAM returned before sending the whole request");
+-    let (length, message) = bytes.split_at(4);
+-    assert_eq!(
+-        u32::from_le_bytes(length.try_into().unwrap()) as usize,
+-        message.len()
+-    );
+-    message.to_vec()
+-}
+-
+-/// The daemon never answers, PAM must not wait for it.
+-fn assert_quick(start: Instant) {
+-    assert!(start.elapsed() < Duration::from_secs(1));
+-}
+-
+ #[test]
+ fn open_session_delivers_unlock() {
+     let fixture = common::fixture();
+     let mut pam = fixture.start();
+-    let listener = fixture.listen();
++    let (server, completed) = handle_request(fixture.listen());
+ 
+     assert_eq!(pam.authenticate(), PAM_SUCCESS);
+-    let start = Instant::now();
+     assert_eq!(pam.open_session(), PAM_SUCCESS);
+-    assert_quick(start);
++    assert!(completed.load(Ordering::SeqCst));
+ 
+     let expected = PamMessage::unlock(fixture.username.clone(), b"old-password".to_vec());
+-    assert_eq!(take_request(&listener), expected.to_bytes().unwrap());
++    assert_eq!(server.join().unwrap(), expected.to_bytes().unwrap());
+     assert_eq!(pam.close_session(), PAM_SUCCESS);
+ }
+ 
+@@ -69,133 +72,38 @@
+ fn chauthtok_delivers_password_change() {
+     let fixture = common::fixture();
+     let mut pam = fixture.start();
+-    let listener = fixture.listen();
+-
+-    let start = Instant::now();
++    let (server, completed) = handle_request(fixture.listen());
+     assert_eq!(pam.chauthtok(), PAM_SUCCESS);
+-    assert_quick(start);
++    assert!(completed.load(Ordering::SeqCst));
+ 
+     let expected = PamMessage::change_password(
+         fixture.username.clone(),
+         b"old-password".to_vec(),
+         b"new-password".to_vec(),
+     );
+-    assert_eq!(take_request(&listener), expected.to_bytes().unwrap());
++    assert_eq!(server.join().unwrap(), expected.to_bytes().unwrap());
+ }
+ 
+ #[test]
+-fn missing_daemon_is_not_fatal() {
++fn open_session_accepts_unstashed_authtok() {
+     let fixture = common::fixture();
+-    let mut pam = fixture.start();
++    let mut pam = fixture.start_without_stash();
++    let (server, completed) = handle_request(fixture.listen());
+ 
+-    assert_eq!(pam.authenticate(), PAM_SUCCESS);
+     assert_eq!(pam.open_session(), PAM_SUCCESS);
++    assert!(completed.load(Ordering::SeqCst));
++    let expected = PamMessage::unlock(fixture.username.clone(), b"old-password".to_vec());
++    assert_eq!(server.join().unwrap(), expected.to_bytes().unwrap());
+     assert_eq!(pam.close_session(), PAM_SUCCESS);
+-    assert_eq!(pam.chauthtok(), PAM_SUCCESS);
+ }
+ 
+-// Linux SO_PEERGROUPS is not exposed by libc 0.2.190.
+-const SO_PEERGROUPS: libc::c_int = 59;
+-
+-fn original_credentials() -> io::Result<()> {
+-    let mut group: libc::gid_t = !0;
+-    // SAFETY: group is valid storage for the single requested gid_t.
+-    let unchanged = unsafe {
+-        libc::getuid() == 0
+-            && libc::geteuid() == 0
+-            && libc::getgid() == 0
+-            && libc::getegid() == 0
+-            && libc::getgroups(1, &mut group) == 1
+-            && group == 0
+-    };
+-    if !unchanged {
+-        return Err(io::Error::other(
+-            "expected caller UID/GID 0 and supplementary groups [0]",
+-        ));
+-    }
+-    Ok(())
+-}
+-
+-fn check_peer(username: &str, uid: libc::uid_t, expected_groups: &[libc::gid_t]) -> io::Result<()> {
+-    let group: libc::gid_t = 0;
+-    // SAFETY: only this private worker process has its groups initialized.
+-    if unsafe { libc::setgroups(1, &group) } != 0 {
+-        return Err(io::Error::last_os_error());
+-    }
+-    original_credentials()?;
++#[test]
++fn missing_daemon_is_not_fatal() {
+     let fixture = common::fixture();
+-    let mut pam = fixture.start_for(username);
+-    let listener = fixture.listen();
+-    fs::set_permissions(
+-        fixture.socket_path.parent().unwrap(),
+-        fs::Permissions::from_mode(0o755),
+-    )?;
+-    fs::set_permissions(&fixture.socket_path, fs::Permissions::from_mode(0o600))?;
+-    chown(&fixture.socket_path, Some(uid), Some(uid))?;
++    let mut pam = fixture.start();
++
+     assert_eq!(pam.authenticate(), PAM_SUCCESS);
+     assert_eq!(pam.open_session(), PAM_SUCCESS);
+     assert_eq!(pam.close_session(), PAM_SUCCESS);
+-    drop(pam);
+-    original_credentials()?;
+-
+-    let (peer, _) = listener.accept()?;
+-    // SAFETY: ucred consists entirely of integer fields.
+-    let mut credentials: libc::ucred = unsafe { std::mem::zeroed() };
+-    let mut length = size_of::<libc::ucred>() as libc::socklen_t;
+-    // SAFETY: both output pointers have the specified valid storage sizes.
+-    if unsafe {
+-        libc::getsockopt(
+-            peer.as_raw_fd(),
+-            libc::SOL_SOCKET,
+-            libc::SO_PEERCRED,
+-            (&mut credentials as *mut libc::ucred).cast(),
+-            &mut length,
+-        )
+-    } != 0
+-    {
+-        return Err(io::Error::last_os_error());
+-    }
+-    assert_eq!(length as usize, size_of::<libc::ucred>());
+-    let mut groups = [0 as libc::gid_t; 64];
+-    let mut length = size_of_val(&groups) as libc::socklen_t;
+-    // SAFETY: groups and length are valid output storage of the specified
+-    // sizes.
+-    if unsafe {
+-        libc::getsockopt(
+-            peer.as_raw_fd(),
+-            libc::SOL_SOCKET,
+-            SO_PEERGROUPS,
+-            groups.as_mut_ptr().cast(),
+-            &mut length,
+-        )
+-    } != 0
+-    {
+-        return Err(io::Error::last_os_error());
+-    }
+-    let length = length as usize;
+-    assert!(length <= size_of_val(&groups) && length.is_multiple_of(size_of::<libc::gid_t>()));
+-    let groups = &groups[..length / size_of::<libc::gid_t>()];
+-    let expected = PamMessage::unlock(username.into(), b"old-password".to_vec());
+-    assert_eq!(read_request(peer), expected.to_bytes().unwrap());
+-    if (credentials.uid, credentials.gid) != (uid, uid) || groups != expected_groups {
+-        return Err(io::Error::other(format!(
+-            "unexpected {username} peer: uid={}, gid={}, groups={groups:?}; expected uid={uid}, gid={uid}, groups={expected_groups:?}",
+-            credentials.uid, credentials.gid,
+-        )));
+-    }
+-    Ok(())
++    assert_eq!(pam.chauthtok(), PAM_SUCCESS);
+ }
+-
+-#[test]
+-#[ignore = "requires OO7_PAM_PRIVILEGED_TESTS=1 and root-capable bubblewrap"]
+-fn root_to_user_discards_inherited_groups() -> io::Result<()> {
+-    common::namespace::run("root_to_user_discards_inherited_groups", || {
+-        check_peer("oo7-test", 65534, &[])
+-    })
+-}
+-
+-#[test]
+-#[ignore = "requires OO7_PAM_PRIVILEGED_TESTS=1 and root-capable bubblewrap"]
+-fn same_user_preserves_groups() -> io::Result<()> {
+-    common::namespace::run("same_user_preserves_groups", || check_peer("root", 0, &[0]))
+-}
+--- a/tests/common/mod.rs
++++ b/tests/common/mod.rs
+@@ -1,7 +1,5 @@
+ //! Drives the built PAM module through a private Linux-PAM configuration.
+ 
+-pub mod namespace;
+-
+ use std::{
+     ffi::{CStr, CString, c_char, c_int, c_void},
+     fs,
+@@ -90,19 +88,23 @@
+             ),
+         )
+         .unwrap();
++        fs::write(
++            dir.path().join("oo7-fallback"),
++            format!(
++                "session required {dir}/tokens.so\n\
++                 session required {dir}/pam_oo7.so\n",
++                dir = dir.path().display()
++            ),
++        )
++        .unwrap();
+ 
+         let socket_path = dir.path().join("pam.sock");
+         // SAFETY: set once, before any test drives the PAM module.
+         unsafe { std::env::set_var("OO7_PAM_SOCKET", &socket_path) };
+ 
+-        // The module only delivers without forking when running as the user.
++        // Exercise delivery to a private socket owned by the current user.
+         let pw = unsafe { libc::getpwuid(libc::getuid()) };
+         assert!(!pw.is_null());
+-        assert_eq!(
+-            unsafe { (*pw).pw_gid },
+-            unsafe { libc::getgid() },
+-            "tests must run with the user's primary group"
+-        );
+         let username = unsafe { CStr::from_ptr((*pw).pw_name) }
+             .to_str()
+             .unwrap()
+@@ -117,21 +119,25 @@
+ 
+     /// Start a transaction for the current user, without a daemon listening.
+     pub fn start(&self) -> Pam {
+-        self.start_for(&self.username)
++        self.start_service(c"oo7-test")
+     }
+ 
+-    pub fn start_for(&self, username: &str) -> Pam {
++    pub fn start_without_stash(&self) -> Pam {
++        self.start_service(c"oo7-fallback")
++    }
++
++    fn start_service(&self, service: &CStr) -> Pam {
+         let _ = fs::remove_file(&self.socket_path);
+         let conv = Box::new(PamConv {
+             conv: no_conversation,
+             appdata_ptr: std::ptr::null_mut(),
+         });
+-        let user = CString::new(username).unwrap();
++        let user = CString::new(self.username.as_str()).unwrap();
+         let confdir = CString::new(self.dir.path().as_os_str().as_encoded_bytes()).unwrap();
+         let mut handle = std::ptr::null_mut();
+         let ret = unsafe {
+             pam_start_confdir(
+-                c"oo7-test".as_ptr(),
++                service.as_ptr(),
+                 user.as_ptr(),
+                 &*conv,
+                 confdir.as_ptr(),
+@@ -148,7 +154,6 @@
+ 
+     pub fn listen(&self) -> UnixListener {
+         let listener = UnixListener::bind(&self.socket_path).unwrap();
+-        listener.set_nonblocking(true).unwrap();
+         listener
+     }
+ }
+--- a/tests/common/tokens.rs
++++ b/tests/common/tokens.rs
+@@ -26,6 +26,27 @@
+ 
+ #[allow(clippy::missing_safety_doc)]
+ #[unsafe(no_mangle)]
++pub unsafe extern "C" fn pam_sm_open_session(
++    pamh: *mut c_void,
++    flags: c_int,
++    argc: c_int,
++    argv: *mut *const c_char,
++) -> c_int {
++    unsafe { pam_sm_authenticate(pamh, flags, argc, argv) }
++}
++
++#[unsafe(no_mangle)]
++pub extern "C" fn pam_sm_close_session(
++    _pamh: *mut c_void,
++    _flags: c_int,
++    _argc: c_int,
++    _argv: *mut *const c_char,
++) -> c_int {
++    PAM_SUCCESS
++}
++
++#[allow(clippy::missing_safety_doc)]
++#[unsafe(no_mangle)]
+ pub unsafe extern "C" fn pam_sm_chauthtok(
+     pamh: *mut c_void,
+     flags: c_int,

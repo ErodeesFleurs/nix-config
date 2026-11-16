@@ -8,12 +8,12 @@
 
 stdenvNoCC.mkDerivation rec {
   pname = "clice";
-  version = "0.1.2026110716";
+  version = "1.0.0";
 
-  # Upstream release source: ec5b90e1617bda438e794aa1ac3a84da21b00be5.
+  # Upstream release source: 92d26ad688e439961d6176cf3d30270bd898c55e.
   src = fetchurl {
     url = "https://github.com/clice-io/clice/releases/download/v${version}/clice-${version}.x86_64-unknown-linux-gnu.tar.gz";
-    hash = "sha256-BbncGIUNyFA9NwaDGgDiOmiIumD/WP/I1g52gTOe+uQ=";
+    hash = "sha256-ndGBqsnIHK52slXpU9ohyeYD/FtAZEfrJsler2ftlpo=";
   };
 
   nativeBuildInputs = [ autoPatchelfHook ];
