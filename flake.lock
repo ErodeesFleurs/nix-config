@@ -154,6 +154,26 @@
         "type": "github"
       }
     },
+    "linuxqq-wayland-fix": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1793603338,
+        "narHash": "sha256-J9tGGmDBIF8IVtKHCmN/FS7rfgzJxJKHryRk65fXgbs=",
+        "owner": "SHORiN-KiWATA",
+        "repo": "linuxqq-wayland-fix",
+        "rev": "e45408c477d2307461ff8e900cf78084590fd83d",
+        "type": "github"
+      },
+      "original": {
+        "owner": "SHORiN-KiWATA",
+        "repo": "linuxqq-wayland-fix",
+        "type": "github"
+      }
+    },
     "llm-agents": {
       "inputs": {
         "bun2nix": "bun2nix",
@@ -421,6 +441,7 @@
         "flake-parts": "flake-parts",
         "fleurs-nur": "fleurs-nur",
         "home-manager": "home-manager",
+        "linuxqq-wayland-fix": "linuxqq-wayland-fix",
         "llm-agents": "llm-agents",
         "niri": "niri",
         "nixcord": "nixcord",

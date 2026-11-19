@@ -17,6 +17,11 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    linuxqq-wayland-fix = {
+      url = "github:SHORiN-KiWATA/linuxqq-wayland-fix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     nixcord = {
       url = "github:kaylorben/nixcord";
       inputs.nixpkgs.follows = "nixpkgs";

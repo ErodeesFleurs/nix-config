@@ -19,6 +19,9 @@ let
           "--text-input-version=3"
         ];
       };
+      fix = inputs.linuxqq-wayland-fix.packages.${pkgs.stdenv.hostPlatform.system}.default.override {
+        qqPackage = upstream;
+      };
       emptyGtkConfig = pkgs.writeText "qq-gtk-config-empty" "";
       emptyGtkSettings = pkgs.writeText "qq-gtk-settings-empty" "[Settings]\n";
       launcher = pkgs.writeShellScript "qq-system-theme" ''
@@ -37,7 +40,7 @@ let
         done
         exec ${lib.getExe pkgs.bubblewrap} \
           --bind / / --dev-bind /dev /dev --bind /proc /proc \
-          "''${mounts[@]}" -- ${upstream}/bin/qq "$@"
+          "''${mounts[@]}" -- ${lib.getExe fix} "$@"
       '';
     in
     pkgs.symlinkJoin {
@@ -46,6 +49,7 @@ let
       paths = [ upstream ];
       postBuild = ''
         ln -sfn ${launcher} "$out/bin/qq"
+        ln -s "$out/bin/qq" "$out/bin/linuxqq-wayland-fix"
         rm "$out/share/applications/qq.desktop"
         # 上游桌面入口使用 PATH 中的 qq；显式指向包装器，避免绕过主题隔离。
         substitute ${upstream}/share/applications/qq.desktop "$out/share/applications/qq.desktop" \
