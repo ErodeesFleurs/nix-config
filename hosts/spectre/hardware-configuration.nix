@@ -29,14 +29,23 @@
 
   # impermanence：原根分区改挂 /persist（stage 1 即需），/ 由 tmpfs 提供（见 impermanence.nix）
   fileSystems."/persist" = {
-    device = "/dev/disk/by-uuid/db49ca8e-d9ed-40b8-83fa-d34ace01aba0";
-    fsType = "ext4";
+    device = "/dev/disk/by-uuid/23dc60ac-b2d1-41dd-8b0c-25e8d2dfd153";
+    fsType = "btrfs";
+    options = [
+      "subvol=@persist"
+      "compress=zstd"
+      "noatime"
+    ];
     neededForBoot = true;
   };
 
   fileSystems."/media/next" = {
-    device = "/dev/disk/by-uuid/69b9f3d3-55a4-443a-aa47-49ecc235f228";
-    fsType = "ext4";
+    device = "/dev/disk/by-uuid/01d3dee1-ed3d-4559-8700-563dbecd7132";
+    fsType = "btrfs";
+    options = [
+      "compress=zstd"
+      "noatime"
+    ];
   };
 
   fileSystems."/boot" = {

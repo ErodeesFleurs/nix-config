@@ -1,12 +1,12 @@
-# Impermanence：tmpfs 根 + /persist 绑定（V1 零迁移）
+# Impermanence：tmpfs 根 + Btrfs /persist 绑定
 #
-# 布局：/ 为 tmpfs（重启即清空），/persist 挂载原根分区（ext4）作为持久 backing。
-# 所有绑定源即磁盘上的现有目录（/persist/nix 即原 /nix），无需任何数据迁移；
-# 回滚旧 generation 即完全恢复原布局（分区内容未动）。
+# 布局：/ 为 tmpfs（重启即清空），/persist 挂载系统盘 Btrfs 的 @persist 子卷。
+# /nix、/var、/home、/root 绑定到 /persist 中的对应目录。
+# 文件系统迁移后不能仅靠旧 generation 恢复 ext4；回退依赖独立磁盘副本。
 #
 # 临时化目录：/tmp、/srv、/usr、/mnt、/opt 及根下杂项。
 # /etc 已由 modules.etc 的不可变 overlay 管理，NM 连接等经 /persist/etc 绑定（见 wlan/dae 模块）。
-# /media/next（独立数据盘）不受影响，仍按 hardware-configuration.nix 原样挂载。
+# /media/next 挂载独立 Btrfs 数据盘。
 { ... }:
 
 {
