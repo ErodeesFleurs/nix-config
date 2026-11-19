@@ -6,16 +6,12 @@
 }:
 let
   llmAgents = inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system};
-  # pi-natives 的 zstd-sys/onig_sys 需要系统库；上游包遗漏这些构建依赖。
-  omp = llmAgents.omp.overrideAttrs (old: {
-    buildInputs = (old.buildInputs or [ ]) ++ [
-      pkgs.zstd
-      pkgs.oniguruma
-    ];
-  });
 in
 {
-  home.packages = [ omp ];
+  home.packages = [
+    llmAgents.codex
+    llmAgents.omp
+  ];
 
   programs.opencode = {
     enable = true;
