@@ -10,7 +10,14 @@ in
 {
   home.packages = [
     llmAgents.codex
-    llmAgents.omp
+    (pkgs.symlinkJoin {
+      name = llmAgents.omp.name;
+      paths = [ llmAgents.omp ];
+      nativeBuildInputs = [ pkgs.makeWrapper ];
+      postBuild = ''
+        wrapProgram "$out/bin/omp" --suffix PATH : ${lib.makeBinPath [ pkgs.python3 ]}
+      '';
+    })
   ];
 
   programs.opencode = {
