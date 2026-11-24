@@ -121,11 +121,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1795411510,
-        "narHash": "sha256-2rAHzHxXY27m2qVnt1Ml5+LqTz/v8KscyWjHEEyMggc=",
+        "lastModified": 1795490362,
+        "narHash": "sha256-2Dyznqm3z4qIzjk1QoGOcJmTMxALWQasXa0rGn6bXjk=",
         "owner": "ErodeesFleurs",
         "repo": "fleurs-nur",
-        "rev": "8397eac4c05f22c8403e91ff314f0d67167582ca",
+        "rev": "8fe01e14d5fba6152994cdb4989e994726ae482e",
         "type": "github"
       },
       "original": {
@@ -189,11 +189,11 @@
         "treefmt-nix": "treefmt-nix"
       },
       "locked": {
-        "lastModified": 1795395764,
-        "narHash": "sha256-OR+ahE/QRMHSS3mPB/XjbXfvaIN8IgqGfD+Jsnh4n3Q=",
+        "lastModified": 1795488354,
+        "narHash": "sha256-keNoBqjmAW2fVlumEkhWkXsO7piM+/lt7nEDadOYvrQ=",
         "owner": "numtide",
         "repo": "llm-agents.nix",
-        "rev": "6a434b94efa2b508f04f5cd3c2327a8a571b553b",
+        "rev": "7268d156621c08fc8f4cc474730e7c2b0f586ceb",
         "type": "github"
       },
       "original": {
@@ -298,11 +298,11 @@
         "treefmt-nix": "treefmt-nix_2"
       },
       "locked": {
-        "lastModified": 1795392066,
-        "narHash": "sha256-Vf/oXkQ+CJNQLdul03QVgjzAW356oJYlyRMSFrVrrKA=",
+        "lastModified": 1795463887,
+        "narHash": "sha256-YcPmiyvA1ND1PRHduUrIcniGqx5ioX8TRDuAn4++CGU=",
         "owner": "kaylorben",
         "repo": "nixcord",
-        "rev": "7bb374b0b1f1978c1f957700dd3542e07c8ba566",
+        "rev": "0b95ae717d3e0cefb45f9686d1be43f0d80366b5",
         "type": "github"
       },
       "original": {
@@ -349,11 +349,11 @@
     },
     "nixpkgs-ci": {
       "locked": {
-        "lastModified": 1795095985,
-        "narHash": "sha256-iE8oRwNZcE7Mcupd5cNTCWMi4e07CoQIRYUmw5tf+9w=",
-        "rev": "19cfded70b91ca0981373973c5b1efffdd4d6647",
+        "lastModified": 1795249095,
+        "narHash": "sha256-tFvjrdir1xJuUxdmsv+yK9PiZ4IMnFCeT8z0iayTlso=",
+        "rev": "93a9ed0a866099a230ed5146a5bb7d16fd5c9b14",
         "type": "tarball",
-        "url": "https://releases.nixos.org/nixpkgs/nixpkgs-26.11pre1124565.19cfded70b91/nixexprs.tar.zst"
+        "url": "https://releases.nixos.org/nixpkgs/nixpkgs-26.11pre1125912.93a9ed0a8660/nixexprs.tar.zst"
       },
       "original": {
         "type": "tarball",
@@ -378,11 +378,11 @@
     },
     "nixpkgs-packages": {
       "locked": {
-        "lastModified": 1795095985,
-        "narHash": "sha256-iE8oRwNZcE7Mcupd5cNTCWMi4e07CoQIRYUmw5tf+9w=",
-        "rev": "19cfded70b91ca0981373973c5b1efffdd4d6647",
+        "lastModified": 1795249095,
+        "narHash": "sha256-tFvjrdir1xJuUxdmsv+yK9PiZ4IMnFCeT8z0iayTlso=",
+        "rev": "93a9ed0a866099a230ed5146a5bb7d16fd5c9b14",
         "type": "tarball",
-        "url": "https://releases.nixos.org/nixpkgs/nixpkgs-26.11pre1124565.19cfded70b91/nixexprs.tar.zst"
+        "url": "https://releases.nixos.org/nixpkgs/nixpkgs-26.11pre1125912.93a9ed0a8660/nixexprs.tar.zst"
       },
       "original": {
         "type": "tarball",
@@ -584,11 +584,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1795145015,
-        "narHash": "sha256-1/rsjMmp27JfIiGmKNn6vo/fvTEXWd/+RoPzvmho6Ns=",
+        "lastModified": 1795486754,
+        "narHash": "sha256-Jg8DjtkoEiJBUrTh3TEJ1dOGAVNQTO8i7HJ5akanK98=",
         "owner": "vicinaehq",
         "repo": "vicinae",
-        "rev": "3570314783f49b345af3cba12e7e201be6379396",
+        "rev": "18c6f09525084986eefe758e603acc1d21900128",
         "type": "github"
       },
       "original": {
