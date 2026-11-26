@@ -94,6 +94,7 @@ in
         freerdp
 
         # 开发
+        gh
         steamcmd
         baidupcs-go
 
